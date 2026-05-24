@@ -11,6 +11,7 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || process.env.SERVER_PORT || 5000;
+const buildPath = path.join(__dirname, '../frontend/dist');
 
 // Enable CORS for frontend dev server
 app.use(cors({
@@ -175,10 +176,16 @@ app.get('/api/auth/callback', async (req, res) => {
   const { code } = req.query;
 
   // Dynamically determine redirect base (dev vs prod)
-  let redirectBase = process.env.FRONTEND_URL || 'http://localhost:5173';
-  if (req.get('host') && (req.get('host').includes('5000') || !process.env.FRONTEND_URL)) {
-    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-    redirectBase = `${protocol}://${req.get('host')}`;
+  let redirectBase = process.env.FRONTEND_URL;
+  if (!redirectBase) {
+    if (fs.existsSync(buildPath)) {
+      // In production hosting (serving frontend and backend on the same port)
+      const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+      redirectBase = `${protocol}://${req.get('host')}`;
+    } else {
+      // In local development
+      redirectBase = 'http://localhost:5173';
+    }
   }
 
   // Construct dynamic redirect URI for Discord swap code validation
@@ -405,7 +412,6 @@ app.get('/api/guilds/:guildId/leaderboard', checkAuth, async (req, res) => {
 });
 
 // Serve frontend assets in production build
-const buildPath = path.join(__dirname, '../frontend/dist');
 if (fs.existsSync(buildPath)) {
   app.use(express.static(buildPath));
   app.get('*', (req, res) => {
