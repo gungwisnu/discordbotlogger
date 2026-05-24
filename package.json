@@ -1,0 +1,35 @@
+{
+  "name": "botloggerdiscord",
+  "version": "1.0.0",
+  "description": "Discord Logging, Analytics, and Achievement Bot with Glassmorphic Web Dashboard",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "build:frontend": "npm --prefix frontend install && npm --prefix frontend run build",
+    "install:all": "npm install && npm --prefix frontend install"
+  },
+  "dependencies": {
+    "axios": "^1.6.8",
+    "cors": "^2.8.5",
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-session": "^1.18.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "logger",
+    "analytics",
+    "achievements",
+    "dashboard",
+    "express",
+    "react"
+  ],
+  "author": "Antigravity",
+  "license": "MIT"
+}
