@@ -2,8 +2,8 @@
 node_modules/
 frontend/node_modules/
 
-# Production build output
-frontend/dist/
+# Production build output (committed for zero-overhead hosting)
+# frontend/dist/
 
 # Local Environment Credentials & Secrets (CRITICAL!)
 .env
