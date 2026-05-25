@@ -7,13 +7,49 @@ module.exports = {
     if (!message.guild || message.author.bot) return;
 
     const prefix = 'pan!';
-    if (message.content.startsWith(prefix)) {
-      const args = message.content.slice(prefix.length).trim().split(/ +/);
-      const commandName = args.shift().toLowerCase();
+    const mentionRegex = new RegExp(`^<@!?${client.user.id}>`);
+    const hasPrefix = message.content.startsWith(prefix);
+    const hasMention = mentionRegex.test(message.content);
+
+    if (hasPrefix || hasMention) {
+      let args;
+      if (hasPrefix) {
+        args = message.content.slice(prefix.length).trim().split(/ +/);
+      } else {
+        args = message.content.replace(mentionRegex, '').trim().split(/ +/);
+      }
 
       const guildId = message.guild.id;
-      const targetUser = message.mentions.users.first() || message.author;
       const settings = db.getGuildSettings(guildId);
+
+      // Welcome introduction if bot is tagged with no commands
+      if (hasMention && (args.length === 0 || args[0] === '')) {
+        const introEmbed = new EmbedBuilder()
+          .setColor(settings.embed_color || '#6366f1')
+          .setTitle('👋 Halo! Saya adalah Sistem Logger & Analitik Server')
+          .setDescription('Saya dirancang khusus untuk memantau aktivitas server Anda secara terperinci, melacak durasi aktivitas Voice, mencatat waktu bermain game, serta merekam tindakan moderasi demi keamanan server.')
+          .addFields(
+            {
+              name: '📋 Kategori Pemantauan Utama',
+              value: '• **Log Voice**: Sesi bergabung, keluar, mute/deafen, kamera, dan berbagi layar secara real-time.\n• **Log Aktivitas**: Deteksi bermain game dan integrasi lagu Spotify secara real-time.\n• **Log Profil Anggota**: Perubahan nama panggilan (nickname), peran (role), bergabung, dan keluar server.\n• **Log Moderasi & Keamanan**: Rekaman tindakan ban, kick, timeout, pesan dihapus, dan pesan diedit.'
+            },
+            {
+              name: '🛠️ Perintah Utama (Gunakan prefix `pan!` atau tag saya)',
+              value: '• `pan!stats` atau `@Bot stats` - Menampilkan statistik aktivitas Anda.\n• `pan!leaderboard` atau `@Bot leaderboard` - Menampilkan peringkat teraktif server.\n• `pan!achievements` or `@Bot achievements` - Memeriksa lencana pencapaian Anda.\n• `pan!help` atau `@Bot help` - Menampilkan panduan konfigurasi administrator secara lengkap.'
+            },
+            {
+              name: '💡 Butuh Bantuan Lebih Lanjut?',
+              value: 'Silakan ketik perintah `pan!help` atau kunjungi dasbor web premium kami untuk mengonfigurasi saluran log secara praktis.'
+            }
+          )
+          .setFooter({ text: 'Sistem Logger & Analitik Server', iconURL: client.user.displayAvatarURL() })
+          .setTimestamp();
+
+        return message.reply({ embeds: [introEmbed] });
+      }
+
+      const commandName = args.shift().toLowerCase();
+      const targetUser = message.mentions.users.filter(u => u.id !== client.user.id).first() || message.author;
 
       if (commandName === 'stats') {
         const { ACHIEVEMENTS_METADATA } = require('../bot');
