@@ -7,11 +7,11 @@ module.exports = {
     
     const embed = new EmbedBuilder()
       .setColor('#10b981') // Green
-      .setDescription(`### **📥 Member Join Server**\n${member} bergabung ke server`)
+      .setDescription(`### **📥 Anggota Baru Bergabung**\n${member} telah bergabung ke dalam server.`)
       .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
       .addFields(
-        { name: 'Umur Akun', value: `\`${accountAgeDays} Hari\` (Dibuat: <t:${Math.floor(member.user.createdTimestamp / 1000)}:R>)` },
-        { name: 'Total Member Baru', value: `\`${member.guild.memberCount.toLocaleString()} member\``, inline: true }
+        { name: 'Umur Akun', value: `\`${accountAgeDays} hari\` (Dibuat: <t:${Math.floor(member.user.createdTimestamp / 1000)}:R>)` },
+        { name: 'Total Anggota Baru', value: `\`${member.guild.memberCount.toLocaleString()} anggota\``, inline: true }
       )
       .setTimestamp()
       .setFooter({ text: `${member.user.username}: ${member.user.id}` });

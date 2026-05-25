@@ -75,7 +75,7 @@ export default function Landing() {
             lineHeight: '1.6',
             fontWeight: '300'
           }}>
-            Bot Logging multifungsi premium dengan pelacakan aktivitas gaming terperinci, grafik analytics VC, server wrapped, dan gamified lencana prestasi.
+            Bot Logging multifungsi premium dengan pelacakan aktivitas bermain game yang terperinci, grafik analisis Voice, server wrapped, serta lencana pencapaian.
           </p>
         </div>
 
@@ -83,7 +83,7 @@ export default function Landing() {
         <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
           <a href="/api/auth/login" style={{ textDecoration: 'none' }}>
             <button className="btn-primary" style={{ fontSize: '1.05rem', padding: '16px 36px' }}>
-              🔌 Hubungkan dengan Discord
+              🔌 Hubungkan ke Discord
             </button>
           </a>
         </div>
@@ -101,27 +101,27 @@ export default function Landing() {
           {/* Card 1 */}
           <div className="glass-panel" style={{ padding: '24px', textAlign: 'left', background: 'rgba(255, 255, 255, 0.02)' }}>
             <span style={{ fontSize: '2rem' }}>📝</span>
-            <h3 style={{ marginTop: '12px', fontSize: '1.2rem', color: 'white' }}>Moderation & Security Log</h3>
+            <h3 style={{ marginTop: '12px', fontSize: '1.2rem', color: 'white' }}>Log Moderasi & Keamanan</h3>
             <p style={{ marginTop: '8px', fontSize: '0.88rem', color: 'hsl(var(--text-secondary))', lineHeight: '1.5' }}>
-              Pantau ban, kick, timeout, pesan dihapus, dan edit channel langsung dari Audit Logs Discord secara realtime.
+              Pantau pemblokiran (ban), pengeluaran (kick), timeout, pesan dihapus, serta pengeditan saluran langsung dari Audit Logs Discord secara real-time.
             </p>
           </div>
 
           {/* Card 2 */}
           <div className="glass-panel" style={{ padding: '24px', textAlign: 'left', background: 'rgba(255, 255, 255, 0.02)' }}>
             <span style={{ fontSize: '2rem' }}>🎙️</span>
-            <h3 style={{ marginTop: '12px', fontSize: '1.2rem', color: 'white' }}>Analytics VC & Game</h3>
+            <h3 style={{ marginTop: '12px', fontSize: '1.2rem', color: 'white' }}>Analisis Voice & Game</h3>
             <p style={{ marginTop: '8px', fontSize: '0.88rem', color: 'hsl(var(--text-secondary))', lineHeight: '1.5' }}>
-              Catat durasi member nongkrong di Voice Channel dan hitung jam bermain game favorit server Anda.
+              Catat durasi aktivitas anggota di Voice Channel serta akumulasi waktu bermain game favorit di server Anda.
             </p>
           </div>
 
           {/* Card 3 */}
           <div className="glass-panel" style={{ padding: '24px', textAlign: 'left', background: 'rgba(255, 255, 255, 0.02)' }}>
             <span style={{ fontSize: '2rem' }}>🏆</span>
-            <h3 style={{ marginTop: '12px', fontSize: '1.2rem', color: 'white' }}>Gamified Achievements</h3>
+            <h3 style={{ marginTop: '12px', fontSize: '1.2rem', color: 'white' }}>Lencana Pencapaian Otomatis</h3>
             <p style={{ marginTop: '8px', fontSize: '0.88rem', color: 'hsl(var(--text-secondary))', lineHeight: '1.5' }}>
-              Lencana prestasi (badges) otomatis yang terbuka saat member aktif mengobrol atau streaming game di malam kalong.
+              Lencana pencapaian otomatis yang terbuka saat anggota aktif berkomunikasi atau melakukan streaming game pada dini hari.
             </p>
           </div>
         </div>

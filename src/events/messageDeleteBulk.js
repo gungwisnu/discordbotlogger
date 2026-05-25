@@ -16,7 +16,7 @@ module.exports = {
 
     const embed = new EmbedBuilder()
       .setColor('#ef4444') // Solid Red
-      .setDescription(`### **🗑️ Purge / Pesan Dihapus Masal**\nSebanyak **${messages.size}** pesan dihapus secara masal (Purge) di channel ${firstMsg.channel}.`)
+      .setDescription(`### **🗑️ Pesan Dihapus Secara Massal (Purge)**\nSebanyak **${messages.size}** pesan telah dihapus secara massal di saluran ${firstMsg.channel}.`)
       .setTimestamp()
       .setFooter({ text: `#${firstMsg.channel.name}: ${firstMsg.channel.id}` });
 

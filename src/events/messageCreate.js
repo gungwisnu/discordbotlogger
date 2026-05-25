@@ -20,7 +20,7 @@ module.exports = {
         const stats = db.getUserStats(guildId, targetUser.id);
         const hrs = Math.round((stats.voice_time / 3600) * 100) / 100;
         
-        let gameStatsStr = 'Tidak ada aktivitas game terdeteksi.';
+        let gameStatsStr = 'Tidak ada aktivitas bermain game yang terdeteksi.';
         const games = Object.entries(stats.gaming_time || {});
         if (games.length > 0) {
           gameStatsStr = games
@@ -38,12 +38,12 @@ module.exports = {
           .setTitle(`📈 Aktivitas & Statistik: ${targetUser.username}`)
           .setThumbnail(targetUser.displayAvatarURL({ dynamic: true }))
           .addFields(
-            { name: '💬 Total Pesan Chat', value: `\`${stats.msg_count.toLocaleString()} pesan\``, inline: true },
-            { name: '🎙️ Total Waktu Voice VC', value: `\`${hrs} jam\``, inline: true },
-            { name: '🎮 Lencana/Badge Terbuka', value: `\`${(stats.achievements || []).length} / ${Object.keys(ACHIEVEMENTS_METADATA).length}\``, inline: true },
-            { name: '🕹️ Top Game Dimainkan', value: gameStatsStr }
+            { name: '💬 Total Pesan Teks', value: `\`${stats.msg_count.toLocaleString()} pesan\``, inline: true },
+            { name: '🎙️ Total Durasi Voice', value: `\`${hrs} jam\``, inline: true },
+            { name: '🏆 Lencana Terbuka', value: `\`${(stats.achievements || []).length} / ${Object.keys(ACHIEVEMENTS_METADATA).length}\``, inline: true },
+            { name: '🕹️ Game Terpopuler Dimainkan', value: gameStatsStr }
           )
-          .setFooter({ text: 'Dibuat dengan ❤️ oleh Logging & Analytics System' })
+          .setFooter({ text: 'Sistem Logger & Analitik Server' })
           .setTimestamp();
 
         return message.reply({ embeds: [embed] });
@@ -52,7 +52,7 @@ module.exports = {
       if (commandName === 'leaderboard') {
         const category = args[0] || 'voice';
         if (!['voice', 'messages', 'gaming'].includes(category)) {
-          return message.reply('Kategori tidak valid! Gunakan: `pan!leaderboard voice|messages|gaming`');
+          return message.reply('Kategori tidak valid. Silakan gunakan format: `pan!leaderboard voice|messages|gaming`');
         }
         
         const rows = db.getLeaderboard(guildId, category, 10);
@@ -61,7 +61,7 @@ module.exports = {
           .setTimestamp();
 
         if (category === 'voice') {
-          embed.setTitle('🎙️ Peringkat Server: Nongkrong VC Terlama');
+          embed.setTitle('🎙️ Peringkat Server: Durasi Sesi Voice Terlama');
           let desc = '';
           for (let i = 0; i < rows.length; i++) {
             const user = await client.users.fetch(rows[i].user_id).catch(() => null);
@@ -69,9 +69,9 @@ module.exports = {
             const hrs = Math.round((rows[i].score / 3600) * 100) / 100;
             desc += `**#${i + 1}** - ${name} : \`${hrs} jam\`\n`;
           }
-          embed.setDescription(desc || 'Belum ada data voice untuk server ini.');
+          embed.setDescription(desc || 'Belum ada data aktivitas Voice untuk server ini.');
         } else if (category === 'messages') {
-          embed.setTitle('💬 Peringkat Server: Chat Pesan Teraktif');
+          embed.setTitle('💬 Peringkat Server: Pengirim Pesan Teks Teraktif');
           let desc = '';
           for (let i = 0; i < rows.length; i++) {
             const user = await client.users.fetch(rows[i].user_id).catch(() => null);
@@ -80,15 +80,15 @@ module.exports = {
           }
           embed.setDescription(desc || 'Belum ada data pesan untuk server ini.');
         } else if (category === 'gaming') {
-          embed.setTitle('🎮 Peringkat Server: Gaming Sessions Teraktif');
+          embed.setTitle('🎮 Peringkat Server: Durasi Bermain Game Terlama');
           let desc = '';
           for (let i = 0; i < rows.length; i++) {
             const user = await client.users.fetch(rows[i].user_id).catch(() => null);
             const name = user ? user.username : `User ID: ${rows[i].user_id}`;
             const hrs = Math.round((rows[i].score / 3600) * 100) / 100;
-            desc += `**#${i + 1}** - ${name} : \`${hrs} jam total gaming\`\n`;
+            desc += `**#${i + 1}** - ${name} : \`${hrs} jam total bermain game\`\n`;
           }
-          embed.setDescription(desc || 'Belum ada data game terdeteksi.');
+          embed.setDescription(desc || 'Belum ada data bermain game yang terdeteksi.');
         }
 
         return message.reply({ embeds: [embed] });
@@ -101,16 +101,16 @@ module.exports = {
 
         const embed = new EmbedBuilder()
           .setColor(settings.embed_color || '#6366f1')
-          .setTitle(`🏆 Server Badges & Achievements: ${targetUser.username}`)
+          .setTitle(`🏆 Lencana & Pencapaian Server: ${targetUser.username}`)
           .setThumbnail(targetUser.displayAvatarURL({ dynamic: true }))
-          .setDescription('Selesaikan tantangan server berikut untuk membuka lencana khusus!')
-          .setFooter({ text: 'Mainkan game, nongkrong VC, dan ngobrol aktif untuk membuka lencana.' })
+          .setDescription('Selesaikan tantangan server berikut untuk membuka lencana pencapaian eksklusif!')
+          .setFooter({ text: 'Aktiflah bermain game, gunakan Voice, dan kirimkan pesan untuk membuka lencana.' })
           .setTimestamp();
 
         Object.entries(ACHIEVEMENTS_METADATA).forEach(([id, meta]) => {
           const isUnlocked = unlockedSet.has(id);
           const title = `${isUnlocked ? '✅' : '🔒'} ${meta.emoji} ${meta.name}`;
-          const desc = `_${meta.desc}_ - **${isUnlocked ? 'DIBUKA' : 'TERKUNCI'}**`;
+          const desc = `_${meta.desc}_ - **${isUnlocked ? 'TERBUKA' : 'TERKUNCI'}**`;
           embed.addFields({ name: title, value: desc, inline: false });
         });
 
@@ -123,10 +123,10 @@ module.exports = {
           .setTitle('🤖 Daftar Command PanBot')
           .setDescription('Berikut adalah daftar command yang tersedia untuk server ini:')
           .addFields(
-            { name: '📊 Statistik & Info', value: '`pan!stats [@user]` - Lihat statistik user\n`pan!leaderboard [voice|messages|gaming]` - Lihat peringkat server\n`pan!achievements [@user]` - Lihat lencana/badges' },
-            { name: '⚙️ Admin Configuration', value: '`pan!setlog <#channel>` - Atur channel tujuan log\n`pan!log <enable|disable> <moderation|voice|member|server|activity>` - Nyalakan/Matikan tipe log\n`pan!ignore <#channel>` - Abaikan channel dari statistik/log\n`pan!unignore <#channel>` - Hapus dari daftar abaikan\n`pan!setcolor <hex_code>` - Ubah warna embed log (contoh: `#ff0000`)\n`pan!status` - Cek konfigurasi server saat ini' }
+            { name: '📊 Statistik & Informasi', value: '`pan!stats [@user]` - Menampilkan statistik pengguna\n`pan!leaderboard [voice|messages|gaming]` - Menampilkan peringkat server\n`pan!achievements [@user]` - Menampilkan lencana pencapaian' },
+            { name: '⚙️ Konfigurasi Admin', value: '`pan!setlog <#channel>` - Mengatur saluran tujuan log\n`pan!log <enable|disable> <kategori>` - Mengaktifkan atau menonaktifkan kategori log\n`pan!ignore <#channel>` - Mengabaikan saluran dari pencatatan log/statistik\n`pan!unignore <#channel>` - Menghapus saluran dari daftar abaikan\n`pan!setcolor <hex_code>` - Mengubah warna embed log (contoh: `#ff0000`)\n`pan!status` - Memeriksa konfigurasi server saat ini' }
           )
-          .setFooter({ text: 'Dibuat dengan ❤️ oleh Logging System' })
+          .setFooter({ text: 'Sistem Logger & Analitik Server' })
           .setTimestamp();
         return message.reply({ embeds: [embed] });
       }
@@ -137,7 +137,7 @@ module.exports = {
       const isAdminCommand = ['setlog', 'log', 'ignore', 'unignore', 'setcolor', 'status'].includes(commandName);
       if (isAdminCommand) {
         if (!message.member.permissions.has(PermissionsBitField.Flags.ManageGuild) && !message.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
-          return message.reply('❌ Kamu tidak memiliki izin (Manage Server / Administrator) untuk menggunakan command pengaturan ini.');
+          return message.reply('❌ Anda tidak memiliki izin (Manage Server / Administrator) yang diperlukan untuk menggunakan perintah pengaturan ini.');
         }
       }
 
@@ -145,17 +145,17 @@ module.exports = {
         const cats = JSON.parse(settings.categories_enabled || '{}');
         const ign = JSON.parse(settings.ignored_channels || '[]');
         
-        const catStr = Object.entries(cats).map(([k, v]) => `• **${k}**: ${v ? '✅ Aktif' : '❌ Mati'}`).join('\n') || 'Belum ada pengaturan spesifik (default: semua aktif)';
+        const catStr = Object.entries(cats).map(([k, v]) => `• **${k}**: ${v ? '✅ Aktif' : '❌ Nonaktif'}`).join('\n') || 'Belum ada pengaturan spesifik (bawaan: semua aktif)';
         const ignStr = ign.map(id => `<#${id}>`).join(', ') || 'Tidak ada';
 
         const embed = new EmbedBuilder()
           .setColor(settings.embed_color || '#6366f1')
-          .setTitle('⚙️ Konfigurasi Server Log')
+          .setTitle('⚙️ Konfigurasi Log Server')
           .addFields(
-            { name: 'Log Channel', value: settings.log_channel_id ? `<#${settings.log_channel_id}>` : 'Belum diatur' },
+            { name: 'Saluran Log', value: settings.log_channel_id ? `<#${settings.log_channel_id}>` : 'Belum diatur' },
             { name: 'Warna Embed', value: `\`${settings.embed_color || '#6366f1'}\`` },
             { name: 'Kategori Log', value: catStr },
-            { name: 'Channel Diabaikan', value: ignStr }
+            { name: 'Saluran Diabaikan', value: ignStr }
           )
           .setTimestamp();
         return message.reply({ embeds: [embed] });
@@ -163,10 +163,10 @@ module.exports = {
 
       if (commandName === 'setlog') {
         const channel = message.mentions.channels.first();
-        if (!channel) return message.reply('❌ Harap tag channel yang ingin digunakan, contoh: `pan!setlog #mod-logs`');
+        if (!channel) return message.reply('❌ Harap tandai (tag) saluran yang ingin digunakan, contoh: `pan!setlog #mod-logs`');
         
         db.setGuildSettings(guildId, { log_channel_id: channel.id });
-        return message.reply(`✅ Berhasil mengatur log channel ke ${channel}`);
+        return message.reply(`✅ Berhasil mengatur saluran log utama ke ${channel}`);
       }
 
       if (commandName === 'setcolor') {
@@ -175,46 +175,46 @@ module.exports = {
           return message.reply('❌ Harap masukkan kode hex warna yang valid, contoh: `pan!setcolor #ff0000`');
         }
         db.setGuildSettings(guildId, { embed_color: color });
-        return message.reply({ embeds: [new EmbedBuilder().setColor(color).setDescription(`✅ Warna embed log diubah ke \`${color}\``)] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor(color).setDescription(`✅ Warna embed log berhasil diubah menjadi \`${color}\``)] });
       }
 
       if (commandName === 'log') {
         const action = args[0]?.toLowerCase();
         const category = args[1]?.toLowerCase();
-        const validCats = ['moderation', 'voice', 'member', 'server', 'activity'];
+        const validCats = ['moderation', 'voice_join_leave', 'voice_mute_deafen', 'member', 'server', 'gaming_activity', 'spotify_activity'];
         
         if (!['enable', 'disable'].includes(action) || !validCats.includes(category)) {
-          return message.reply(`❌ Format salah! Gunakan:\n\`pan!log <enable|disable> <${validCats.join('|')}>\``);
+          return message.reply(`❌ Format salah. Harap gunakan format:\n\`pan!log <enable|disable> <${validCats.join('|')}>\``);
         }
 
         const cats = JSON.parse(settings.categories_enabled || '{}');
         cats[category] = (action === 'enable');
         db.setGuildSettings(guildId, { categories_enabled: JSON.stringify(cats) });
         
-        return message.reply(`✅ Log kategori **${category}** berhasil di-${action === 'enable' ? 'aktifkan' : 'matikan'}.`);
+        return message.reply(`✅ Kategori log **${category}** berhasil ${action === 'enable' ? 'diaktifkan' : 'dinonaktifkan'}.`);
       }
 
       if (commandName === 'ignore') {
         const channel = message.mentions.channels.first();
-        if (!channel) return message.reply('❌ Harap tag channel yang ingin diabaikan, contoh: `pan!ignore #general`');
+        if (!channel) return message.reply('❌ Harap tandai (tag) saluran yang ingin diabaikan, contoh: `pan!ignore #general`');
 
         const ign = JSON.parse(settings.ignored_channels || '[]');
         if (!ign.includes(channel.id)) {
           ign.push(channel.id);
           db.setGuildSettings(guildId, { ignored_channels: JSON.stringify(ign) });
         }
-        return message.reply(`✅ Channel ${channel} sekarang diabaikan dari log & statistik.`);
+        return message.reply(`✅ Saluran ${channel} kini diabaikan dari pencatatan log dan statistik.`);
       }
 
       if (commandName === 'unignore') {
         const channel = message.mentions.channels.first();
-        if (!channel) return message.reply('❌ Harap tag channel, contoh: `pan!unignore #general`');
+        if (!channel) return message.reply('❌ Harap tandai (tag) saluran, contoh: `pan!unignore #general`');
 
         let ign = JSON.parse(settings.ignored_channels || '[]');
         ign = ign.filter(id => id !== channel.id);
         db.setGuildSettings(guildId, { ignored_channels: JSON.stringify(ign) });
         
-        return message.reply(`✅ Channel ${channel} tidak lagi diabaikan.`);
+        return message.reply(`✅ Saluran ${channel} tidak lagi diabaikan.`);
       }
     }
     

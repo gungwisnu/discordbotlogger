@@ -85,7 +85,7 @@ function Sidebar() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <SidebarLink to="/dashboard" icon="⚙️">Konfigurasi Log</SidebarLink>
           <SidebarLink to="/logs" icon="📋">Audit Logs Feed</SidebarLink>
-          <SidebarLink to="/leaderboard" icon="🏆">Analytics & Ranks</SidebarLink>
+          <SidebarLink to="/leaderboard" icon="🏆">Analisis & Peringkat</SidebarLink>
         </div>
       </div>
 

@@ -65,7 +65,7 @@ export default function Logs() {
       {/* Header Panel */}
       <div>
         <h2 style={{ fontSize: '2rem', fontFamily: 'var(--font-display)', color: 'white' }}>📋 Audit Logs Feed</h2>
-        <p style={{ color: 'hsl(var(--text-secondary))', marginTop: '4px' }}>Log riwayat moderasi server dari database SQLite secara waktu-nyata.</p>
+        <p style={{ color: 'hsl(var(--text-secondary))', marginTop: '4px' }}>Log riwayat moderasi server dari basis data secara real-time.</p>
       </div>
 
       {/* Control Filters Bar */}
@@ -73,14 +73,14 @@ export default function Logs() {
         <div style={{ position: 'relative', flex: 1, minWidth: '240px' }}>
           <input 
             type="text"
-            placeholder="🔍 Cari berdasarkan aksi, user ID, moderator, atau alasan..."
+            placeholder="🔍 Cari berdasarkan aksi, ID pengguna, moderator, atau alasan..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="input-glass"
           />
         </div>
         <div style={{ fontSize: '0.85rem', color: 'hsl(var(--text-muted))' }}>
-          Menampilkan {filteredLogs.length} hasil dari total {total} log tersimpan
+          Menampilkan {filteredLogs.length} hasil dari total {total} log yang tersimpan
         </div>
       </div>
 
@@ -136,7 +136,7 @@ export default function Logs() {
                 {/* Event Contents Detail */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <div style={{ fontSize: '0.95rem', color: 'white', lineHeight: '1.4' }}>
-                    <strong>User ID:</strong> <span style={{ fontFamily: 'monospace', color: 'hsl(var(--accent-cyan))' }}>{log.user_id}</span>
+                    <strong>ID Pengguna:</strong> <span style={{ fontFamily: 'monospace', color: 'hsl(var(--accent-cyan))' }}>{log.user_id}</span>
                     <span style={{ color: 'hsl(var(--text-muted))', margin: '0 8px' }}>•</span>
                     <strong>Mod:</strong> <span style={{ fontFamily: 'monospace' }}>{log.executor_id}</span>
                   </div>
@@ -188,9 +188,9 @@ export default function Logs() {
         </div>
       ) : (
         <div className="glass-panel" style={{ padding: '40px', textAlign: 'center' }}>
-          <h3>Tidak Ada Logs Ditemukan</h3>
+          <h3>Tidak Ada Catatan Log Yang Ditemukan</h3>
           <p style={{ marginTop: '10px', color: 'hsl(var(--text-secondary))' }}>
-            Belum ada catatan aktivitas moderasi atau filter pencarian tidak membuahkan hasil.
+            Belum ada catatan aktivitas moderasi atau pencarian Anda tidak membuahkan hasil.
           </p>
         </div>
       )}

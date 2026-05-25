@@ -21,8 +21,6 @@ module.exports = {
       .setTimestamp()
       .setFooter({ text: `${newPresence.member.user.username}: ${userId}` });
 
-    let logged = false;
-
     // Case 1: Stopped playing old game
     if (oldActivity && (!newActivity || oldActivity.name !== newActivity.name)) {
       const session = activeGamingSessions[key];
@@ -38,8 +36,9 @@ module.exports = {
       }
 
       embed.setColor('#6b7280') // Neutral grey
-        .setDescription(`### **🎮 Berhenti Bermain Game**\n${newPresence.member} selesai bermain **${oldActivity.name}**${durationStr}.`);
-      logged = true;
+        .setDescription(`### **🎮 Selesai Bermain Game**\n${newPresence.member} telah selesai bermain **${oldActivity.name}**${durationStr}.`);
+      
+      sendLog(guildId, 'gaming_activity', embed);
     }
 
     // Case 2: Started playing a game (or changed to a new game)
@@ -58,12 +57,13 @@ module.exports = {
       };
 
       embed.setColor('#10b981') // Green
-        .setDescription(`### **🎮 Mulai Bermain Game**\n${newPresence.member} mulai bermain **${newActivity.name}**.`);
+        .setDescription(`### **🎮 Mulai Bermain Game**\n${newPresence.member} telah mulai bermain **${newActivity.name}**.`);
       
       if (newActivity.details) {
-        embed.addFields({ name: 'Keterangan', value: `\`${newActivity.details}\` ${newActivity.state ? `- ${newActivity.state}` : ''}` });
+        embed.addFields({ name: 'Detail Aktivitas', value: `\`${newActivity.details}\` ${newActivity.state ? `- ${newActivity.state}` : ''}` });
       }
-      logged = true;
+      
+      sendLog(guildId, 'gaming_activity', embed);
     }
 
     // Case 3: Spotify Rich Presence tracking
@@ -72,7 +72,7 @@ module.exports = {
 
     if (newSpotify && (!oldSpotify || oldSpotify.details !== newSpotify.details)) {
       embed.setColor('#1db954') // Spotify green
-        .setDescription(`### **🎵 Spotify Playing**\n${newPresence.member} sedang mendengarkan lagu`)
+        .setDescription(`### **🎵 Mendengarkan Spotify**\n${newPresence.member} sedang mendengarkan musik`)
         .addFields(
           { name: 'Judul Lagu', value: `**${newSpotify.details}**`, inline: true },
           { name: 'Artis', value: `*${newSpotify.state}*`, inline: true }
@@ -83,11 +83,8 @@ module.exports = {
         const albumId = newSpotify.assets.largeImage.replace('spotify:', '');
         embed.setThumbnail(`https://i.scdn.co/image/${albumId}`);
       }
-      logged = true;
-    }
-
-    if (logged) {
-      sendLog(guildId, 'activity', embed);
+      
+      sendLog(guildId, 'spotify_activity', embed);
     }
   }
 };

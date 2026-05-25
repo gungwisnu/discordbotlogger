@@ -13,7 +13,7 @@ module.exports = {
     const executor = await guild.client.users.fetch(executorId).catch(() => null);
     const executorName = executor ? executor.username : 'Unknown';
     const executorText = executor ? `${executor}` : `Admin ID: \`${executorId}\``;
-    const reasonText = reason || 'Tidak ada alasan diberikan.';
+    const reasonText = reason || 'Tidak ada alasan yang diberikan.';
 
     const embed = new EmbedBuilder()
       .setTimestamp()
@@ -29,9 +29,9 @@ module.exports = {
       const name = target ? `${target}` : `User ID: \`${targetId}\``;
       
       embed.setColor('#ef4444') // Solid Red
-        .setDescription(`### **🚫 Member Dibanned**`)
+        .setDescription(`### **🚫 Anggota Diblokir (Banned)**`)
         .addFields(
-          { name: 'Target Member', value: name, inline: true },
+          { name: 'Target Anggota', value: name, inline: true },
           { name: 'Moderator', value: executorText, inline: true },
           { name: 'Alasan', value: reasonText }
         )
@@ -49,9 +49,9 @@ module.exports = {
       const name = target ? `${target}` : `User ID: \`${targetId}\``;
       
       embed.setColor('#10b981') // Emerald Green
-        .setDescription(`### **🔓 Member Di-unban**`)
+        .setDescription(`### **🔓 Pemblokiran Anggota Dicabut (Unbanned)**`)
         .addFields(
-          { name: 'Target Member', value: name, inline: true },
+          { name: 'Target Anggota', value: name, inline: true },
           { name: 'Moderator', value: executorText, inline: true },
           { name: 'Alasan', value: reasonText }
         )
@@ -69,9 +69,9 @@ module.exports = {
       const name = target ? `${target}` : `User ID: \`${targetId}\``;
       
       embed.setColor('#f97316') // Orange
-        .setDescription(`### **👢 Member Dikick**`)
+        .setDescription(`### **👢 Anggota Dikeluarkan (Kicked)**`)
         .addFields(
-          { name: 'Target Member', value: name, inline: true },
+          { name: 'Target Anggota', value: name, inline: true },
           { name: 'Moderator', value: executorText, inline: true },
           { name: 'Alasan', value: reasonText }
         )
@@ -98,9 +98,9 @@ module.exports = {
           const durationMin = Math.round((timeoutTime.getTime() - Date.now()) / 60000);
           
           embed.setColor('#d97706') // Dark Amber
-            .setDescription(`### **⏳ Member Di-timeout**`)
+            .setDescription(`### **⏳ Anggota Diberikan Timeout**`)
             .addFields(
-              { name: 'Target Member', value: name, inline: true },
+              { name: 'Target Anggota', value: name, inline: true },
               { name: 'Moderator', value: executorText, inline: true },
               { name: 'Durasi', value: `\`${durationMin} menit\` (Sampai: <t:${Math.floor(timeoutTime.getTime() / 1000)}:f>)` },
               { name: 'Alasan', value: reasonText }
@@ -112,11 +112,11 @@ module.exports = {
           isLogged = true;
         } else if (oldVal && !newVal) {
           embed.setColor('#3b82f6') // Blue
-            .setDescription(`### **⏰ Timeout Dihapus**`)
+            .setDescription(`### **⏰ Timeout Dicabut**`)
             .addFields(
-              { name: 'Target Member', value: name, inline: true },
+              { name: 'Target Anggota', value: name, inline: true },
               { name: 'Moderator', value: executorText, inline: true },
-              { name: 'Alasan', value: 'Timeout dibatalkan lebih awal.' }
+              { name: 'Alasan', value: 'Timeout dibatalkan sebelum waktunya.' }
             )
             .setFooter({ text: `${executorName}: ${executorId} | ${targetName}: ${targetId} | Audit Log: ${id}` });
           
@@ -201,9 +201,9 @@ module.exports = {
     // 7. ROLE CREATE / DELETE
     else if (action === AuditLogEvent.RoleCreate) {
       embed.setColor('#8b5cf6') // Purple
-        .setDescription(`### **🛡️ Role Dibuat**`)
+        .setDescription(`### **🛡️ Peran (Role) Dibuat**`)
         .addFields(
-          { name: 'Role', value: `<@&${targetId}>`, inline: true },
+          { name: 'Peran', value: `<@&${targetId}>`, inline: true },
           { name: 'Dibuat Oleh', value: executorText, inline: true }
         )
         .setFooter({ text: `${executorName}: ${executorId} | Role ID: ${targetId} | Audit Log: ${id}` });
@@ -215,9 +215,9 @@ module.exports = {
       const roleName = nameChange ? nameChange.old : `ID: ${targetId}`;
       
       embed.setColor('#ef4444')
-        .setDescription(`### **🛡️ Role Dihapus**`)
+        .setDescription(`### **🛡️ Peran (Role) Dihapus**`)
         .addFields(
-          { name: 'Nama Role', value: `**${roleName}**`, inline: true },
+          { name: 'Nama Peran', value: `**${roleName}**`, inline: true },
           { name: 'Dihapus Oleh', value: executorText, inline: true }
         )
         .setFooter({ text: `${executorName}: ${executorId} | @${roleName}: ${targetId} | Audit Log: ${id}` });
@@ -232,7 +232,7 @@ module.exports = {
       const roleNameActual = roleActual ? roleActual.name : 'Unknown';
 
       embed.setColor('#3b82f6')
-        .setDescription(`### **🛡️ Role Diperbarui**\n<@&${targetId}>`)
+        .setDescription(`### **🛡️ Peran (Role) Diperbarui**\n<@&${targetId}>`)
         .addFields(
           { name: 'Diperbarui Oleh', value: executorText }
         )

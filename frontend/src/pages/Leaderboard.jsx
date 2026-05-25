@@ -3,16 +3,16 @@ import { useApp } from '../App';
 
 // Achievements badge list
 const BADGES = [
-  { id: 'first_word', emoji: '💬', name: 'First Word', desc: 'Kirimkan pesan pertama di server.' },
-  { id: 'chatterbox_basic', emoji: '🗣️', name: 'Chatterbox I', desc: 'Kirimkan 100 pesan chat.' },
-  { id: 'chatterbox_elite', emoji: '📢', name: 'Chatterbox II', desc: 'Kirimkan 1.000 pesan chat.' },
-  { id: 'vc_rookie', emoji: '🎙️', name: 'VC Rookie', desc: 'Nongkrong VC selama 1 jam.' },
-  { id: 'vc_veteran', emoji: '👑', name: 'VC Veteran', desc: 'Nongkrong VC selama 10 jam.' },
-  { id: 'vc_deity', emoji: '♾️', name: 'VC Deity', desc: 'Nongkrong VC selama 100 jam.' },
-  { id: 'marathon_vc', emoji: '🏃', name: 'VC Marathoner', desc: 'VC tanpa putus minimal 5 jam.' },
-  { id: 'night_owl', emoji: '🦉', name: 'Night Owl', desc: 'VC aktif di jam kalong (02:00 - 05:00).' },
-  { id: 'gamer_initiate', emoji: '🎮', name: 'Gamer Initiate', desc: 'Deteksi bermain game minimal 1 jam.' },
-  { id: 'hardcore_gamer', emoji: '🔥', name: 'Hardcore Gamer', desc: 'Bermain satu judul game minimal 10 jam.' }
+  { id: 'first_word', emoji: '💬', name: 'First Word', desc: 'Mengirimkan pesan pertama di server.' },
+  { id: 'chatterbox_basic', emoji: '🗣️', name: 'Chatterbox I', desc: 'Mengirimkan 100 pesan teks.' },
+  { id: 'chatterbox_elite', emoji: '📢', name: 'Chatterbox II', desc: 'Mengirimkan 1.000 pesan teks.' },
+  { id: 'vc_rookie', emoji: '🎙️', name: 'Voice Rookie', desc: 'Aktivitas Voice selama 1 jam.' },
+  { id: 'vc_veteran', emoji: '👑', name: 'Voice Veteran', desc: 'Aktivitas Voice selama 10 jam.' },
+  { id: 'vc_deity', emoji: '♾️', name: 'Voice Deity', desc: 'Aktivitas Voice selama 100 jam.' },
+  { id: 'marathon_vc', emoji: '🏃', name: 'Voice Marathoner', desc: 'Aktivitas Voice tanpa terputus minimal selama 5 jam.' },
+  { id: 'night_owl', emoji: '🦉', name: 'Night Owl', desc: 'Aktivitas Voice secara aktif pada dini hari (02:00 - 05:00).' },
+  { id: 'gamer_initiate', emoji: '🎮', name: 'Gamer Initiate', desc: 'Deteksi aktivitas bermain game minimal selama 1 jam.' },
+  { id: 'hardcore_gamer', emoji: '🔥', name: 'Hardcore Gamer', desc: 'Mencapai bermain satu judul game minimal selama 10 jam.' }
 ];
 
 export default function Leaderboard() {
@@ -107,17 +107,17 @@ export default function Leaderboard() {
 
           <div className="glass-panel" style={{ padding: '20px', position: 'relative' }}>
             <span style={{ fontSize: '1.8rem', position: 'absolute', top: '20px', right: '20px' }}>🎙️</span>
-            <span style={{ color: 'hsl(var(--text-secondary))', fontSize: '0.82rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Total Voice Hours</span>
+            <span style={{ color: 'hsl(var(--text-secondary))', fontSize: '0.82rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Total Durasi Voice</span>
             <h2 style={{ fontSize: '2.2rem', color: 'white', marginTop: '8px', fontFamily: 'var(--font-display)' }}>
-              {analytics.total_voice_hours.toLocaleString()} hrs
+              {analytics.total_voice_hours.toLocaleString()} jam
             </h2>
           </div>
 
           <div className="glass-panel" style={{ padding: '20px', position: 'relative' }}>
             <span style={{ fontSize: '1.8rem', position: 'absolute', top: '20px', right: '20px' }}>🔊</span>
-            <span style={{ color: 'hsl(var(--text-secondary))', fontSize: '0.82rem', fontWeight: 'bold', textTransform: 'uppercase' }}>VC Aktif Saat Ini</span>
+            <span style={{ color: 'hsl(var(--text-secondary))', fontSize: '0.82rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Sesi Voice Aktif</span>
             <h2 style={{ fontSize: '2.2rem', color: 'hsl(var(--success-emerald))', marginTop: '8px', fontFamily: 'var(--font-display)' }}>
-              {analytics.active_voice_count} users
+              {analytics.active_voice_count} pengguna
             </h2>
           </div>
 
@@ -154,7 +154,7 @@ export default function Leaderboard() {
                   fontSize: '0.8rem'
                 }}
               >
-                VC
+                Voice
               </button>
               <button 
                 onClick={() => setCategory('messages')}

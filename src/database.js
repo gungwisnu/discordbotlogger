@@ -66,10 +66,12 @@ const DatabaseFunctions = {
         log_channel_id: null,
         categories_enabled: JSON.stringify({
           moderation: true,
-          voice: true,
+          voice_join_leave: true,
+          voice_mute_deafen: true,
           member: true,
           server: true,
-          activity: true
+          gaming_activity: true,
+          spotify_activity: true
         }),
         embed_color: '#6366f1',
         ignored_channels: '[]'
@@ -139,8 +141,8 @@ const DatabaseFunctions = {
     const userStats = data.user_history[guildId][userId];
     userStats.voice_time = (userStats.voice_time || 0) + duration;
 
-    // Check for VC Achievements
-    this.checkAndAwardVCStats(guildId, userId, duration);
+    // Check for Voice Achievements
+    this.checkAndAwardVoiceStats(guildId, userId, duration);
     
     triggerSave();
     return duration;
@@ -219,7 +221,7 @@ const DatabaseFunctions = {
     }
   },
 
-  checkAndAwardVCStats(guildId, userId, sessionDuration) {
+  checkAndAwardVoiceStats(guildId, userId, sessionDuration) {
     const stats = this.getUserStats(guildId, userId);
     const list = new Set(stats.achievements || []);
     let updated = false;
@@ -246,7 +248,7 @@ const DatabaseFunctions = {
       updated = true;
     }
 
-    // Check night owl (VC between 2 AM and 5 AM)
+    // Check night owl (Voice between 2 AM and 5 AM)
     const hr = new Date().getHours();
     if ((hr >= 2 && hr <= 5) && !list.has('night_owl')) {
       list.add('night_owl');
@@ -360,8 +362,8 @@ const DatabaseFunctions = {
     const totalMessages = list.reduce((a, b) => a + (b.msg_count || 0), 0);
     const totalVoiceSecs = list.reduce((a, b) => a + (b.voice_time || 0), 0);
     
-    // Active VC members right now
-    const activeVCs = data.voice_sessions.filter(s => s.guild_id === guildId && s.leave_time === null).length;
+    // Active Voice members right now
+    const activeVoices = data.voice_sessions.filter(s => s.guild_id === guildId && s.leave_time === null).length;
     
     // Mod log count
     const modCount = data.mod_logs.filter(l => l.guild_id === guildId).length;
@@ -383,7 +385,7 @@ const DatabaseFunctions = {
     return {
       total_messages: totalMessages,
       total_voice_hours: Math.round((totalVoiceSecs / 3600) * 10) / 10,
-      active_voice_count: activeVCs,
+      active_voice_count: activeVoices,
       total_moderations: modCount,
       tracked_users_count: list.length,
       popular_games: popularGames

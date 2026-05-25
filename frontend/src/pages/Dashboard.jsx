@@ -3,99 +3,131 @@ import { useApp } from '../App';
 
 const categoryDetails = {
   moderation: {
-    title: '📝 Moderation Log',
-    subtitle: 'Ban, unban, kick, timeout, delete & edit message.',
+    title: '📝 Log Moderasi',
+    subtitle: 'Ban, unban, kick, timeout, pesan dihapus & diedit.',
     desc: 'Melacak seluruh aktivitas penegakan disiplin dan moderasi konten untuk menjaga keamanan server Anda.',
     color: '#ef4444',
     events: [
-      { emoji: '🚫', title: 'Ban & Unban Member', text: 'Melacak pemblokiran dan pembatalan blokir beserta alasannya.' },
-      { emoji: '👢', title: 'Kick Member', text: 'Mencatat pengeluaran paksa anggota dari server oleh moderator.' },
-      { emoji: '⏳', title: 'Timeout (Mute sementara)', text: 'Melacak durasi pematikan mic/chat serta waktu pencabutannya.' },
-      { emoji: '🗑️', title: 'Pesan Dihapus (Single & Bulk)', text: 'Menyimpan teks pesan yang terhapus beserta lampirannya untuk mencegah abuse.' },
-      { emoji: '📝', title: 'Pesan Diedit', text: 'Melihat perbandingan pesan sebelum dan sesudah diedit.' }
+      { emoji: '🚫', title: 'Ban & Unban Anggota', text: 'Melacak pemblokiran dan pembatalan blokir beserta alasannya.' },
+      { emoji: '👢', title: 'Dikeluarkan (Kick) Anggota', text: 'Mencatat pengeluaran paksa anggota dari server oleh moderator.' },
+      { emoji: '⏳', title: 'Timeout Anggota', text: 'Melacak pemberian timeout serta pembatalannya.' },
+      { emoji: '🗑️', title: 'Pesan Dihapus (Masal & Tunggal)', text: 'Menyimpan teks pesan yang terhapus beserta lampirannya.' },
+      { emoji: '📝', title: 'Pesan Diedit', text: 'Melihat perbandingan pesan sebelum dan sesudah diubah.' }
     ],
     mockEmbed: {
       color: '#f43f5e',
       description: '### **🗑️ Pesan Dihapus**',
       fields: [
         { name: 'Pengirim', value: '@dipa', inline: true },
-        { name: 'Channel', value: '#umum', inline: true },
-        { name: 'Isi Pesan', value: 'Oi jangan spam di sini!' }
+        { name: 'Saluran', value: '#umum', inline: true },
+        { name: 'Isi Pesan', value: 'Harap tidak mengirimkan pesan spam di sini.' }
       ],
       footer: 'dipa: 333105200942546946 | #umum: 1486233076160925881'
     }
   },
-  voice: {
-    title: '🔊 Voice Log',
-    subtitle: 'Join, leave, pindah channel, mute/deaf, streaming.',
-    desc: 'Memantau aktivitas nongkrong, panggilan suara, hingga presentasi layar di voice channel server Anda.',
+  voice_join_leave: {
+    title: '🔊 Log Aktivitas Saluran Voice',
+    subtitle: 'Bergabung, meninggalkan, dan berpindah saluran voice.',
+    desc: 'Memantau aktivitas bergabung, keluar, serta perpindahan anggota di antara saluran Voice server Anda.',
     color: '#10b981',
     events: [
-      { emoji: '🔊', title: 'Join Voice', text: 'Mencatat jam masuk pengguna ke saluran suara.' },
-      { emoji: '🔇', title: 'Leave Voice', text: 'Menghitung durasi waktu pengguna nongkrong di voice.' },
-      { emoji: '🔄', title: 'Pindah Channel Voice', text: 'Mencatat perpindahan dari satu voice channel ke channel lain.' },
-      { emoji: '🎙️', title: 'Mute & Deaf (Self)', text: 'Melihat kapan pengguna mematikan microphone atau pendengaran.' },
-      { emoji: '🖥️', title: 'Screen Share & Camera', text: 'Mendapat pemberitahuan saat share screen dimulai atau diakhiri.' }
+      { emoji: '🔊', title: 'Bergabung ke Voice', text: 'Mencatat waktu bergabung anggota ke saluran Voice.' },
+      { emoji: '🔇', title: 'Meninggalkan Voice', text: 'Mencatat waktu keluar dan menghitung durasi sesi Voice.' },
+      { emoji: '🔄', title: 'Berpindah Saluran Voice', text: 'Melacak perpindahan anggota antar saluran Voice.' }
     ],
     mockEmbed: {
       color: '#10b981',
-      description: '### **🔊 Join Channel Voice**\n@dipa bergabung ke channel voice 📚┇Belajar!',
+      description: '### **🔊 Bergabung ke Saluran Voice**\n@dipa telah bergabung ke saluran Voice 📚┇Belajar!.',
+      footer: 'dipa: 333105200942546946 | #Belajar!: 1486233076160925881'
+    }
+  },
+  voice_mute_deafen: {
+    title: '🎙️ Log Status Suara & Media Voice',
+    subtitle: 'Mute, deafen, kamera video, dan screen sharing.',
+    desc: 'Melacak perubahan status mikrofon, pendengaran, kamera video, serta pembagian layar anggota di saluran Voice.',
+    color: '#3b82f6',
+    events: [
+      { emoji: '🎙️', title: 'Mikrofon (Mute/Unmute)', text: 'Mendeteksi penonaktifan atau pengaktifan mikrofon mandiri.' },
+      { emoji: '🎧', title: 'Pendengaran (Deaf/Undeaf)', text: 'Mendeteksi penonaktifan atau pengaktifan pendengaran mandiri.' },
+      { emoji: '📷', title: 'Kamera Video', text: 'Mencatat waktu pengaktifan atau penonaktifan kamera video.' },
+      { emoji: '🖥️', title: 'Screen Share (Berbagi Layar)', text: 'Mendeteksi dimulainya atau dihentikannya aktivitas berbagi layar.' }
+    ],
+    mockEmbed: {
+      color: '#8b5cf6',
+      description: '### **🎙️ Mikrofon Dinonaktifkan**\n@dipa menonaktifkan mikrofon mereka di 📚┇Belajar!.',
       footer: 'dipa: 333105200942546946 | #Belajar!: 1486233076160925881'
     }
   },
   member: {
-    title: '👤 Member Log',
-    subtitle: 'Member join/leave server, ganti nickname, role updates.',
-    desc: 'Melacak riwayat masuk-keluar anggota server serta perubahan identitas profil mereka.',
-    color: '#3b82f6',
+    title: '👤 Log Profil Anggota',
+    subtitle: 'Bergabung/keluar server, perubahan nama panggilan, pembaruan peran.',
+    desc: 'Melacak riwayat keanggotaan server serta perubahan nama panggilan lokal dan peran anggota.',
+    color: '#f59e0b',
     events: [
-      { emoji: '📥', title: 'Join Server', text: 'Melacak anggota baru lengkap dengan umur akun mereka.' },
-      { emoji: '📤', title: 'Keluar Server', text: 'Mencatat kepergian anggota beserta durasi mereka bergabung.' },
-      { emoji: '👤', title: 'Ganti Nickname', text: 'Mencatat perubahan nama samaran lokal di dalam server.' },
-      { emoji: '🛡️', title: 'Role Ditambah/Dihapus', text: 'Melacak modifikasi peran yang diberikan kepada anggota.' }
+      { emoji: '📥', title: 'Bergabung ke Server', text: 'Mencatat anggota baru lengkap dengan umur akun mereka.' },
+      { emoji: '📤', title: 'Meninggalkan Server', text: 'Mencatat kepergian anggota beserta durasi keanggotaan mereka.' },
+      { emoji: '👤', title: 'Nama Panggilan Berubah', text: 'Mencatat perubahan nama samaran (nickname) lokal di server.' },
+      { emoji: '🛡️', title: 'Peran (Role) Ditambah/Dihapus', text: 'Melacak penambahan atau pencabutan peran dari anggota.' }
     ],
     mockEmbed: {
       color: '#3b82f6',
-      description: '### **👤 Nickname Berubah**\n@dipa mengubah nickname mereka',
+      description: '### **👤 Nama Panggilan (Nickname) Berubah**\n@dipa mengubah nama panggilan mereka',
       fields: [
-        { name: 'Sebelum', value: 'Dipa Santai', inline: true },
-        { name: 'Sesudah', value: 'Dipa Belajar', inline: true }
+        { name: 'Sebelum', value: 'Dipa S.', inline: true },
+        { name: 'Sesudah', value: 'Dipa Voice', inline: true }
       ],
       footer: 'dipa: 333105200942546946'
     }
   },
   server: {
-    title: '⚙️ Server Configuration Log',
-    subtitle: 'Channel dibuat/dihapus, role dibuat/dihapus, server update.',
-    desc: 'Melacak modifikasi struktural server oleh admin atau bot agar keamanan tata kelola tetap terkontrol.',
+    title: '⚙️ Log Konfigurasi Server',
+    subtitle: 'Saluran dibuat/dihapus, peran dibuat/dihapus, emoji diperbarui.',
+    desc: 'Melacak modifikasi struktural server oleh administrator atau bot untuk menjaga keamanan tata kelola.',
     color: '#8b5cf6',
     events: [
-      { emoji: '📁', title: 'Channel Dibuat/Dihapus/Diedit', text: 'Melacak perubahan kategori, teks, atau voice channel.' },
-      { emoji: '🛡️', title: 'Role Dibuat/Dihapus/Diedit', text: 'Mencatat perubahan izin role, warna role, atau pembuatan role baru.' },
-      { emoji: '😀', title: 'Emoji Dibuat/Dihapus', text: 'Memantau penambahan emoji custom server.' }
+      { emoji: '📁', title: 'Saluran Dibuat/Dihapus/Diedit', text: 'Melacak perubahan kategori, teks, atau saluran Voice.' },
+      { emoji: '🛡️', title: 'Peran Dibuat/Dihapus/Diedit', text: 'Mencatat perubahan izin, warna, atau pembuatan peran baru.' },
+      { emoji: '😀', title: 'Emoji Dibuat/Dihapus', text: 'Memantau penambahan atau penghapusan emoji kustom server.' }
     ],
     mockEmbed: {
       color: '#10b981',
-      description: '### **📁 Channel Dibuat**',
+      description: '### **📁 Saluran Dibuat**',
       fields: [
-        { name: 'Nama Channel', value: '#pengumuman', inline: true },
+        { name: 'Nama Saluran', value: '#pengumuman', inline: true },
         { name: 'Dibuat Oleh', value: '@dipa', inline: true }
       ],
       footer: 'dipa: 333105200942546946 | #pengumuman: 1486233076160925881'
     }
   },
-  activity: {
-    title: '🎮 Presence & Activity Log',
-    subtitle: 'User mulai bermain game, ganti game, mendengarkan Spotify.',
-    desc: 'Mencatat game yang dimainkan dan musik Spotify yang didengarkan oleh anggota server secara real-time.',
-    color: '#1db954',
+  gaming_activity: {
+    title: '🎮 Log Aktivitas Bermain Game',
+    subtitle: 'Mulai dan selesai bermain game.',
+    desc: 'Mendeteksi dan mencatat waktu ketika anggota mulai atau selesai bermain judul game terintegrasi.',
+    color: '#f43f5e',
     events: [
-      { emoji: '🎮', title: 'Mulai/Berhenti Main Game', text: 'Mendeteksi judul game (seperti Mobile Legends, Valorant) beserta durasi main.' },
-      { emoji: '🎵', title: 'Mendengarkan Spotify', text: 'Melacak judul lagu dan artis yang sedang diputar.' }
+      { emoji: '🎮', title: 'Mulai/Selesai Bermain Game', text: 'Mendeteksi judul game (seperti Valorant, Minecraft) beserta durasi bermain.' }
     ],
     mockEmbed: {
       color: '#10b981',
-      description: '### **🎮 Mulai Bermain Game**\n@dipa mulai bermain **Minecraft**.',
+      description: '### **🎮 Mulai Bermain Game**\n@dipa telah mulai bermain **Minecraft**.',
+      footer: 'dipa: 333105200942546946'
+    }
+  },
+  spotify_activity: {
+    title: '🎵 Log Aktivitas Spotify',
+    subtitle: 'Mendengarkan musik Spotify.',
+    desc: 'Mendeteksi judul lagu dan artis yang sedang diputar oleh anggota server secara real-time.',
+    color: '#1db954',
+    events: [
+      { emoji: '🎵', title: 'Mendengarkan Spotify', text: 'Melacak judul lagu, album, dan artis yang sedang diputar.' }
+    ],
+    mockEmbed: {
+      color: '#1db954',
+      description: '### **🎵 Mendengarkan Spotify**\n@dipa sedang mendengarkan musik',
+      fields: [
+        { name: 'Judul Lagu', value: '**Bohemian Rhapsody**', inline: true },
+        { name: 'Artis', value: '*Queen*', inline: true }
+      ],
       footer: 'dipa: 333105200942546946'
     }
   }
@@ -109,10 +141,12 @@ export default function Dashboard() {
   const [message, setMessage] = useState('');
   const [expandedCats, setExpandedCats] = useState({
     moderation: false,
-    voice: false,
+    voice_join_leave: false,
+    voice_mute_deafen: false,
     member: false,
     server: false,
-    activity: false
+    gaming_activity: false,
+    spotify_activity: false
   });
 
   // Fetch settings & channels list when selected guild changes
@@ -186,7 +220,7 @@ export default function Dashboard() {
       <div className="glass-panel" style={{ padding: '40px', textAlign: 'center' }}>
         <h2>Server Belum Terkoneksi</h2>
         <p style={{ marginTop: '10px', color: 'hsl(var(--text-secondary))' }}>
-          Anda tidak memiliki server di mana bot Discord terpasang.
+          Anda tidak memiliki server yang terhubung dengan bot Discord.
         </p>
       </div>
     );
@@ -199,7 +233,7 @@ export default function Dashboard() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
         <div>
           <h2 style={{ fontSize: '2rem', fontFamily: 'var(--font-display)', color: 'white' }}>⚙️ Konfigurasi Server</h2>
-          <p style={{ color: 'hsl(var(--text-secondary))', marginTop: '4px' }}>Sesuaikan channel log dan kategori event untuk bot Anda.</p>
+          <p style={{ color: 'hsl(var(--text-secondary))', marginTop: '4px' }}>Sesuaikan saluran log dan kategori peristiwa untuk bot Anda.</p>
         </div>
 
         {/* Guild Switching Dropdown */}
@@ -231,9 +265,9 @@ export default function Dashboard() {
             
             {/* General Log Target Channel */}
             <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <h3 style={{ fontSize: '1.25rem', color: 'white' }}>🎯 Channel Log Utama</h3>
+              <h3 style={{ fontSize: '1.25rem', color: 'white' }}>🎯 Saluran Log Utama</h3>
               <p style={{ fontSize: '0.88rem', color: 'hsl(var(--text-secondary))' }}>
-                Seluruh aktivitas server yang dipantau akan dikirimkan sebagai pesan embed ke channel ini.
+                Seluruh aktivitas server yang dipantau akan dikirimkan sebagai pesan embed ke saluran ini.
               </p>
               
               <select
@@ -242,7 +276,7 @@ export default function Dashboard() {
                 className="input-glass"
                 style={{ cursor: 'pointer' }}
               >
-                <option value="" style={{ backgroundColor: 'black' }}>-- Pilih Text Channel --</option>
+                <option value="" style={{ backgroundColor: 'black' }}>-- Pilih Saluran Teks --</option>
                 {channels.map(ch => (
                   <option key={ch.id} value={ch.id} style={{ backgroundColor: 'black' }}>
                     #{ch.name}
@@ -254,7 +288,7 @@ export default function Dashboard() {
             {/* Event Category Cards */}
             <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <h3 style={{ fontSize: '1.25rem', color: 'white' }}>📋 Aktifkan Kategori Log</h3>
-              <p style={{ fontSize: '0.88rem', color: 'hsl(var(--text-secondary))' }}>Tentukan kategori mana saja yang ingin dicatat oleh bot Anda.</p>
+              <p style={{ fontSize: '0.88rem', color: 'hsl(var(--text-secondary))' }}>Tentukan kategori log yang ingin dicatat oleh bot Anda.</p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 
@@ -290,7 +324,7 @@ export default function Dashboard() {
                                 fontWeight: 'bold'
                               }}
                             >
-                              {isEnabled ? 'Aktif' : 'Mati'}
+                              {isEnabled ? 'Aktif' : 'Nonaktif'}
                             </span>
                           </div>
                           <span style={{ fontSize: '0.82rem', color: 'hsl(var(--text-muted))', display: 'block', marginTop: '4px' }}>
@@ -315,7 +349,7 @@ export default function Dashboard() {
                               backgroundColor: isExpanded ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.02)'
                             }}
                           >
-                            <span>ℹ️</span> {isExpanded ? 'Tutup Contoh' : 'Penjelasan & Contoh'}
+                            <span>ℹ️</span> {isExpanded ? 'Tutup Deskripsi' : 'Penjelasan & Contoh'}
                           </button>
 
                           {/* Custom Premium Switch Toggle */}
@@ -489,7 +523,7 @@ export default function Dashboard() {
             <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <h3 style={{ fontSize: '1.25rem', color: 'white' }}>🎨 Warna Tema Embed</h3>
               <p style={{ fontSize: '0.82rem', color: 'hsl(var(--text-secondary))' }}>
-                Warna garis tepi embed pesan logs yang akan muncul di Discord Anda.
+                Warna garis tepi embed pesan log yang akan ditampilkan di Discord Anda.
               </p>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -528,10 +562,10 @@ export default function Dashboard() {
                   boxShadow: '0 4px 10px rgba(0,0,0,0.2)'
                 }}>
                   <div style={{ fontSize: '0.92rem', fontWeight: 'bold', color: 'white', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    🔊 Join Channel Voice
+                    🔊 Bergabung ke Saluran Voice
                   </div>
                   <p style={{ fontSize: '0.8rem', color: '#dbdee1', lineHeight: '1.4' }}>
-                    <span style={{ backgroundColor: 'rgba(88, 101, 242, 0.15)', color: '#5865f2', padding: '0 4px', borderRadius: '3px', fontWeight: '500' }}>@dipa</span> bergabung ke channel voice <span style={{ backgroundColor: 'rgba(88, 101, 242, 0.15)', color: '#5865f2', padding: '0 4px', borderRadius: '3px', fontWeight: '500' }}>📚┇Belajar!</span>
+                    <span style={{ backgroundColor: 'rgba(88, 101, 242, 0.15)', color: '#5865f2', padding: '0 4px', borderRadius: '3px', fontWeight: '500' }}>@dipa</span> telah bergabung ke saluran Voice <span style={{ backgroundColor: 'rgba(88, 101, 242, 0.15)', color: '#5865f2', padding: '0 4px', borderRadius: '3px', fontWeight: '500' }}>📚┇Belajar!</span>
                   </p>
                   <div style={{ marginTop: '12px', fontSize: '0.7rem', color: '#949ba4', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '8px' }}>
                     dipa: 333105200942546946 | #Belajar!: 1486233076160925881 • Hari ini pukul 03:10

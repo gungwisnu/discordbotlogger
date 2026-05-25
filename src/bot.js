@@ -23,19 +23,19 @@ client.commands = new Collection();
 const commands = [
   {
     name: 'stats',
-    description: 'Tampilkan statistik voice time, game time, dan chat pesan Anda di server.',
+    description: 'Menampilkan statistik durasi Voice, durasi bermain game, dan jumlah pesan teks Anda di server.',
     options: [
       {
         name: 'user',
         type: 6, // USER type
-        description: 'Pilih member untuk melihat statistik mereka.',
+        description: 'Pilih anggota untuk melihat statistik mereka.',
         required: false
       }
     ]
   },
   {
     name: 'leaderboard',
-    description: 'Lihat peringkat server berdasarkan aktivitas.',
+    description: 'Menampilkan peringkat server berdasarkan aktivitas anggota.',
     options: [
       {
         name: 'kategori',
@@ -43,21 +43,21 @@ const commands = [
         description: 'Kategori peringkat yang ingin dilihat.',
         required: true,
         choices: [
-          { name: 'Voice Time (Nongkrong VC)', value: 'voice' },
-          { name: 'Pesan Chat terbanyak', value: 'messages' },
-          { name: 'Gamer Teraktif (Gaming Time)', value: 'gaming' }
+          { name: 'Durasi Sesi Voice', value: 'voice' },
+          { name: 'Pesan Teks Terbanyak', value: 'messages' },
+          { name: 'Waktu Bermain Game Teraktif', value: 'gaming' }
         ]
       }
     ]
   },
   {
     name: 'achievements',
-    description: 'Tampilkan lencana/badges pencapaian server Anda.',
+    description: 'Menampilkan lencana pencapaian server Anda.',
     options: [
       {
         name: 'user',
         type: 6, // USER type
-        description: 'Pilih member untuk melihat lencana mereka.',
+        description: 'Pilih anggota untuk melihat lencana mereka.',
         required: false
       }
     ]
@@ -67,15 +67,15 @@ const commands = [
 // Map achievements definition
 const ACHIEVEMENTS_METADATA = {
   first_word: { emoji: '💬', name: 'First Word', desc: 'Mengirimkan pesan pertama di server.' },
-  chatterbox_basic: { emoji: '🗣️', name: 'Chatterbox I', desc: 'Mengirimkan 100 pesan chat.' },
-  chatterbox_elite: { emoji: '📢', name: 'Chatterbox II', desc: 'Mengirimkan 1,000 pesan chat.' },
-  vc_rookie: { emoji: '🎙️', name: 'VC Rookie', desc: 'Akumulasi nongkrong VC selama 1 jam.' },
-  vc_veteran: { emoji: '👑', name: 'VC Veteran', desc: 'Akumulasi nongkrong VC selama 10 jam.' },
-  vc_deity: { emoji: '♾️', name: 'VC Deity', desc: 'Akumulasi nongkrong VC selama 100 jam.' },
-  marathon_vc: { emoji: '🏃', name: 'VC Marathoner', desc: 'Satu sesi VC tanpa putus minimal 5 jam.' },
-  night_owl: { emoji: '🦉', name: 'Night Owl', desc: 'Nongkrong VC aktif di jam kalong (02:00 - 05:00).' },
-  gamer_initiate: { emoji: '🎮', name: 'Gamer Initiate', desc: 'Bermain game terdeteksi minimal 1 jam.' },
-  hardcore_gamer: { emoji: '🔥', name: 'Hardcore Gamer', desc: 'Bermain satu judul game minimal selama 10 jam.' }
+  chatterbox_basic: { emoji: '🗣️', name: 'Chatterbox I', desc: 'Mengirimkan 100 pesan teks.' },
+  chatterbox_elite: { emoji: '📢', name: 'Chatterbox II', desc: 'Mengirimkan 1.000 pesan teks.' },
+  vc_rookie: { emoji: '🎙️', name: 'Voice Rookie', desc: 'Akumulasi aktivitas Voice selama 1 jam.' },
+  vc_veteran: { emoji: '👑', name: 'Voice Veteran', desc: 'Akumulasi aktivitas Voice selama 10 jam.' },
+  vc_deity: { emoji: '♾️', name: 'Voice Deity', desc: 'Akumulasi aktivitas Voice selama 100 jam.' },
+  marathon_vc: { emoji: '🏃', name: 'Voice Marathoner', desc: 'Satu sesi Voice tanpa terputus minimal selama 5 jam.' },
+  night_owl: { emoji: '🦉', name: 'Night Owl', desc: 'Aktivitas Voice secara aktif pada dini hari (02:00 - 05:00).' },
+  gamer_initiate: { emoji: '🎮', name: 'Gamer Initiate', desc: 'Deteksi aktivitas bermain game minimal selama 1 jam.' },
+  hardcore_gamer: { emoji: '🔥', name: 'Hardcore Gamer', desc: 'Mencapai akumulasi bermain satu judul game minimal selama 10 jam.' }
 };
 
 // Ready event handling & slash command registration
@@ -144,7 +144,7 @@ client.on('interactionCreate', async interaction => {
     const hrs = Math.round((stats.voice_time / 3600) * 100) / 100;
     
     // Process game activity text
-    let gameStatsStr = 'Tidak ada aktivitas game terdeteksi.';
+    let gameStatsStr = 'Tidak ada aktivitas bermain game yang terdeteksi.';
     const games = Object.entries(stats.gaming_time || {});
     if (games.length > 0) {
       gameStatsStr = games
@@ -162,12 +162,12 @@ client.on('interactionCreate', async interaction => {
       .setTitle(`📈 Aktivitas & Statistik: ${targetUser.username}`)
       .setThumbnail(targetUser.displayAvatarURL({ dynamic: true }))
       .addFields(
-        { name: '💬 Total Pesan Chat', value: `\`${stats.msg_count.toLocaleString()} pesan\``, inline: true },
-        { name: '🎙️ Total Waktu Voice VC', value: `\`${hrs} jam\``, inline: true },
-        { name: '🎮 Lencana/Badge Terbuka', value: `\`${(stats.achievements || []).length} / ${Object.keys(ACHIEVEMENTS_METADATA).length}\``, inline: true },
-        { name: '🕹️ Top Game Dimainkan', value: gameStatsStr }
+        { name: '💬 Total Pesan Teks', value: `\`${stats.msg_count.toLocaleString()} pesan\``, inline: true },
+        { name: '🎙️ Total Durasi Voice', value: `\`${hrs} jam\``, inline: true },
+        { name: '🏆 Lencana Terbuka', value: `\`${(stats.achievements || []).length} / ${Object.keys(ACHIEVEMENTS_METADATA).length}\``, inline: true },
+        { name: '🕹️ Game Terpopuler Dimainkan', value: gameStatsStr }
       )
-      .setFooter({ text: 'Dibuat dengan ❤️ oleh Logging & Analytics System', iconURL: client.user.displayAvatarURL() })
+      .setFooter({ text: 'Sistem Logger & Analitik Server', iconURL: client.user.displayAvatarURL() })
       .setTimestamp();
 
     await interaction.editReply({ embeds: [embed] });
@@ -182,11 +182,11 @@ client.on('interactionCreate', async interaction => {
 
     const embed = new EmbedBuilder()
       .setColor(settings.embed_color || '#6366f1')
-      .setFooter({ text: 'Dibuat dengan ❤️ oleh Logging & Analytics System', iconURL: client.user.displayAvatarURL() })
+      .setFooter({ text: 'Sistem Logger & Analitik Server', iconURL: client.user.displayAvatarURL() })
       .setTimestamp();
 
     if (category === 'voice') {
-      embed.setTitle('🎙️ Peringkat Server: Nongkrong VC Terlama');
+      embed.setTitle('🎙️ Peringkat Server: Durasi Sesi Voice Terlama');
       let desc = '';
       for (let i = 0; i < rows.length; i++) {
         const user = await client.users.fetch(rows[i].user_id).catch(() => null);
@@ -194,9 +194,9 @@ client.on('interactionCreate', async interaction => {
         const hrs = Math.round((rows[i].score / 3600) * 100) / 100;
         desc += `**#${i + 1}** - ${name} : \`${hrs} jam\`\n`;
       }
-      embed.setDescription(desc || 'Belum ada data voice untuk server ini.');
+      embed.setDescription(desc || 'Belum ada data aktivitas Voice untuk server ini.');
     } else if (category === 'messages') {
-      embed.setTitle('💬 Peringkat Server: Chat Pesan Teraktif');
+      embed.setTitle('💬 Peringkat Server: Pengirim Pesan Teks Teraktif');
       let desc = '';
       for (let i = 0; i < rows.length; i++) {
         const user = await client.users.fetch(rows[i].user_id).catch(() => null);
@@ -205,15 +205,15 @@ client.on('interactionCreate', async interaction => {
       }
       embed.setDescription(desc || 'Belum ada data pesan untuk server ini.');
     } else if (category === 'gaming') {
-      embed.setTitle('🎮 Peringkat Server: Gaming Sessions Teraktif');
+      embed.setTitle('🎮 Peringkat Server: Durasi Bermain Game Terlama');
       let desc = '';
       for (let i = 0; i < rows.length; i++) {
         const user = await client.users.fetch(rows[i].user_id).catch(() => null);
         const name = user ? user.username : `User ID: ${rows[i].user_id}`;
         const hrs = Math.round((rows[i].score / 3600) * 100) / 100;
-        desc += `**#${i + 1}** - ${name} : \`${hrs} jam total gaming\`\n`;
+        desc += `**#${i + 1}** - ${name} : \`${hrs} jam total bermain game\`\n`;
       }
-      embed.setDescription(desc || 'Belum ada data game terdeteksi.');
+      embed.setDescription(desc || 'Belum ada data bermain game yang terdeteksi.');
     }
 
     await interaction.editReply({ embeds: [embed] });
@@ -228,16 +228,16 @@ client.on('interactionCreate', async interaction => {
 
     const embed = new EmbedBuilder()
       .setColor(settings.embed_color || '#6366f1')
-      .setTitle(`🏆 Server Badges & Achievements: ${targetUser.username}`)
+      .setTitle(`🏆 Lencana & Pencapaian Server: ${targetUser.username}`)
       .setThumbnail(targetUser.displayAvatarURL({ dynamic: true }))
-      .setDescription('Selesaikan tantangan server berikut untuk membuka lencana khusus!')
-      .setFooter({ text: 'Mainkan game, nongkrong VC, dan ngobrol aktif untuk membuka lencana.', iconURL: client.user.displayAvatarURL() })
+      .setDescription('Selesaikan tantangan server berikut untuk membuka lencana pencapaian eksklusif!')
+      .setFooter({ text: 'Aktiflah bermain game, gunakan Voice, dan kirimkan pesan untuk membuka lencana.', iconURL: client.user.displayAvatarURL() })
       .setTimestamp();
 
     Object.entries(ACHIEVEMENTS_METADATA).forEach(([id, meta]) => {
       const isUnlocked = unlockedSet.has(id);
       const title = `${isUnlocked ? '✅' : '🔒'} ${meta.emoji} ${meta.name}`;
-      const desc = `_${meta.desc}_ - **${isUnlocked ? 'DIBUKA' : 'TERKUNCI'}**`;
+      const desc = `_${meta.desc}_ - **${isUnlocked ? 'TERBUKA' : 'TERKUNCI'}**`;
       embed.addFields({ name: title, value: desc, inline: false });
     });
 
@@ -254,7 +254,19 @@ async function sendLog(guildId, category, embed) {
   
   // Check if category is enabled
   const cats = JSON.parse(settings.categories_enabled || '{}');
-  if (cats[category] === false) return;
+  
+  // Fallback check for new granular categories to maintain backward compatibility
+  if (category === 'voice_join_leave' || category === 'voice_mute_deafen') {
+    if (cats[category] === false || (cats[category] === undefined && cats['voice'] === false)) {
+      return;
+    }
+  } else if (category === 'gaming_activity' || category === 'spotify_activity') {
+    if (cats[category] === false || (cats[category] === undefined && cats['activity'] === false)) {
+      return;
+    }
+  } else {
+    if (cats[category] === false) return;
+  }
 
   try {
     const guild = await client.guilds.fetch(guildId).catch(() => null);
