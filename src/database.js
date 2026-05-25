@@ -77,6 +77,66 @@ const DatabaseFunctions = {
         ignored_channels: '[]'
       };
     }
+
+    // Perform dynamic migration for newly introduced granular settings to maintain backward compatibility
+    try {
+      const cats = JSON.parse(row.categories_enabled || '{}');
+      let changed = false;
+
+      // Migrate legacy 'voice' category to split 'voice_join_leave' and 'voice_mute_deafen'
+      if (cats.voice !== undefined) {
+        if (cats.voice_join_leave === undefined) {
+          cats.voice_join_leave = cats.voice;
+          changed = true;
+        }
+        if (cats.voice_mute_deafen === undefined) {
+          cats.voice_mute_deafen = cats.voice;
+          changed = true;
+        }
+        delete cats.voice;
+        changed = true;
+      }
+
+      // Migrate legacy 'activity' category to split 'gaming_activity' and 'spotify_activity'
+      if (cats.activity !== undefined) {
+        if (cats.gaming_activity === undefined) {
+          cats.gaming_activity = cats.activity;
+          changed = true;
+        }
+        if (cats.spotify_activity === undefined) {
+          cats.spotify_activity = cats.activity;
+          changed = true;
+        }
+        delete cats.activity;
+        changed = true;
+      }
+
+      // Fill in default values for other missing keys if they don't exist
+      const defaults = {
+        moderation: true,
+        voice_join_leave: true,
+        voice_mute_deafen: true,
+        member: true,
+        server: true,
+        gaming_activity: true,
+        spotify_activity: true
+      };
+
+      for (const [k, v] of Object.entries(defaults)) {
+        if (cats[k] === undefined) {
+          cats[k] = v;
+          changed = true;
+        }
+      }
+
+      if (changed) {
+        row.categories_enabled = JSON.stringify(cats);
+        triggerSave();
+      }
+    } catch (e) {
+      console.error('[DATABASE] Gagal migrasi kategori guild categories_enabled:', e.message);
+    }
+
     return row;
   },
 
