@@ -12,41 +12,59 @@ module.exports = {
     const hasMention = mentionRegex.test(message.content);
 
     if (hasPrefix || hasMention) {
-      let args;
+      let commandString = '';
       if (hasPrefix) {
-        args = message.content.slice(prefix.length).trim().split(/ +/);
+        commandString = message.content.slice(prefix.length).trim();
       } else {
-        args = message.content.replace(mentionRegex, '').trim().split(/ +/);
+        commandString = message.content.replace(mentionRegex, '').trim();
+      }
+
+      const args = commandString.split(/ +/);
+      const firstArg = args[0] ? args[0].toLowerCase() : '';
+
+      const knownCommands = new Set([
+        'stats',
+        'leaderboard',
+        'achievements',
+        'help',
+        'status',
+        'setlog',
+        'setcolor',
+        'log',
+        'ignore',
+        'unignore'
+      ]);
+
+      const isExplicitAI = (firstArg === 'ask');
+      const isKnownCommand = knownCommands.has(firstArg);
+
+      // Route to DeepSeek AI if not a known command or if explicitly calling 'ask'
+      if (!isKnownCommand || isExplicitAI) {
+        let prompt = '';
+        if (isExplicitAI) {
+          prompt = commandString.slice(firstArg.length).trim();
+        } else {
+          prompt = commandString;
+        }
+
+        // Trigger typing state to indicate the bot is preparing the response (premium UX)
+        await message.channel.sendTyping();
+
+        try {
+          const { askAI } = require('../utils/ai');
+          const aiResponse = await askAI(prompt);
+          return message.reply(aiResponse);
+        } catch (error) {
+          console.error('Error handling AI response:', error);
+          if (error.message === 'API_KEY_NOT_CONFIGURED') {
+            return message.reply('⚠️ **Maaf, integrasi AI belum dikonfigurasi.** Administrator server harus menambahkan `DEEPSEEK_API_KEY` terlebih dahulu.');
+          }
+          return message.reply('⚠️ **Maaf, saya sedang mengalami gangguan saat terhubung ke otak AI saya.** Silakan coba beberapa saat lagi!');
+        }
       }
 
       const guildId = message.guild.id;
       const settings = db.getGuildSettings(guildId);
-
-      // Welcome introduction if bot is tagged with no commands
-      if (hasMention && (args.length === 0 || args[0] === '')) {
-        const introEmbed = new EmbedBuilder()
-          .setColor(settings.embed_color || '#6366f1')
-          .setTitle('👋 Halo! Saya adalah Sistem Logger & Analitik Server')
-          .setDescription('Saya dirancang khusus untuk memantau aktivitas server Anda secara terperinci, melacak durasi aktivitas Voice, mencatat waktu bermain game, serta merekam tindakan moderasi demi keamanan server.')
-          .addFields(
-            {
-              name: '📋 Kategori Pemantauan Utama',
-              value: '• **Log Voice**: Sesi bergabung, keluar, mute/deafen, kamera, dan berbagi layar secara real-time.\n• **Log Aktivitas**: Deteksi bermain game dan integrasi lagu Spotify secara real-time.\n• **Log Profil Anggota**: Perubahan nama panggilan (nickname), peran (role), bergabung, dan keluar server.\n• **Log Moderasi & Keamanan**: Rekaman tindakan ban, kick, timeout, pesan dihapus, dan pesan diedit.'
-            },
-            {
-              name: '🛠️ Perintah Utama (Gunakan prefix `pan!` atau tag saya)',
-              value: '• `pan!stats` atau `@Bot stats` - Menampilkan statistik aktivitas Anda.\n• `pan!leaderboard` atau `@Bot leaderboard` - Menampilkan peringkat teraktif server.\n• `pan!achievements` or `@Bot achievements` - Memeriksa lencana pencapaian Anda.\n• `pan!help` atau `@Bot help` - Menampilkan panduan konfigurasi administrator secara lengkap.'
-            },
-            {
-              name: '💡 Butuh Bantuan Lebih Lanjut?',
-              value: 'Silakan ketik perintah `pan!help` atau kunjungi dasbor web premium kami untuk mengonfigurasi saluran log secara praktis.'
-            }
-          )
-          .setFooter({ text: 'Sistem Logger & Analitik Server', iconURL: client.user.displayAvatarURL() })
-          .setTimestamp();
-
-        return message.reply({ embeds: [introEmbed] });
-      }
 
       const commandName = args.shift().toLowerCase();
       const targetUser = message.mentions.users.filter(u => u.id !== client.user.id).first() || message.author;
