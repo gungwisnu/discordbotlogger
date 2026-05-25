@@ -156,9 +156,12 @@ app.get('/api/auth/login', (req, res) => {
 
   // Dynamically determine redirect URI if not explicitly configured
   let rawRedirectUri = process.env.REDIRECT_URI;
-  if (!rawRedirectUri || rawRedirectUri === 'your_redirect_uri_here') {
+  const currentHost = req.get('host');
+  const isLocalHost = currentHost.includes('localhost') || currentHost.includes('127.0.0.1');
+
+  if (!rawRedirectUri || rawRedirectUri === 'your_redirect_uri_here' || (!isLocalHost && rawRedirectUri.includes('localhost'))) {
     const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-    rawRedirectUri = `${protocol}://${req.get('host')}/api/auth/callback`;
+    rawRedirectUri = `${protocol}://${currentHost}/api/auth/callback`;
   }
 
   const redirectUri = encodeURIComponent(rawRedirectUri);
@@ -177,11 +180,14 @@ app.get('/api/auth/callback', async (req, res) => {
 
   // Dynamically determine redirect base (dev vs prod)
   let redirectBase = process.env.FRONTEND_URL;
-  if (!redirectBase) {
+  const currentHost = req.get('host');
+  const isLocalHost = currentHost.includes('localhost') || currentHost.includes('127.0.0.1');
+
+  if (!redirectBase || (!isLocalHost && redirectBase.includes('localhost'))) {
     if (fs.existsSync(buildPath)) {
       // In production hosting (serving frontend and backend on the same port)
       const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-      redirectBase = `${protocol}://${req.get('host')}`;
+      redirectBase = `${protocol}://${currentHost}`;
     } else {
       // In local development
       redirectBase = 'http://localhost:5173';
@@ -190,8 +196,9 @@ app.get('/api/auth/callback', async (req, res) => {
 
   // Construct dynamic redirect URI for Discord swap code validation
   let rawRedirectUri = process.env.REDIRECT_URI;
-  if (!rawRedirectUri || rawRedirectUri === 'your_redirect_uri_here') {
-    rawRedirectUri = `${redirectBase}/api/auth/callback`;
+  if (!rawRedirectUri || rawRedirectUri === 'your_redirect_uri_here' || (!isLocalHost && rawRedirectUri.includes('localhost'))) {
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+    rawRedirectUri = `${protocol}://${currentHost}/api/auth/callback`;
   }
 
   if (!code) {
@@ -428,7 +435,7 @@ if (fs.existsSync(buildPath)) {
 // Start API Server
 function startServer() {
   app.listen(PORT, () => {
-    console.log(`API Web & OAuth2 Dashboard berjalan lancar di http://localhost:${PORT}`);
+    console.log(`Sistem Logger & Analitik: API Web & Dashboard berjalan lancar pada port ${PORT}`);
   });
 }
 
