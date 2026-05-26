@@ -25,7 +25,8 @@ module.exports = {
 
     const embed = new EmbedBuilder()
       .setColor('#10b981') // Green
-      .setDescription(`### **📥 Anggota Baru Bergabung**\n${member} telah bergabung ke dalam server.`)
+      .setTitle('📥 Anggota Baru Bergabung')
+      .setDescription(`${member} telah bergabung ke dalam server.`)
       .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
       .addFields(
         { name: 'Umur Akun', value: `\`${accountAgeDays} hari\` (Dibuat: <t:${Math.floor(member.user.createdTimestamp / 1000)}:R>)` },

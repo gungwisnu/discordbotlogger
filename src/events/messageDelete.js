@@ -15,7 +15,8 @@ module.exports = {
 
     const embed = new EmbedBuilder()
       .setColor('#f43f5e') // sleek red
-      .setDescription(`### **🗑️ Pesan Dihapus**`)
+      .setTitle('🗑️ Pesan Dihapus')
+      .setDescription(`Sebuah pesan teks telah dihapus dari saluran.`)
       .addFields(
         { name: 'Pengirim', value: `${message.author}`, inline: true },
         { name: 'Channel', value: `${message.channel}`, inline: true },

@@ -17,7 +17,8 @@ module.exports = {
 
     const embed = new EmbedBuilder()
       .setColor('#eab308') // sleek amber/yellow
-      .setDescription(`### **📝 Pesan Diedit**`)
+      .setTitle('📝 Pesan Diedit')
+      .setDescription(`Sebuah pesan teks telah disunting di saluran.`)
       .addFields(
         { name: 'Pengirim', value: `${newMessage.author}`, inline: true },
         { name: 'Channel', value: `${newMessage.channel}`, inline: true },

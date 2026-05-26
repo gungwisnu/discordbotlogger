@@ -41,7 +41,8 @@ module.exports = {
       }
 
       embed.setColor('#6b7280') // Neutral grey
-        .setDescription(`### **🎮 Selesai Bermain Game**\n${newPresence.member} telah selesai bermain **${oldActivity.name}**${durationStr}.`);
+        .setTitle('🎮 Selesai Bermain Game')
+        .setDescription(`${newPresence.member} telah selesai bermain **${oldActivity.name}**${durationStr}.`);
       
       sendLog(guildId, 'gaming_activity', embed);
     }
@@ -67,7 +68,8 @@ module.exports = {
       };
 
       embed.setColor('#10b981') // Green
-        .setDescription(`### **🎮 Mulai Bermain Game**\n${newPresence.member} telah mulai bermain **${newActivity.name}**.`);
+        .setTitle('🎮 Mulai Bermain Game')
+        .setDescription(`${newPresence.member} telah mulai bermain **${newActivity.name}**.`);
       
       if (newActivity.details) {
         embed.addFields({ name: 'Detail Aktivitas', value: `\`${newActivity.details}\` ${newActivity.state ? `- ${newActivity.state}` : ''}` });
@@ -82,7 +84,8 @@ module.exports = {
 
     if (newSpotify && (!oldSpotify || oldSpotify.details !== newSpotify.details)) {
       embed.setColor('#1db954') // Spotify green
-        .setDescription(`### **🎵 Mendengarkan Spotify**\n${newPresence.member} sedang mendengarkan musik`)
+        .setTitle('🎵 Mendengarkan Spotify')
+        .setDescription(`${newPresence.member} sedang mendengarkan musik di Spotify.`)
         .addFields(
           { name: 'Judul Lagu', value: `**${newSpotify.details}**`, inline: true },
           { name: 'Artis', value: `*${newSpotify.state}*`, inline: true }

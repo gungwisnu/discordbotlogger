@@ -29,7 +29,8 @@ module.exports = {
       const name = target ? `${target}` : `User ID: \`${targetId}\``;
       
       embed.setColor('#ef4444') // Solid Red
-        .setDescription(`### **🚫 Anggota Diblokir (Banned)**`)
+        .setTitle('🚫 Anggota Diblokir (Banned)')
+        .setDescription(`Pengguna **${targetName}** telah diblokir dari server.`)
         .addFields(
           { name: 'Target Anggota', value: name, inline: true },
           { name: 'Moderator', value: executorText, inline: true },
@@ -49,7 +50,8 @@ module.exports = {
       const name = target ? `${target}` : `User ID: \`${targetId}\``;
       
       embed.setColor('#10b981') // Emerald Green
-        .setDescription(`### **🔓 Pemblokiran Anggota Dicabut (Unbanned)**`)
+        .setTitle('🔓 Pemblokiran Anggota Dicabut')
+        .setDescription(`Pemblokiran pengguna **${targetName}** telah dicabut.`)
         .addFields(
           { name: 'Target Anggota', value: name, inline: true },
           { name: 'Moderator', value: executorText, inline: true },
@@ -69,7 +71,8 @@ module.exports = {
       const name = target ? `${target}` : `User ID: \`${targetId}\``;
       
       embed.setColor('#f97316') // Orange
-        .setDescription(`### **👢 Anggota Dikeluarkan (Kicked)**`)
+        .setTitle('👢 Anggota Dikeluarkan (Kicked)')
+        .setDescription(`Pengguna **${targetName}** telah dikeluarkan dari server.`)
         .addFields(
           { name: 'Target Anggota', value: name, inline: true },
           { name: 'Moderator', value: executorText, inline: true },
@@ -98,7 +101,8 @@ module.exports = {
           const durationMin = Math.round((timeoutTime.getTime() - Date.now()) / 60000);
           
           embed.setColor('#d97706') // Dark Amber
-            .setDescription(`### **⏳ Anggota Diberikan Timeout**`)
+            .setTitle('⏳ Anggota Diberikan Timeout')
+            .setDescription(`Pengguna **${targetName}** telah ditempatkan dalam mode senyap (timeout).`)
             .addFields(
               { name: 'Target Anggota', value: name, inline: true },
               { name: 'Moderator', value: executorText, inline: true },
@@ -112,7 +116,8 @@ module.exports = {
           isLogged = true;
         } else if (oldVal && !newVal) {
           embed.setColor('#3b82f6') // Blue
-            .setDescription(`### **⏰ Timeout Dicabut**`)
+            .setTitle('⏰ Timeout Dicabut')
+            .setDescription(`Masa timeout untuk **${targetName}** telah dicabut.`)
             .addFields(
               { name: 'Target Anggota', value: name, inline: true },
               { name: 'Moderator', value: executorText, inline: true },
@@ -133,7 +138,8 @@ module.exports = {
       const chanName = channelNameChange ? channelNameChange.new : `Channel ID: ${targetId}`;
       
       embed.setColor('#10b981')
-        .setDescription(`### **📁 Channel Dibuat**`)
+        .setTitle('📁 Channel Dibuat')
+        .setDescription(`Saluran teks baru telah berhasil dibuat di server.`)
         .addFields(
           { name: 'Nama Channel', value: `<#${targetId}>`, inline: true },
           { name: 'Dibuat Oleh', value: executorText, inline: true }
@@ -147,7 +153,8 @@ module.exports = {
       const chanName = channelNameChange ? channelNameChange.old : `Channel ID: ${targetId}`;
       
       embed.setColor('#ef4444')
-        .setDescription(`### **📂 Channel Dihapus**`)
+        .setTitle('📂 Channel Dihapus')
+        .setDescription(`Saluran **#${chanName}** telah dihapus dari server.`)
         .addFields(
           { name: 'Nama Channel', value: `**#${chanName}**`, inline: true },
           { name: 'Dihapus Oleh', value: executorText, inline: true }
@@ -165,7 +172,8 @@ module.exports = {
       const chanNameActual = targetChannel ? targetChannel.name : 'Unknown';
       
       embed.setColor('#3b82f6')
-        .setDescription(`### **📂 Channel Diperbarui**\n${chanMention}`)
+        .setTitle('📂 Channel Diperbarui')
+        .setDescription(`Saluran ${chanMention} telah diperbarui.`)
         .addFields(
           { name: 'Diperbarui Oleh', value: executorText }
         )
@@ -201,7 +209,8 @@ module.exports = {
     // 7. ROLE CREATE / DELETE
     else if (action === AuditLogEvent.RoleCreate) {
       embed.setColor('#8b5cf6') // Purple
-        .setDescription(`### **🛡️ Peran (Role) Dibuat**`)
+        .setTitle('🛡️ Peran (Role) Dibuat')
+        .setDescription('Peran (role) server baru telah dibuat.')
         .addFields(
           { name: 'Peran', value: `<@&${targetId}>`, inline: true },
           { name: 'Dibuat Oleh', value: executorText, inline: true }
@@ -215,7 +224,8 @@ module.exports = {
       const roleName = nameChange ? nameChange.old : `ID: ${targetId}`;
       
       embed.setColor('#ef4444')
-        .setDescription(`### **🛡️ Peran (Role) Dihapus**`)
+        .setTitle('🛡️ Peran (Role) Dihapus')
+        .setDescription(`Peran **@${roleName}** telah dihapus dari server.`)
         .addFields(
           { name: 'Nama Peran', value: `**${roleName}**`, inline: true },
           { name: 'Dihapus Oleh', value: executorText, inline: true }
@@ -232,7 +242,8 @@ module.exports = {
       const roleNameActual = roleActual ? roleActual.name : 'Unknown';
 
       embed.setColor('#3b82f6')
-        .setDescription(`### **🛡️ Peran (Role) Diperbarui**\n<@&${targetId}>`)
+        .setTitle('🛡️ Peran (Role) Diperbarui')
+        .setDescription(`Peran <@&${targetId}> telah diperbarui.`)
         .addFields(
           { name: 'Diperbarui Oleh', value: executorText }
         )
@@ -271,7 +282,8 @@ module.exports = {
     else if (action === AuditLogEvent.EmojiCreate) {
       const emojiName = changes.find(c => c.key === 'name')?.new;
       embed.setColor('#10b981')
-        .setDescription(`### **😀 Emoji Dibuat**`)
+        .setTitle('😀 Emoji Dibuat')
+        .setDescription(`Emoji baru dengan alias \`:${emojiName}:\` telah ditambahkan ke server.`)
         .addFields(
           { name: 'Nama Emoji', value: `\`:${emojiName}:\``, inline: true },
           { name: 'Dibuat Oleh', value: executorText, inline: true }
@@ -282,7 +294,8 @@ module.exports = {
     } else if (action === AuditLogEvent.EmojiDelete) {
       const emojiName = changes.find(c => c.key === 'name')?.old;
       embed.setColor('#ef4444')
-        .setDescription(`### **😢 Emoji Dihapus**`)
+        .setTitle('😢 Emoji Dihapus')
+        .setDescription(`Emoji \`:${emojiName}:\` telah dihapus dari server.`)
         .addFields(
           { name: 'Nama Emoji', value: `\`:${emojiName}:\``, inline: true },
           { name: 'Dihapus Oleh', value: executorText, inline: true }

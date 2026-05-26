@@ -7,7 +7,8 @@ module.exports = {
     
     const embed = new EmbedBuilder()
       .setColor('#f43f5e') // Red
-      .setDescription(`### **📤 Anggota Meninggalkan Server**\n${member} telah meninggalkan server.`)
+      .setTitle('📤 Anggota Meninggalkan Server')
+      .setDescription(`${member} telah meninggalkan server.`)
       .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
       .addFields(
         { name: 'Bergabung Sejak', value: joinedAt },

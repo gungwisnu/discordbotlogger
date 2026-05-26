@@ -26,7 +26,8 @@ module.exports = {
       db.startVoiceSession(guildId, userId, newState.channelId);
 
       embed.setColor('#10b981') // Green
-        .setDescription(`### **🔊 Bergabung ke Saluran Voice**\n${member} telah bergabung ke saluran Voice ${newState.channel}.`);
+        .setTitle('🔊 Bergabung ke Saluran Voice')
+        .setDescription(`${member} telah bergabung ke saluran Voice ${newState.channel}.`);
       sendLog(guildId, 'voice_join_leave', embed);
     }
 
@@ -45,7 +46,8 @@ module.exports = {
       }
 
       embed.setColor('#ef4444') // Red
-        .setDescription(`### **🔇 Meninggalkan Saluran Voice**\n${member} telah meninggalkan saluran Voice ${oldState.channel}.`)
+        .setTitle('🔇 Meninggalkan Saluran Voice')
+        .setDescription(`${member} telah meninggalkan saluran Voice ${oldState.channel}.`)
         .addFields({ name: 'Durasi Sesi', value: `\`${durationStr}\`` });
       sendLog(guildId, 'voice_join_leave', embed);
 
@@ -62,7 +64,8 @@ module.exports = {
       db.startVoiceSession(guildId, userId, newState.channelId);
 
       embed.setColor('#3b82f6') // Blue
-        .setDescription(`### **🔄 Berpindah Saluran Voice**\n${member} telah berpindah saluran Voice.`)
+        .setTitle('🔄 Berpindah Saluran Voice')
+        .setDescription(`${member} telah berpindah saluran Voice.`)
         .addFields(
           { name: 'Sebelum', value: `${oldState.channel}`, inline: true },
           { name: 'Sesudah', value: `${newState.channel}`, inline: true }
@@ -82,28 +85,32 @@ module.exports = {
       // Self Mute
       if (oldState.selfMute !== newState.selfMute) {
         embed.setColor(newState.selfMute ? '#f59e0b' : '#10b981')
-          .setDescription(`### **🎙️ ${newState.selfMute ? 'Mikrofon Dinonaktifkan' : 'Mikrofon Diaktifkan'}**\n${member} ${newState.selfMute ? 'menonaktifkan mikrofon mereka' : 'mengaktifkan mikrofon mereka'} di ${newState.channel}.`);
+          .setTitle(newState.selfMute ? '🎙️ Mikrofon Dinonaktifkan' : '🎙️ Mikrofon Diaktifkan')
+          .setDescription(`${member} ${newState.selfMute ? 'menonaktifkan mikrofon mereka' : 'mengaktifkan mikrofon mereka'} di ${newState.channel}.`);
         logged = true;
       }
       
       // Self Deaf
       if (oldState.selfDeaf !== newState.selfDeaf) {
         embed.setColor(newState.selfDeaf ? '#f59e0b' : '#10b981')
-          .setDescription(`### **🎧 ${newState.selfDeaf ? 'Pendengaran Dinonaktifkan' : 'Pendengaran Diaktifkan'}**\n${member} ${newState.selfDeaf ? 'menonaktifkan pendengaran mereka' : 'mengaktifkan pendengaran mereka'} di ${newState.channel}.`);
+          .setTitle(newState.selfDeaf ? '🎧 Pendengaran Dinonaktifkan' : '🎧 Pendengaran Diaktifkan')
+          .setDescription(`${member} ${newState.selfDeaf ? 'menonaktifkan pendengaran mereka' : 'mengaktifkan pendengaran mereka'} di ${newState.channel}.`);
         logged = true;
       }
 
       // Camera status (Video)
       if (oldState.selfVideo !== newState.selfVideo) {
         embed.setColor(newState.selfVideo ? '#8b5cf6' : '#6b7280')
-          .setDescription(`### **📷 ${newState.selfVideo ? 'Kamera Voice Diaktifkan' : 'Kamera Voice Dinonaktifkan'}**\n${member} ${newState.selfVideo ? 'mengaktifkan kamera video mereka' : 'menonaktifkan kamera video mereka'} di ${newState.channel}.`);
+          .setTitle(newState.selfVideo ? '📷 Kamera Voice Diaktifkan' : '📷 Kamera Voice Dinonaktifkan')
+          .setDescription(`${member} ${newState.selfVideo ? 'mengaktifkan kamera video mereka' : 'menonaktifkan kamera video mereka'} di ${newState.channel}.`);
         logged = true;
       }
 
       // Screen Share (Go Live)
       if (oldState.streaming !== newState.streaming) {
         embed.setColor(newState.streaming ? '#8b5cf6' : '#6b7280')
-          .setDescription(`### **🖥️ Berbagi Layar (Screen Share) ${newState.streaming ? 'Dimulai' : 'Dihentikan'}**\n${member} ${newState.streaming ? 'memulai aktivitas berbagi layar' : 'menghentikan aktivitas berbagi layar'} di ${newState.channel}.`);
+          .setTitle(newState.streaming ? '🖥️ Berbagi Layar Dimulai' : '🖥️ Berbagi Layar Dihentikan')
+          .setDescription(`${member} ${newState.streaming ? 'memulai aktivitas berbagi layar' : 'menghentikan aktivitas berbagi layar'} di ${newState.channel}.`);
         logged = true;
       }
 
