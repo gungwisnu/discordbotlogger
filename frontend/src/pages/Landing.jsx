@@ -65,7 +65,7 @@ export default function Landing() {
             letterSpacing: '-0.03em',
             lineHeight: '1.1'
           }}>
-            NEON LOGGER & ANALYTICS
+            PANDU LOGGER & ANALYTICS
           </h1>
           <p style={{
             color: 'hsl(var(--text-secondary))',

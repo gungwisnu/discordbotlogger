@@ -186,7 +186,7 @@ export default function App() {
           borderRadius: '50%',
           animation: 'spin 1s linear infinite'
         }} />
-        <span style={{ fontFamily: 'var(--font-display)', color: 'hsl(var(--text-secondary))', letterSpacing: '0.05em' }}>MEMUAT DATA NEON APP...</span>
+        <span style={{ fontFamily: 'var(--font-display)', color: 'hsl(var(--text-secondary))', letterSpacing: '0.05em' }}>MEMUAT DATA PANDU APP...</span>
         <style dangerouslySetInnerHTML={{__html: `
           @keyframes spin { to { transform: rotate(360deg); } }
         `}} />
