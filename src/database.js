@@ -75,7 +75,12 @@ const DatabaseFunctions = {
         }),
         embed_color: '#6366f1',
         ignored_channels: '[]',
-        ai_model: 'deepseek-chat'
+        ai_model: 'deepseek-chat',
+        welcome_enabled: false,
+        welcome_channel_id: null,
+        welcome_message: 'Selamat datang, {user}!',
+        autorole_enabled: false,
+        autorole_role_id: null
       };
     }
 
@@ -135,6 +140,27 @@ const DatabaseFunctions = {
         changed = true;
       }
 
+      if (row.welcome_enabled === undefined) {
+        row.welcome_enabled = false;
+        changed = true;
+      }
+      if (row.welcome_channel_id === undefined) {
+        row.welcome_channel_id = null;
+        changed = true;
+      }
+      if (row.welcome_message === undefined) {
+        row.welcome_message = 'Selamat datang, {user}!';
+        changed = true;
+      }
+      if (row.autorole_enabled === undefined) {
+        row.autorole_enabled = false;
+        changed = true;
+      }
+      if (row.autorole_role_id === undefined) {
+        row.autorole_role_id = null;
+        changed = true;
+      }
+
       if (changed) {
         row.categories_enabled = JSON.stringify(cats);
         triggerSave();
@@ -146,7 +172,7 @@ const DatabaseFunctions = {
     return row;
   },
 
-  setGuildSettings(guildId, { log_channel_id, categories_enabled, embed_color, ignored_channels, ai_model }) {
+  setGuildSettings(guildId, { log_channel_id, categories_enabled, embed_color, ignored_channels, ai_model, welcome_enabled, welcome_channel_id, welcome_message, autorole_enabled, autorole_role_id }) {
     const current = this.getGuildSettings(guildId);
     
     const channel = log_channel_id !== undefined ? log_channel_id : current.log_channel_id;
@@ -154,6 +180,11 @@ const DatabaseFunctions = {
     const color = embed_color !== undefined ? embed_color : current.embed_color;
     const ignored = ignored_channels !== undefined ? (typeof ignored_channels === 'string' ? ignored_channels : JSON.stringify(ignored_channels)) : current.ignored_channels;
     const model = ai_model !== undefined ? ai_model : current.ai_model || 'deepseek-chat';
+    const welcomeEnabled = welcome_enabled !== undefined ? welcome_enabled : current.welcome_enabled !== undefined ? current.welcome_enabled : false;
+    const welcomeChannel = welcome_channel_id !== undefined ? welcome_channel_id : current.welcome_channel_id !== undefined ? current.welcome_channel_id : null;
+    const welcomeMsg = welcome_message !== undefined ? welcome_message : current.welcome_message !== undefined ? current.welcome_message : 'Selamat datang, {user}!';
+    const autoroleEnabled = autorole_enabled !== undefined ? autorole_enabled : current.autorole_enabled !== undefined ? current.autorole_enabled : false;
+    const autoroleRoleId = autorole_role_id !== undefined ? autorole_role_id : current.autorole_role_id !== undefined ? current.autorole_role_id : null;
 
     data.guild_settings[guildId] = {
       guild_id: guildId,
@@ -161,7 +192,12 @@ const DatabaseFunctions = {
       categories_enabled: cats,
       embed_color: color,
       ignored_channels: ignored,
-      ai_model: model
+      ai_model: model,
+      welcome_enabled: welcomeEnabled,
+      welcome_channel_id: welcomeChannel,
+      welcome_message: welcomeMsg,
+      autorole_enabled: autoroleEnabled,
+      autorole_role_id: autoroleRoleId
     };
 
     triggerSave();

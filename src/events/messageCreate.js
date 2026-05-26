@@ -33,7 +33,12 @@ module.exports = {
         'log',
         'ignore',
         'unignore',
-        'setmodel'
+        'setmodel',
+        'welcome',
+        'setwelcome',
+        'welcomemsg',
+        'autorole',
+        'setrole'
       ]);
 
       const isExplicitAI = (firstArg === 'ask');
@@ -184,23 +189,48 @@ module.exports = {
       }
 
       if (commandName === 'help') {
-        const embed = new EmbedBuilder()
-          .setColor(settings.embed_color || '#6366f1')
-          .setTitle('🤖 Daftar Command Pandu')
-          .setDescription('Berikut adalah daftar command yang tersedia untuk server ini:')
-          .addFields(
-            { name: '📊 Statistik & Informasi', value: '`pan!stats [@user]` - Menampilkan statistik pengguna\n`pan!leaderboard [voice|messages|gaming]` - Menampilkan peringkat server\n`pan!achievements [@user]` - Menampilkan lencana pencapaian' },
-            { name: '⚙️ Konfigurasi Admin', value: '`pan!setlog <#channel>` - Mengatur saluran tujuan log\n`pan!log <enable|disable> <kategori>` - Mengaktifkan atau menonaktifkan kategori log\n`pan!ignore <#channel>` - Mengabaikan saluran dari pencatatan log/statistik\n`pan!unignore <#channel>` - Menghapus saluran dari daftar abaikan\n`pan!setcolor <hex_code>` - Mengubah warna embed log (contoh: `#ff0000`)\n`pan!setmodel <faster|thinker>` - Mengubah model AI DeepSeek (contoh: `pan!setmodel thinker`)\n`pan!status` - Memeriksa konfigurasi server saat ini' }
-          )
-          .setFooter({ text: 'Sistem Logger & Analitik Server' })
-          .setTimestamp();
-        return message.reply({ embeds: [embed] });
+        const isHelpAdmin = args[0]?.toLowerCase() === 'admin';
+
+        if (isHelpAdmin) {
+          if (!message.member.permissions.has(PermissionsBitField.Flags.ManageGuild) && !message.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+            return message.reply('❌ Anda tidak memiliki izin (Manage Server / Administrator) yang diperlukan untuk melihat menu bantuan admin.');
+          }
+
+          const embed = new EmbedBuilder()
+            .setColor(settings.embed_color || '#6366f1')
+            .setTitle('⚙️ Daftar Command Admin Pandu')
+            .setDescription('Berikut adalah daftar command konfigurasi server untuk Administrator:')
+            .addFields(
+              { name: '🎯 Saluran & Log', value: '`pan!setlog <#channel>` - Mengatur saluran tujuan log\n`pan!log <enable|disable> <kategori>` - Mengaktifkan/menonaktifkan kategori log\n`pan!ignore <#channel>` - Mengabaikan saluran dari pencatatan log/statistik\n`pan!unignore <#channel>` - Menghapus saluran dari daftar abaikan\n`pan!setcolor <hex_code>` - Mengubah warna embed log (contoh: `#ff0000`)' },
+              { name: '🤖 Pengaturan AI & Status', value: '`pan!setmodel <faster|thinker>` - Mengubah model AI DeepSeek\n`pan!status` - Memeriksa konfigurasi server saat ini' },
+              { name: '📥 Pengaturan Welcome (Sapaan)', value: '`pan!welcome <enable|disable>` - Mengaktifkan/menonaktifkan pesan selamat datang\n`pan!setwelcome <#channel>` - Mengatur saluran teks sapaan welcome\n`pan!welcomemsg <isi_pesan...>` - Mengubah pesan sapaan kustom (Gunakan `{user}` untuk mention)' },
+              { name: '🛡️ Pengaturan Auto-Role', value: '`pan!autorole <enable|disable>` - Mengaktifkan/menonaktifkan pemberian peran otomatis\n`pan!setrole <@role|role_id>` - Mengatur peran otomatis bagi anggota baru' }
+            )
+            .setFooter({ text: 'Sistem Logger & Analitik Server' })
+            .setTimestamp();
+          return message.reply({ embeds: [embed] });
+        } else {
+          const embed = new EmbedBuilder()
+            .setColor(settings.embed_color || '#6366f1')
+            .setTitle('🤖 Daftar Command Pandu')
+            .setDescription('Berikut adalah daftar command yang tersedia untuk server ini:')
+            .addFields(
+              { name: '📊 Statistik & Informasi', value: '`pan!stats [@user]` - Menampilkan statistik pengguna\n`pan!leaderboard [voice|messages|gaming]` - Menampilkan peringkat server\n`pan!achievements [@user]` - Menampilkan lencana pencapaian' },
+              { name: '🧠 Obrolan AI', value: 'Tandai (tag) bot atau gunakan `pan!ask <pertanyaan>` untuk bertanya kepada AI.' }
+            )
+            .setFooter({ text: 'Gunakan "pan!help admin" jika Anda adalah Administrator untuk konfigurasi bot.' })
+            .setTimestamp();
+          return message.reply({ embeds: [embed] });
+        }
       }
 
       // ----------------------------------------------------------------------
       // ADMIN COMMANDS BELOW
       // ----------------------------------------------------------------------
-      const isAdminCommand = ['setlog', 'log', 'ignore', 'unignore', 'setcolor', 'status', 'setmodel'].includes(commandName);
+      const isAdminCommand = [
+        'setlog', 'log', 'ignore', 'unignore', 'setcolor', 'status', 'setmodel',
+        'welcome', 'setwelcome', 'welcomemsg', 'autorole', 'setrole'
+      ].includes(commandName);
       if (isAdminCommand) {
         if (!message.member.permissions.has(PermissionsBitField.Flags.ManageGuild) && !message.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
           return message.reply('❌ Anda tidak memiliki izin (Manage Server / Administrator) yang diperlukan untuk menggunakan perintah pengaturan ini.');
@@ -214,13 +244,21 @@ module.exports = {
         const catStr = Object.entries(cats).map(([k, v]) => `• **${k}**: ${v ? '✅ Aktif' : '❌ Nonaktif'}`).join('\n') || 'Belum ada pengaturan spesifik (bawaan: semua aktif)';
         const ignStr = ign.map(id => `<#${id}>`).join(', ') || 'Tidak ada';
 
+        const welcomeChanStr = settings.welcome_channel_id ? `<#${settings.welcome_channel_id}>` : '*Belum diatur*';
+        const welcomeStatus = `• Status: ${settings.welcome_enabled ? '✅ Aktif' : '❌ Nonaktif'}\n• Saluran: ${welcomeChanStr}\n• Pesan: \`${settings.welcome_message || 'Selamat datang, {user}!'}\``;
+
+        const roleStr = settings.autorole_role_id ? `<@&${settings.autorole_role_id}>` : '*Belum diatur*';
+        const autoroleStatus = `• Status: ${settings.autorole_enabled ? '✅ Aktif' : '❌ Nonaktif'}\n• Peran: ${roleStr}`;
+
         const embed = new EmbedBuilder()
           .setColor(settings.embed_color || '#6366f1')
           .setTitle('⚙️ Konfigurasi Log & AI Server')
           .addFields(
-            { name: 'Saluran Log', value: settings.log_channel_id ? `<#${settings.log_channel_id}>` : 'Belum diatur' },
-            { name: 'Warna Embed', value: `\`${settings.embed_color || '#6366f1'}\`` },
-            { name: 'Model AI DeepSeek', value: settings.ai_model === 'deepseek-reasoner' ? '🧠 **Pemikir (deepseek-reasoner)**' : '⚡ **Tercepat (deepseek-chat)**' },
+            { name: 'Saluran Log', value: settings.log_channel_id ? `<#${settings.log_channel_id}>` : 'Belum diatur', inline: true },
+            { name: 'Warna Embed', value: `\`${settings.embed_color || '#6366f1'}\``, inline: true },
+            { name: 'Model AI DeepSeek', value: settings.ai_model === 'deepseek-reasoner' ? '🧠 **Pemikir (deepseek-reasoner)**' : '⚡ **Tercepat (deepseek-chat)**', inline: true },
+            { name: '📥 Fitur Welcome (Sapaan)', value: welcomeStatus },
+            { name: '🛡️ Fitur Auto-Role', value: autoroleStatus },
             { name: 'Kategori Log', value: catStr },
             { name: 'Saluran Diabaikan', value: ignStr }
           )
@@ -295,6 +333,77 @@ module.exports = {
 
         const modelName = modelValue === 'deepseek-reasoner' ? 'Pemikir (deepseek-reasoner) 🧠' : 'Tercepat (deepseek-chat) ⚡';
         return message.reply(`✅ Berhasil mengatur model otak AI server ini ke **${modelName}**.`);
+      }
+
+      if (commandName === 'welcome') {
+        const action = args[0]?.toLowerCase();
+        if (!['enable', 'disable'].includes(action)) {
+          return message.reply('❌ Format salah. Harap gunakan format: `pan!welcome <enable|disable>`');
+        }
+
+        const isEnable = action === 'enable';
+        if (isEnable && !settings.welcome_channel_id) {
+          return message.reply('⚠️ Anda belum mengatur saluran sapaan welcome. Harap atur terlebih dahulu menggunakan `pan!setwelcome <#channel>`');
+        }
+
+        db.setGuildSettings(guildId, { welcome_enabled: isEnable });
+        return message.reply(`✅ Fitur pesan selamat datang berhasil **${isEnable ? 'diaktifkan' : 'dinonaktifkan'}**.`);
+      }
+
+      if (commandName === 'setwelcome') {
+        const channel = message.mentions.channels.first();
+        if (!channel) {
+          return message.reply('❌ Format salah. Harap tag saluran welcome, contoh: `pan!setwelcome #welcome-channel`');
+        }
+
+        db.setGuildSettings(guildId, {
+          welcome_channel_id: channel.id,
+          welcome_enabled: true
+        });
+        return message.reply(`✅ Berhasil mengatur saluran welcome ke ${channel} dan otomatis mengaktifkan fitur welcome.`);
+      }
+
+      if (commandName === 'welcomemsg') {
+        const welcomeText = args.join(' ');
+        if (!welcomeText) {
+          return message.reply(`ℹ️ Pesan welcome saat ini:\n\`${settings.welcome_message || 'Selamat datang, {user}!'}\`\n\nUntuk mengubahnya, ketik: \`pan!welcomemsg <pesan baru>\` (Gunakan \`{user}\` sebagai placeholder mention user).`);
+        }
+
+        db.setGuildSettings(guildId, { welcome_message: welcomeText });
+        return message.reply(`✅ Pesan welcome berhasil diubah menjadi:\n\`${welcomeText}\``);
+      }
+
+      if (commandName === 'autorole') {
+        const action = args[0]?.toLowerCase();
+        if (!['enable', 'disable'].includes(action)) {
+          return message.reply('❌ Format salah. Harap gunakan format: `pan!autorole <enable|disable>`');
+        }
+
+        const isEnable = action === 'enable';
+        if (isEnable && !settings.autorole_role_id) {
+          return message.reply('⚠️ Anda belum mengatur peran untuk auto-role. Harap atur terlebih dahulu menggunakan `pan!setrole <@role>`');
+        }
+
+        db.setGuildSettings(guildId, { autorole_enabled: isEnable });
+        return message.reply(`✅ Fitur auto-role berhasil **${isEnable ? 'diaktifkan' : 'dinonaktifkan'}**.`);
+      }
+
+      if (commandName === 'setrole') {
+        const role = message.mentions.roles.first() || message.guild.roles.cache.get(args[0]);
+        if (!role) {
+          return message.reply('❌ Format salah. Harap tag peran atau masukkan ID peran yang valid, contoh:\n`pan!setrole @Member` atau `pan!setrole 123456789012345`');
+        }
+
+        const botMember = message.guild.members.me;
+        if (botMember && role.position >= botMember.roles.highest.position) {
+          return message.reply('⚠️ **Peringatan Izin:** Peran tersebut berada di atas atau sejajar dengan peran tertinggi bot saya. Bot tidak akan bisa membagikannya kecuali posisi peran bot ditarik ke atas.');
+        }
+
+        db.setGuildSettings(guildId, {
+          autorole_role_id: role.id,
+          autorole_enabled: true
+        });
+        return message.reply(`✅ Berhasil mengatur auto-role ke peran **${role.name}** dan otomatis mengaktifkan fitur auto-role.`);
       }
     }
     

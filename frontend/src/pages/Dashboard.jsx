@@ -136,6 +136,7 @@ const categoryDetails = {
 export default function Dashboard() {
   const { selectedGuild, guilds, setSelectedGuild } = useApp();
   const [channels, setChannels] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [settings, setSettings] = useState(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -174,6 +175,17 @@ export default function Dashboard() {
         setChannels(data);
       })
       .catch(err => console.error('Failed to load channels:', err));
+
+    // Fetch roles list
+    fetch(`/api/guilds/${selectedGuild.id}/roles`)
+      .then(res => {
+        if (!res.ok) throw new Error();
+        return res.json();
+      })
+      .then(data => {
+        setRoles(data);
+      })
+      .catch(err => console.error('Failed to load roles:', err));
   }, [selectedGuild]);
 
   const handleCategoryToggle = (category) => {
@@ -325,6 +337,176 @@ export default function Dashboard() {
                     </span>
                   )}
                 </div>
+              </div>
+            </div>
+
+            {/* Welcome & Auto-Role Settings */}
+            <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '1.5rem' }}>📥</span>
+                <div>
+                  <h3 style={{ fontSize: '1.25rem', color: 'white' }}>📥 Fitur Welcome & Auto-Role</h3>
+                  <p style={{ fontSize: '0.82rem', color: 'hsl(var(--text-secondary))', marginTop: '2px' }}>
+                    Sapa anggota baru yang bergabung ke server Anda secara otomatis dan sematkan peran langsung.
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', flexWrap: 'wrap' }}>
+                
+                {/* Welcomer Column */}
+                <div style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  gap: '16px',
+                  borderRight: window.innerWidth > 768 ? '1px solid hsl(var(--border-glass))' : 'none',
+                  paddingRight: window.innerWidth > 768 ? '24px' : '0'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h4 style={{ color: 'white', fontSize: '1.05rem', fontWeight: '600' }}>👋 Pesan Selamat Datang</h4>
+                    
+                    {/* Toggle Switch */}
+                    <label style={{
+                      position: 'relative',
+                      display: 'inline-block',
+                      width: '48px',
+                      height: '24px',
+                      cursor: 'pointer'
+                    }}>
+                      <input 
+                        type="checkbox" 
+                        checked={!!settings.welcome_enabled} 
+                        onChange={(e) => setSettings(prev => ({ ...prev, welcome_enabled: e.target.checked }))}
+                        style={{ opacity: 0, width: 0, height: 0 }} 
+                      />
+                      <span style={{
+                        position: 'absolute',
+                        cursor: 'pointer',
+                        top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: settings.welcome_enabled ? '#10b981' : '#3f3f46',
+                        transition: '0.3s',
+                        borderRadius: '34px',
+                        border: '1px solid hsl(var(--border-glass))'
+                      }}>
+                        <span style={{
+                          position: 'absolute',
+                          height: '16px',
+                          width: '16px',
+                          left: settings.welcome_enabled ? '26px' : '4px',
+                          bottom: '3px',
+                          backgroundColor: 'white',
+                          transition: '0.3s',
+                          borderRadius: '50%',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                        }} />
+                      </span>
+                    </label>
+                  </div>
+
+                  {settings.welcome_enabled && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <label style={{ fontSize: '0.88rem', color: 'hsl(var(--text-secondary))' }}>Saluran Sapaan:</label>
+                      <select
+                        value={settings.welcome_channel_id || ''}
+                        onChange={(e) => setSettings(prev => ({ ...prev, welcome_channel_id: e.target.value || null }))}
+                        className="input-glass"
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <option value="" style={{ backgroundColor: 'black' }}>-- Pilih Saluran Sapaan --</option>
+                        {channels.map(ch => (
+                          <option key={ch.id} value={ch.id} style={{ backgroundColor: 'black' }}>
+                            #{ch.name}
+                          </option>
+                        ))}
+                      </select>
+
+                      <label style={{ fontSize: '0.88rem', color: 'hsl(var(--text-secondary))', marginTop: '6px' }}>Isi Pesan Sapaan:</label>
+                      <textarea
+                        value={settings.welcome_message || ''}
+                        onChange={(e) => setSettings(prev => ({ ...prev, welcome_message: e.target.value }))}
+                        className="input-glass"
+                        style={{ 
+                          minHeight: '80px', 
+                          resize: 'vertical', 
+                          fontFamily: 'inherit',
+                          fontSize: '0.88rem',
+                          padding: '10px'
+                        }}
+                        placeholder="Contoh: Selamat datang, {user}!"
+                      />
+                      <span style={{ fontSize: '0.75rem', color: 'hsl(var(--text-muted))', lineHeight: '1.4' }}>
+                        💡 Gunakan tag <code>{"{user}"}</code> untuk menyebut/mention anggota baru secara dinamis.
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Auto-Role Column */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h4 style={{ color: 'white', fontSize: '1.05rem', fontWeight: '600' }}>🛡️ Peran Otomatis (Auto-Role)</h4>
+                    
+                    {/* Toggle Switch */}
+                    <label style={{
+                      position: 'relative',
+                      display: 'inline-block',
+                      width: '48px',
+                      height: '24px',
+                      cursor: 'pointer'
+                    }}>
+                      <input 
+                        type="checkbox" 
+                        checked={!!settings.autorole_enabled} 
+                        onChange={(e) => setSettings(prev => ({ ...prev, autorole_enabled: e.target.checked }))}
+                        style={{ opacity: 0, width: 0, height: 0 }} 
+                      />
+                      <span style={{
+                        position: 'absolute',
+                        cursor: 'pointer',
+                        top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: settings.autorole_enabled ? '#10b981' : '#3f3f46',
+                        transition: '0.3s',
+                        borderRadius: '34px',
+                        border: '1px solid hsl(var(--border-glass))'
+                      }}>
+                        <span style={{
+                          position: 'absolute',
+                          height: '16px',
+                          width: '16px',
+                          left: settings.autorole_enabled ? '26px' : '4px',
+                          bottom: '3px',
+                          backgroundColor: 'white',
+                          transition: '0.3s',
+                          borderRadius: '50%',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                        }} />
+                      </span>
+                    </label>
+                  </div>
+
+                  {settings.autorole_enabled && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <label style={{ fontSize: '0.88rem', color: 'hsl(var(--text-secondary))' }}>Peran Yang Diberikan:</label>
+                      <select
+                        value={settings.autorole_role_id || ''}
+                        onChange={(e) => setSettings(prev => ({ ...prev, autorole_role_id: e.target.value || null }))}
+                        className="input-glass"
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <option value="" style={{ backgroundColor: 'black' }}>-- Pilih Peran Discord --</option>
+                        {roles.map(role => (
+                          <option key={role.id} value={role.id} style={{ backgroundColor: 'black' }}>
+                            {role.name}
+                          </option>
+                        ))}
+                      </select>
+                      <span style={{ fontSize: '0.75rem', color: 'hsl(var(--text-muted))', lineHeight: '1.4' }}>
+                        ⚠️ Pastikan peran bot berada di atas peran yang dipilih ini agar proses penugasan tidak gagal.
+                      </span>
+                    </div>
+                  )}
+                </div>
+
               </div>
             </div>
 

@@ -137,7 +137,12 @@ const DEMO_SETTINGS = {
   }),
   embed_color: '#6366f1',
   ignored_channels: '["555"]',
-  ai_model: 'deepseek-chat'
+  ai_model: 'deepseek-chat',
+  welcome_enabled: true,
+  welcome_channel_id: '222',
+  welcome_message: 'Selamat datang, {user}!',
+  autorole_enabled: true,
+  autorole_role_id: '111222'
 };
 
 // ----------------------------------------------------
@@ -304,7 +309,7 @@ app.get('/api/guilds/:guildId/settings', checkAuth, (req, res) => {
 // Update Guild Settings
 app.post('/api/guilds/:guildId/settings', checkAuth, (req, res) => {
   const { guildId } = req.params;
-  const { log_channel_id, categories_enabled, embed_color, ignored_channels, ai_model } = req.body;
+  const { log_channel_id, categories_enabled, embed_color, ignored_channels, ai_model, welcome_enabled, welcome_channel_id, welcome_message, autorole_enabled, autorole_role_id } = req.body;
   const isDemo = req.session.user.demo;
 
   if (isDemo && guildId === '99999999999999') {
@@ -313,7 +318,12 @@ app.post('/api/guilds/:guildId/settings', checkAuth, (req, res) => {
       categories_enabled: typeof categories_enabled === 'string' ? categories_enabled : JSON.stringify(categories_enabled),
       embed_color,
       ignored_channels: typeof ignored_channels === 'string' ? ignored_channels : JSON.stringify(ignored_channels),
-      ai_model: ai_model !== undefined ? ai_model : DEMO_SETTINGS.ai_model
+      ai_model: ai_model !== undefined ? ai_model : DEMO_SETTINGS.ai_model,
+      welcome_enabled: welcome_enabled !== undefined ? welcome_enabled : DEMO_SETTINGS.welcome_enabled,
+      welcome_channel_id: welcome_channel_id !== undefined ? welcome_channel_id : DEMO_SETTINGS.welcome_channel_id,
+      welcome_message: welcome_message !== undefined ? welcome_message : DEMO_SETTINGS.welcome_message,
+      autorole_enabled: autorole_enabled !== undefined ? autorole_enabled : DEMO_SETTINGS.autorole_enabled,
+      autorole_role_id: autorole_role_id !== undefined ? autorole_role_id : DEMO_SETTINGS.autorole_role_id
     });
     return res.json({ success: true, settings: DEMO_SETTINGS });
   }
@@ -323,7 +333,12 @@ app.post('/api/guilds/:guildId/settings', checkAuth, (req, res) => {
     categories_enabled,
     embed_color,
     ignored_channels,
-    ai_model
+    ai_model,
+    welcome_enabled,
+    welcome_channel_id,
+    welcome_message,
+    autorole_enabled,
+    autorole_role_id
   });
 
   res.json({
@@ -362,6 +377,40 @@ app.get('/api/guilds/:guildId/channels', checkAuth, async (req, res) => {
     res.json(channels);
   } catch (error) {
     res.status(500).json({ error: 'Gagal mengambil channels.', details: error.message });
+  }
+});
+
+// Get Guild Roles list for auto-role dropdown
+app.get('/api/guilds/:guildId/roles', checkAuth, async (req, res) => {
+  const { guildId } = req.params;
+  const isDemo = req.session.user.demo;
+
+  if (isDemo && guildId === '99999999999999') {
+    return res.json([
+      { id: '111222', name: 'Member' },
+      { id: '333444', name: 'Gamer' },
+      { id: '555666', name: 'Moderator' }
+    ]);
+  }
+
+  try {
+    if (!client.readyAt) {
+      return res.status(503).json({ error: 'Discord bot client belum siap.' });
+    }
+
+    const guild = await client.guilds.fetch(guildId).catch(() => null);
+    if (!guild) {
+      return res.status(404).json({ error: 'Server tidak ditemukan atau bot belum masuk.' });
+    }
+
+    // Filter out @everyone and managed/bot roles
+    const roles = guild.roles.cache
+      .filter(r => r.name !== '@everyone' && !r.managed)
+      .map(r => ({ id: r.id, name: r.name }));
+
+    res.json(roles);
+  } catch (error) {
+    res.status(500).json({ error: 'Gagal mengambil roles.', details: error.message });
   }
 });
 
