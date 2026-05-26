@@ -15,7 +15,7 @@ async function askAI(promptText, model = 'deepseek-chat') {
   }
 
   // System instructions for the AI behavior
-  const systemPrompt = `Anda adalah Pandu (PanBot), sebuah asisten AI Discord pintar untuk server ini.
+  const systemPrompt = `Anda adalah Pandu, sebuah asisten AI Discord pintar untuk server ini.
 Anda dirancang untuk membantu anggota server, menjawab pertanyaan mereka, dan mengobrol secara interaktif.
 
 Aturan Penting:

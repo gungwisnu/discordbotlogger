@@ -186,7 +186,7 @@ module.exports = {
       if (commandName === 'help') {
         const embed = new EmbedBuilder()
           .setColor(settings.embed_color || '#6366f1')
-          .setTitle('🤖 Daftar Command PanBot')
+          .setTitle('🤖 Daftar Command Pandu')
           .setDescription('Berikut adalah daftar command yang tersedia untuk server ini:')
           .addFields(
             { name: '📊 Statistik & Informasi', value: '`pan!stats [@user]` - Menampilkan statistik pengguna\n`pan!leaderboard [voice|messages|gaming]` - Menampilkan peringkat server\n`pan!achievements [@user]` - Menampilkan lencana pencapaian' },
