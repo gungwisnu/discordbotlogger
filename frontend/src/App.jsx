@@ -52,7 +52,7 @@ function Sidebar() {
       height: 'calc(100vh - 32px)',
       margin: '16px',
       display: 'flex',
-      flexDirection: 'col',
+      flexDirection: 'column',
       justifyContent: 'space-between',
       position: 'sticky',
       top: '16px'
