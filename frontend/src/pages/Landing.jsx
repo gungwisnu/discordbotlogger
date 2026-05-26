@@ -86,6 +86,13 @@ export default function Landing() {
               🔌 Hubungkan ke Discord
             </button>
           </a>
+          <button 
+            className="btn-secondary" 
+            onClick={loginDemo} 
+            style={{ fontSize: '1.05rem', padding: '16px 36px' }}
+          >
+            🧪 Coba Mode Demo (Tanpa Login)
+          </button>
         </div>
 
         {/* Bullet features grid showcases */}

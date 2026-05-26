@@ -4,8 +4,10 @@ const cors = require('cors');
 const axios = require('axios');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
+const { EmbedBuilder } = require('discord.js');
 const db = require('./database');
-const { client } = require('./bot');
+const { client, sendLog } = require('./bot');
 
 require('dotenv').config();
 
@@ -29,6 +31,22 @@ app.use(session({
   cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 Hours
 }));
 
+// Session restoration middleware from cookie
+app.use((req, res, next) => {
+  if (!req.session.user && req.headers.cookie) {
+    const match = req.headers.cookie.match(/(?:^|;)\s*session_token\s*=\s*([^;]+)/);
+    if (match) {
+      const token = decodeURIComponent(match[1]);
+      const sessionData = db.getSession(token);
+      if (sessionData) {
+        req.session.user = sessionData.user;
+        req.session.guilds = sessionData.guilds;
+      }
+    }
+  }
+  next();
+});
+
 // Helper: check auth middleware
 function checkAuth(req, res, next) {
   if (req.session.user) {
@@ -36,6 +54,121 @@ function checkAuth(req, res, next) {
   } else {
     res.status(401).json({ error: 'Unauthorized. Silakan masuk terlebih dahulu.' });
   }
+}
+
+// Helper: Compare configurations and generate audit trail differences
+function getSettingsDiff(oldSettings, newSettings) {
+  const diffs = [];
+  const fieldNames = {
+    log_channel_id: 'Saluran Log Utama',
+    embed_color: 'Warna Embed',
+    ai_model: 'Model AI',
+    welcome_enabled: 'Status Welcome Message',
+    welcome_channel_id: 'Saluran Welcome Message',
+    welcome_message: 'Pesan Welcome',
+    autorole_enabled: 'Status Auto-Role',
+    autorole_role_id: 'Role Auto-Role',
+    achievement_channel_id: 'Saluran Pencapaian'
+  };
+
+  // Compare standard fields
+  for (const [key, label] of Object.entries(fieldNames)) {
+    if (newSettings[key] !== undefined) {
+      let oldVal = oldSettings[key];
+      let newVal = newSettings[key];
+
+      // Standardize booleans
+      if (typeof oldVal === 'string' && (oldVal === 'true' || oldVal === 'false')) oldVal = oldVal === 'true';
+      if (typeof newVal === 'string' && (newVal === 'true' || newVal === 'false')) newVal = newVal === 'true';
+
+      if (oldVal !== newVal) {
+        const formatVal = (v) => {
+          if (v === null || v === undefined || v === '') return 'Tidak disetel';
+          if (v === true) return 'Aktif';
+          if (v === false) return 'Nonaktif';
+          return v;
+        };
+        diffs.push({
+          field: key,
+          label: label,
+          old: formatVal(oldVal),
+          new: formatVal(newVal)
+        });
+      }
+    }
+  }
+
+  // Compare categories_enabled (JSON string or object)
+  if (newSettings.categories_enabled !== undefined) {
+    let oldCats = {};
+    let newCats = {};
+    try {
+      oldCats = typeof oldSettings.categories_enabled === 'string' ? JSON.parse(oldSettings.categories_enabled) : oldSettings.categories_enabled || {};
+    } catch (e) {}
+    try {
+      newCats = typeof newSettings.categories_enabled === 'string' ? JSON.parse(newSettings.categories_enabled) : newSettings.categories_enabled || {};
+    } catch (e) {}
+
+    const catLabels = {
+      moderation: 'Log Moderasi',
+      voice_join_leave: 'Log Voice Join/Leave',
+      voice_mute_deafen: 'Log Voice Mute/Deafen',
+      member: 'Log Profil Anggota',
+      server: 'Log Konfigurasi Server',
+      gaming_activity: 'Log Aktivitas Game',
+      spotify_activity: 'Log Spotify'
+    };
+
+    for (const [cat, label] of Object.entries(catLabels)) {
+      const oldVal = !!oldCats[cat];
+      const newVal = !!newCats[cat];
+      if (oldVal !== newVal) {
+        diffs.push({
+          field: `category_${cat}`,
+          label: `Kategori ${label}`,
+          old: oldVal ? 'Aktif' : 'Nonaktif',
+          new: newVal ? 'Aktif' : 'Nonaktif'
+        });
+      }
+    }
+  }
+
+  // Compare log_channels (JSON string or object)
+  if (newSettings.log_channels !== undefined) {
+    let oldChans = {};
+    let newChans = {};
+    try {
+      oldChans = typeof oldSettings.log_channels === 'string' ? JSON.parse(oldSettings.log_channels) : oldSettings.log_channels || {};
+    } catch (e) {}
+    try {
+      newChans = typeof newSettings.log_channels === 'string' ? JSON.parse(newSettings.log_channels) : newSettings.log_channels || {};
+    } catch (e) {}
+
+    const catLabels = {
+      moderation: 'Saluran Log Moderasi',
+      voice_join_leave: 'Saluran Log Voice Join/Leave',
+      voice_mute_deafen: 'Saluran Log Voice Mute/Deafen',
+      member: 'Saluran Log Profil Anggota',
+      server: 'Saluran Log Konfigurasi Server',
+      gaming_activity: 'Saluran Log Aktivitas Game',
+      spotify_activity: 'Saluran Log Spotify'
+    };
+
+    for (const [cat, label] of Object.entries(catLabels)) {
+      const oldChan = oldChans[cat] || null;
+      const newChan = newChans[cat] || null;
+      if (oldChan !== newChan) {
+        diffs.push({
+          field: `log_chan_${cat}`,
+          label: label,
+          old: oldChan ? oldChan : 'Sama dengan Log Utama',
+          new: newChan ? newChan : 'Sama dengan Log Utama'
+        });
+      }
+    }
+  }
+
+  return diffs;
 }
 
 // ----------------------------------------------------
@@ -155,6 +288,12 @@ const DEMO_SETTINGS = {
 app.get('/api/auth/demo', (req, res) => {
   req.session.user = DEMO_USER;
   req.session.guilds = DEMO_GUILDS;
+
+  // Save persistent session for Demo Mode
+  const sessionToken = crypto.randomBytes(32).toString('hex');
+  db.saveSession(sessionToken, { user: DEMO_USER, guilds: DEMO_GUILDS });
+  res.cookie('session_token', sessionToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true, path: '/' });
+
   res.json({ success: true, user: DEMO_USER });
 });
 
@@ -260,6 +399,11 @@ app.get('/api/auth/callback', async (req, res) => {
       };
     }).filter(g => g.hasAdmin);
 
+    // Save persistent session for Discord login
+    const sessionToken = crypto.randomBytes(32).toString('hex');
+    db.saveSession(sessionToken, { user: req.session.user, guilds: req.session.guilds });
+    res.cookie('session_token', sessionToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true, path: '/' });
+
     res.redirect(`${redirectBase}/dashboard`);
   } catch (error) {
     console.error('Error swap OAuth2 Token:', error.response?.data || error.message);
@@ -278,11 +422,23 @@ app.get('/api/auth/user', (req, res) => {
 
 // Logout Session
 app.get('/api/auth/logout', (req, res) => {
+  let token = null;
+  if (req.headers.cookie) {
+    const match = req.headers.cookie.match(/(?:^|;)\s*session_token\s*=\s*([^;]+)/);
+    if (match) {
+      token = decodeURIComponent(match[1]);
+    }
+  }
+  if (token) {
+    db.deleteSession(token);
+  }
+
   req.session.destroy(err => {
+    res.clearCookie('session_token');
+    res.clearCookie('connect.sid');
     if (err) {
       return res.status(500).json({ error: 'Gagal logout.' });
     }
-    res.clearCookie('connect.sid');
     res.json({ success: true });
   });
 });
@@ -309,13 +465,59 @@ app.get('/api/guilds/:guildId/settings', checkAuth, (req, res) => {
   });
 });
 
+// Get Guild Settings History
+app.get('/api/guilds/:guildId/settings-history', checkAuth, (req, res) => {
+  const { guildId } = req.params;
+  const isDemo = req.session.user.demo;
+
+  if (isDemo && guildId === '99999999999999') {
+    return res.json([
+      {
+        id: 1,
+        guild_id: '99999999999999',
+        executor: 'GamerKalong (Demo)',
+        changes: [
+          { field: 'welcome_enabled', label: 'Status Welcome Message', old: 'Nonaktif', new: 'Aktif' },
+          { field: 'welcome_channel_id', label: 'Saluran Welcome Message', old: 'Tidak disetel', new: '#general-chat' }
+        ],
+        timestamp: Date.now() - 600000
+      },
+      {
+        id: 2,
+        guild_id: '99999999999999',
+        executor: 'SystemBot (Demo)',
+        changes: [
+          { field: 'ai_model', label: 'Model AI', old: 'deepseek-chat', new: 'deepseek-reasoner' }
+        ],
+        timestamp: Date.now() - 3600000 * 3
+      }
+    ]);
+  }
+
+  const history = db.getSettingsHistory(guildId);
+  res.json(history);
+});
+
 // Update Guild Settings
 app.post('/api/guilds/:guildId/settings', checkAuth, (req, res) => {
   const { guildId } = req.params;
   const { log_channel_id, categories_enabled, embed_color, ignored_channels, ai_model, welcome_enabled, welcome_channel_id, welcome_message, autorole_enabled, autorole_role_id, achievement_channel_id, log_channels } = req.body;
   const isDemo = req.session.user.demo;
+  const username = req.session.user ? req.session.user.username : 'Web Dashboard';
 
   if (isDemo && guildId === '99999999999999') {
+    const oldClean = {
+      ...DEMO_SETTINGS,
+      categories_enabled: JSON.parse(DEMO_SETTINGS.categories_enabled || '{}'),
+      ignored_channels: JSON.parse(DEMO_SETTINGS.ignored_channels || '[]'),
+      log_channels: JSON.parse(DEMO_SETTINGS.log_channels || '{}')
+    };
+
+    const diffs = getSettingsDiff(oldClean, req.body);
+    if (diffs.length > 0) {
+      db.logSettingsChange(guildId, diffs, username + ' (Demo)');
+    }
+
     Object.assign(DEMO_SETTINGS, {
       log_channel_id,
       categories_enabled: typeof categories_enabled === 'string' ? categories_enabled : JSON.stringify(categories_enabled),
@@ -336,6 +538,39 @@ app.post('/api/guilds/:guildId/settings', checkAuth, (req, res) => {
       ignored_channels: JSON.parse(DEMO_SETTINGS.ignored_channels || '[]'),
       log_channels: JSON.parse(DEMO_SETTINGS.log_channels || '{}')
     }});
+  }
+
+  const current = db.getGuildSettings(guildId);
+  const cleanCurrent = {
+    ...current,
+    categories_enabled: JSON.parse(current.categories_enabled || '{}'),
+    ignored_channels: JSON.parse(current.ignored_channels || '[]'),
+    log_channels: JSON.parse(current.log_channels || '{}')
+  };
+
+  const diffs = getSettingsDiff(cleanCurrent, req.body);
+
+  if (diffs.length > 0) {
+    db.logSettingsChange(guildId, diffs, username);
+
+    // Send professional embed changelog to Discord logs
+    if (client.readyAt) {
+      const embed = new EmbedBuilder()
+        .setTitle('📝 Konfigurasi Server Diperbarui')
+        .setDescription(`Konfigurasi server telah diperbarui oleh **${username}** via Web Dashboard.`)
+        .setColor(cleanCurrent.embed_color || '#6366f1')
+        .setTimestamp();
+
+      diffs.forEach(diff => {
+        embed.addFields({
+          name: diff.label,
+          value: `Sebelum: \`${diff.old}\`\nSesudah: \`${diff.new}\``,
+          inline: false
+        });
+      });
+
+      sendLog(guildId, 'server', embed);
+    }
   }
 
   const updated = db.setGuildSettings(guildId, {

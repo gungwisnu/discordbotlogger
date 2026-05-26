@@ -140,6 +140,8 @@ export default function Dashboard() {
   const [settings, setSettings] = useState(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [history, setHistory] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
   const [expandedCats, setExpandedCats] = useState({
     moderation: false,
     voice_join_leave: false,
@@ -149,6 +151,21 @@ export default function Dashboard() {
     gaming_activity: false,
     spotify_activity: false
   });
+
+  const fetchHistory = () => {
+    if (!selectedGuild) return;
+    setLoadingHistory(true);
+    fetch(`/api/guilds/${selectedGuild.id}/settings-history`)
+      .then(res => {
+        if (!res.ok) throw new Error();
+        return res.json();
+      })
+      .then(data => {
+        setHistory(data);
+      })
+      .catch(err => console.error('Failed to load history:', err))
+      .finally(() => setLoadingHistory(false));
+  };
 
   // Fetch settings & channels list when selected guild changes
   useEffect(() => {
@@ -186,6 +203,9 @@ export default function Dashboard() {
         setRoles(data);
       })
       .catch(err => console.error('Failed to load roles:', err));
+
+    // Fetch settings history
+    fetchHistory();
   }, [selectedGuild]);
 
   const handleCategoryToggle = (category) => {
@@ -218,6 +238,7 @@ export default function Dashboard() {
       if (data.success) {
         setSettings(data.settings);
         setMessage('✅ Konfigurasi bot berhasil disimpan!');
+        fetchHistory(); // Refresh settings history log
       }
     } catch (err) {
       console.error(err);
@@ -910,6 +931,70 @@ export default function Dashboard() {
                     dipa: 333105200942546946 | #Belajar!: 1486233076160925881 • Hari ini pukul 03:10
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Settings Change History (Audit Logs) */}
+            <div className="glass-panel" style={{ padding: '0px', overflow: 'hidden' }}>
+              <div style={{ 
+                padding: '12px 16px', 
+                background: 'rgba(255,255,255,0.02)', 
+                borderBottom: '1px solid hsl(var(--border-glass))', 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center' 
+              }}>
+                <span style={{ fontSize: '0.8rem', color: 'white', fontWeight: 'bold' }}>📜 RIWAYAT PERUBAHAN</span>
+                <span style={{ fontSize: '0.72rem', color: 'hsl(var(--text-muted))', fontWeight: 'bold' }}>AUDIT TRAIL</span>
+              </div>
+              
+              <div style={{ 
+                padding: '16px', 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: '12px', 
+                maxHeight: '380px', 
+                overflowY: 'auto' 
+              }}>
+                {loadingHistory ? (
+                  <div style={{ textAlign: 'center', padding: '20px', color: 'hsl(var(--text-muted))', fontSize: '0.82rem' }}>
+                    Memuat riwayat perubahan...
+                  </div>
+                ) : history.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '20px', color: 'hsl(var(--text-muted))', fontSize: '0.82rem' }}>
+                    Belum ada riwayat perubahan konfigurasi.
+                  </div>
+                ) : (
+                  history.map((item) => (
+                    <div 
+                      key={item.id} 
+                      style={{ 
+                        padding: '12px', 
+                        borderRadius: '8px', 
+                        backgroundColor: 'rgba(255,255,255,0.01)', 
+                        border: '1px solid hsl(var(--border-glass))',
+                        fontSize: '0.82rem'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '4px' }}>
+                        <span style={{ color: 'white', fontWeight: '600' }}>👤 {item.executor}</span>
+                        <span style={{ color: 'hsl(var(--text-muted))', fontSize: '0.72rem' }}>
+                          {new Date(item.timestamp).toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', day: 'numeric', month: 'short' })}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        {item.changes.map((change, cIdx) => (
+                          <div key={cIdx} style={{ color: 'hsl(var(--text-secondary))', lineHeight: '1.4' }}>
+                            • <strong>{change.label}</strong>:<br/>
+                            <span style={{ color: '#ef4444', textDecoration: 'line-through', marginRight: '6px' }}>{change.old}</span>
+                            <span style={{ color: 'hsl(var(--text-muted))', marginRight: '6px' }}>→</span>
+                            <span style={{ color: '#10b981', fontWeight: '500' }}>{change.new}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 

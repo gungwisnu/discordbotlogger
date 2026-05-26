@@ -16,7 +16,9 @@ let data = {
   voice_sessions: [],
   user_history: {},
   mod_logs: [],
-  audit_cache: {}
+  audit_cache: {},
+  settings_history: [],
+  sessions: {}
 };
 
 // Load data on startup
@@ -31,6 +33,8 @@ if (fs.existsSync(dbPath)) {
     if (!data.user_history) data.user_history = {};
     if (!data.mod_logs) data.mod_logs = [];
     if (!data.audit_cache) data.audit_cache = {};
+    if (!data.settings_history) data.settings_history = [];
+    if (!data.sessions) data.sessions = {};
 
     console.log('Database JSON loaded successfully from', dbPath);
   } catch (err) {
@@ -556,6 +560,50 @@ const DatabaseFunctions = {
       tracked_users_count: list.length,
       popular_games: popularGames
     };
+  },
+
+  // Settings History API
+  logSettingsChange(guildId, changes, executor = 'Web Dashboard') {
+    if (!data.settings_history) data.settings_history = [];
+    const item = {
+      id: Date.now() + Math.floor(Math.random() * 1000),
+      guild_id: guildId,
+      executor: executor,
+      changes: changes, // Array of { field, old, new }
+      timestamp: Date.now()
+    };
+    data.settings_history.push(item);
+    triggerSave();
+    return item;
+  },
+
+  getSettingsHistory(guildId, limit = 50) {
+    if (!data.settings_history) data.settings_history = [];
+    return data.settings_history
+      .filter(h => h.guild_id === guildId)
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .slice(0, limit);
+  },
+
+  // Persistent Sessions API
+  saveSession(token, sessionData) {
+    if (!data.sessions) data.sessions = {};
+    data.sessions[token] = {
+      ...sessionData,
+      createdAt: Date.now()
+    };
+    triggerSave();
+  },
+
+  getSession(token) {
+    if (!data.sessions) data.sessions = {};
+    return data.sessions[token] || null;
+  },
+
+  deleteSession(token) {
+    if (!data.sessions) data.sessions = {};
+    delete data.sessions[token];
+    triggerSave();
   }
 };
 
