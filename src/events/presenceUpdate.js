@@ -28,11 +28,16 @@ module.exports = {
       
       if (session && session.gameName === oldActivity.name) {
         const durationSecs = Math.max(0, Math.floor((Date.now() - session.startTime) / 1000));
-        db.addGamingTime(guildId, userId, oldActivity.name, durationSecs);
+        const newlyUnlocked = db.addGamingTime(guildId, userId, oldActivity.name, durationSecs);
         delete activeGamingSessions[key];
 
         const mins = Math.floor(durationSecs / 60);
         durationStr = ` selama \`${mins} menit\``;
+
+        if (newlyUnlocked && newlyUnlocked.length > 0) {
+          const { sendAchievementNotification } = require('../bot');
+          sendAchievementNotification(guildId, userId, newlyUnlocked);
+        }
       }
 
       embed.setColor('#6b7280') // Neutral grey
@@ -47,7 +52,12 @@ module.exports = {
       if (activeGamingSessions[key]) {
         const session = activeGamingSessions[key];
         const durationSecs = Math.max(0, Math.floor((Date.now() - session.startTime) / 1000));
-        db.addGamingTime(guildId, userId, session.gameName, durationSecs);
+        const newlyUnlocked = db.addGamingTime(guildId, userId, session.gameName, durationSecs);
+
+        if (newlyUnlocked && newlyUnlocked.length > 0) {
+          const { sendAchievementNotification } = require('../bot');
+          sendAchievementNotification(guildId, userId, newlyUnlocked);
+        }
       }
 
       // Record new session

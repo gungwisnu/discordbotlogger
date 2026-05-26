@@ -69,13 +69,18 @@ const ACHIEVEMENTS_METADATA = {
   first_word: { emoji: '💬', name: 'First Word', desc: 'Mengirimkan pesan pertama di server.' },
   chatterbox_basic: { emoji: '🗣️', name: 'Chatterbox I', desc: 'Mengirimkan 100 pesan teks.' },
   chatterbox_elite: { emoji: '📢', name: 'Chatterbox II', desc: 'Mengirimkan 1.000 pesan teks.' },
+  chatterbox_legend: { emoji: '🏆', name: 'Chatterbox Legend', desc: 'Mengirimkan 10.000 pesan teks di server.' },
   vc_rookie: { emoji: '🎙️', name: 'Voice Rookie', desc: 'Akumulasi aktivitas Voice selama 1 jam.' },
   vc_veteran: { emoji: '👑', name: 'Voice Veteran', desc: 'Akumulasi aktivitas Voice selama 10 jam.' },
-  vc_deity: { emoji: '♾️', name: 'Voice Deity', desc: 'Akumulasi aktivitas Voice selama 100 jam.' },
+  vc_master: { emoji: '👑', name: 'Voice Master', desc: 'Akumulasi aktivitas Voice selama 50 jam.' },
+  vc_deity: { emoji: '♾️', name: 'Voice Deity', desc: 'Mengumpulkan 100 jam sesi Voice.' },
   marathon_vc: { emoji: '🏃', name: 'Voice Marathoner', desc: 'Satu sesi Voice tanpa terputus minimal selama 5 jam.' },
   night_owl: { emoji: '🦉', name: 'Night Owl', desc: 'Aktivitas Voice secara aktif pada dini hari (02:00 - 05:00).' },
+  early_bird: { emoji: '🌅', name: 'Early Bird', desc: 'Aktif bergabung ke saluran Voice pada pagi hari (05:00 - 08:00).' },
+  weekend_warrior: { emoji: '⚔️', name: 'Weekend Warrior', desc: 'Aktif menggunakan saluran Voice pada akhir pekan (Sabtu/Minggu).' },
   gamer_initiate: { emoji: '🎮', name: 'Gamer Initiate', desc: 'Deteksi aktivitas bermain game minimal selama 1 jam.' },
-  hardcore_gamer: { emoji: '🔥', name: 'Hardcore Gamer', desc: 'Mencapai akumulasi bermain satu judul game minimal selama 10 jam.' }
+  hardcore_gamer: { emoji: '🔥', name: 'Hardcore Gamer', desc: 'Mencapai bermain satu judul game minimal selama 10 jam.' },
+  gamer_expert: { emoji: '🌟', name: 'Gamer Expert', desc: 'Mengumpulkan total durasi bermain seluruh game selama 50 jam.' }
 };
 
 // Ready event handling & slash command registration
@@ -249,8 +254,11 @@ client.on('interactionCreate', async interaction => {
 async function sendLog(guildId, category, embed) {
   const settings = db.getGuildSettings(guildId);
   
-  // Check if log channel is set
-  if (!settings.log_channel_id) return;
+  // Resolve category specific channel or fallback to main log channel
+  const logChannels = JSON.parse(settings.log_channels || '{}');
+  const targetChannelId = logChannels[category] || settings.log_channel_id;
+
+  if (!targetChannelId) return;
   
   // Check if category is enabled
   const cats = JSON.parse(settings.categories_enabled || '{}');
@@ -272,7 +280,7 @@ async function sendLog(guildId, category, embed) {
     const guild = await client.guilds.fetch(guildId).catch(() => null);
     if (!guild) return;
 
-    const channel = await guild.channels.fetch(settings.log_channel_id).catch(() => null);
+    const channel = await guild.channels.fetch(targetChannelId).catch(() => null);
     if (!channel || !channel.isTextBased()) return;
 
     // Apply standard guild theme color if embed has no color
@@ -283,7 +291,46 @@ async function sendLog(guildId, category, embed) {
 
     await channel.send({ embeds: [embed] });
   } catch (error) {
-    console.error(`Gagal mengirim log ke channel ${settings.log_channel_id}:`, error);
+    console.error(`Gagal mengirim log ke channel ${targetChannelId}:`, error);
+  }
+}
+
+// Helper function to send achievement unlock notification
+async function sendAchievementNotification(guildId, userId, newlyUnlocked) {
+  if (!newlyUnlocked || newlyUnlocked.length === 0) return;
+  const settings = db.getGuildSettings(guildId);
+  const chanId = settings.achievement_channel_id;
+  if (!chanId) return;
+
+  try {
+    const guild = await client.guilds.fetch(guildId).catch(() => null);
+    if (!guild) return;
+
+    const channel = await guild.channels.fetch(chanId).catch(() => null);
+    if (!channel || !channel.isTextBased()) return;
+
+    const member = await guild.members.fetch(userId).catch(() => null);
+    if (!member) return;
+
+    for (const achievementId of newlyUnlocked) {
+      const meta = ACHIEVEMENTS_METADATA[achievementId];
+      if (!meta) continue;
+
+      const embed = new EmbedBuilder()
+        .setColor(settings.embed_color || '#6366f1')
+        .setTitle('🏆 Pencapaian Terbuka')
+        .setDescription(`Selamat kepada ${member}! Anda telah membuka pencapaian baru di server ini.`)
+        .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
+        .addFields(
+          { name: 'Pencapaian', value: `${meta.emoji} **${meta.name}**`, inline: true },
+          { name: 'Tantangan', value: meta.desc, inline: true }
+        )
+        .setTimestamp();
+
+      await channel.send({ embeds: [embed] }).catch(err => console.error('Gagal mengirim notifikasi pencapaian:', err.message));
+    }
+  } catch (error) {
+    console.error('Error saat mengirim notifikasi pencapaian:', error);
   }
 }
 
@@ -308,5 +355,6 @@ module.exports = {
   client,
   startBot,
   sendLog,
+  sendAchievementNotification,
   ACHIEVEMENTS_METADATA
 };

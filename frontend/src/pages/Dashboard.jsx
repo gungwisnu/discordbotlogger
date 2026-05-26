@@ -508,6 +508,77 @@ export default function Dashboard() {
                 </div>
 
               </div>
+
+              {/* Achievement Notification Settings Row */}
+              <div style={{ borderTop: '1px solid hsl(var(--border-glass))', paddingTop: '20px', marginTop: '10px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h4 style={{ color: 'white', fontSize: '1.05rem', fontWeight: '600' }}>🏆 Saluran Notifikasi Pencapaian</h4>
+                    
+                    {/* Toggle Switch */}
+                    <label style={{
+                      position: 'relative',
+                      display: 'inline-block',
+                      width: '48px',
+                      height: '24px',
+                      cursor: 'pointer'
+                    }}>
+                      <input 
+                        type="checkbox" 
+                        checked={settings.achievement_channel_id !== null && settings.achievement_channel_id !== undefined} 
+                        onChange={(e) => setSettings(prev => ({ 
+                          ...prev, 
+                          achievement_channel_id: e.target.checked ? (channels[0]?.id || '') : null 
+                        }))}
+                        style={{ opacity: 0, width: 0, height: 0 }} 
+                      />
+                      <span style={{
+                        position: 'absolute',
+                        cursor: 'pointer',
+                        top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: (settings.achievement_channel_id !== null && settings.achievement_channel_id !== undefined) ? '#10b981' : '#3f3f46',
+                        transition: '0.3s',
+                        borderRadius: '34px',
+                        border: '1px solid hsl(var(--border-glass))'
+                      }}>
+                        <span style={{
+                          position: 'absolute',
+                          height: '16px',
+                          width: '16px',
+                          left: (settings.achievement_channel_id !== null && settings.achievement_channel_id !== undefined) ? '26px' : '4px',
+                          bottom: '3px',
+                          backgroundColor: 'white',
+                          transition: '0.3s',
+                          borderRadius: '50%',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                        }} />
+                      </span>
+                    </label>
+                  </div>
+                  
+                  {settings.achievement_channel_id !== null && settings.achievement_channel_id !== undefined && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <select
+                        value={settings.achievement_channel_id || ''}
+                        onChange={(e) => setSettings(prev => ({ ...prev, achievement_channel_id: e.target.value || null }))}
+                        className="input-glass"
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <option value="" style={{ backgroundColor: 'black' }}>-- Pilih Saluran Pencapaian --</option>
+                        {channels.map(ch => (
+                          <option key={ch.id} value={ch.id} style={{ backgroundColor: 'black' }}>
+                            #{ch.name}
+                          </option>
+                        ))}
+                      </select>
+                      <span style={{ fontSize: '0.75rem', color: 'hsl(var(--text-muted))', lineHeight: '1.4' }}>
+                        💡 Ketika anggota membuka pencapaian baru, bot akan otomatis mengirimkan ucapan selamat premium di saluran ini.
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
             </div>
 
             {/* Event Category Cards */}
@@ -628,6 +699,49 @@ export default function Dashboard() {
                         <p style={{ fontSize: '0.88rem', color: 'hsl(var(--text-secondary))', lineHeight: '1.5', marginBottom: '12px' }}>
                           {details.desc}
                         </p>
+
+                        {/* Granular Channel Selection */}
+                        <div style={{ 
+                          marginBottom: '16px', 
+                          padding: '12px', 
+                          borderRadius: '8px', 
+                          backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                          border: '1px solid hsl(var(--border-glass))',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '6px'
+                        }}>
+                          <label style={{ fontSize: '0.82rem', color: 'white', fontWeight: '500' }}>
+                            🎯 Saluran Log Khusus Kategori Ini:
+                          </label>
+                          <select
+                            value={settings.log_channels?.[catKey] || ''}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setSettings(prev => {
+                                const logChans = { ...(prev.log_channels || {}) };
+                                if (val) logChans[catKey] = val;
+                                else delete logChans[catKey];
+                                return { ...prev, log_channels: logChans };
+                              });
+                            }}
+                            className="input-glass"
+                            style={{ cursor: 'pointer', fontSize: '0.82rem', padding: '6px 10px' }}
+                          >
+                            <option value="" style={{ backgroundColor: 'black' }}>-- Gunakan Saluran Log Utama (Default) --</option>
+                            {channels.map(ch => (
+                              <option key={ch.id} value={ch.id} style={{ backgroundColor: 'black' }}>
+                                #{ch.name}
+                              </option>
+                            ))}
+                          </select>
+                          <span style={{ fontSize: '0.72rem', color: 'hsl(var(--text-muted))' }}>
+                            {settings.log_channels?.[catKey] ? 
+                              `✅ Log untuk kategori ini dialihkan secara khusus ke saluran di atas.` : 
+                              `ℹ️ Kategori ini menggunakan Saluran Log Utama (${settings.log_channel_id ? '#' + (channels.find(c => c.id === settings.log_channel_id)?.name || '') : 'Belum disetel'}).`
+                            }
+                          </span>
+                        </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', flexWrap: 'wrap' }}>
                           {/* Tracked Events List */}

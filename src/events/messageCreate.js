@@ -38,7 +38,9 @@ module.exports = {
         'setwelcome',
         'welcomemsg',
         'autorole',
-        'setrole'
+        'setrole',
+        'setachievement',
+        'logchannel'
       ]);
 
       const isExplicitAI = (firstArg === 'ask');
@@ -201,10 +203,11 @@ module.exports = {
             .setTitle('⚙️ Daftar Command Admin Pandu')
             .setDescription('Berikut adalah daftar command konfigurasi server untuk Administrator:')
             .addFields(
-              { name: '🎯 Saluran & Log', value: '`pan!setlog <#channel>` - Mengatur saluran tujuan log\n`pan!log <enable|disable> <kategori>` - Mengaktifkan/menonaktifkan kategori log\n`pan!ignore <#channel>` - Mengabaikan saluran dari pencatatan log/statistik\n`pan!unignore <#channel>` - Menghapus saluran dari daftar abaikan\n`pan!setcolor <hex_code>` - Mengubah warna embed log (contoh: `#ff0000`)' },
+              { name: '🎯 Saluran & Log Utama', value: '`pan!setlog <#channel>` - Mengatur saluran tujuan log utama\n`pan!log <enable|disable> <kategori>` - Mengaktifkan/menonaktifkan kategori log\n`pan!ignore <#channel>` - Mengabaikan saluran dari pencatatan log/statistik\n`pan!unignore <#channel>` - Menghapus saluran dari daftar abaikan\n`pan!setcolor <hex_code>` - Mengubah warna embed log (contoh: `#ff0000`)' },
               { name: '🤖 Pengaturan AI & Status', value: '`pan!setmodel <faster|thinker>` - Mengubah model AI DeepSeek\n`pan!status` - Memeriksa konfigurasi server saat ini' },
-              { name: '📥 Pengaturan Welcome (Sapaan)', value: '`pan!welcome <enable|disable>` - Mengaktifkan/menonaktifkan pesan selamat datang\n`pan!setwelcome <#channel>` - Mengatur saluran teks sapaan welcome\n`pan!welcomemsg <isi_pesan...>` - Mengubah pesan sapaan kustom (Gunakan `{user}` untuk mention)' },
-              { name: '🛡️ Pengaturan Auto-Role', value: '`pan!autorole <enable|disable>` - Mengaktifkan/menonaktifkan pemberian peran otomatis\n`pan!setrole <@role|role_id>` - Mengatur peran otomatis bagi anggota baru' }
+              { name: '📥 Welcome & Pencapaian', value: '`pan!welcome <enable|disable>` - Mengaktifkan/menonaktifkan welcome\n`pan!setwelcome <#channel>` - Mengatur saluran welcome\n`pan!welcomemsg <isi_pesan...>` - Mengatur pesan welcome\n`pan!setachievement <#channel|disable>` - Mengatur saluran notifikasi pencapaian' },
+              { name: '🛡️ Pengaturan Auto-Role', value: '`pan!autorole <enable|disable>` - Mengaktifkan/menonaktifkan pemberian peran otomatis\n`pan!setrole <@role|role_id>` - Mengatur peran otomatis bagi anggota baru' },
+              { name: '🎯 Granular Log Channels', value: '`pan!logchannel <kategori> <#channel>` - Mengatur log saluran terpisah per kategori (contoh: `pan!logchannel voice #log-vc`)\n`pan!logchannel reset <kategori>` - Mengembalikan kategori log ke saluran utama' }
             )
             .setFooter({ text: 'Sistem Logger & Analitik Server' })
             .setTimestamp();
@@ -229,7 +232,8 @@ module.exports = {
       // ----------------------------------------------------------------------
       const isAdminCommand = [
         'setlog', 'log', 'ignore', 'unignore', 'setcolor', 'status', 'setmodel',
-        'welcome', 'setwelcome', 'welcomemsg', 'autorole', 'setrole'
+        'welcome', 'setwelcome', 'welcomemsg', 'autorole', 'setrole',
+        'setachievement', 'logchannel'
       ].includes(commandName);
       if (isAdminCommand) {
         if (!message.member.permissions.has(PermissionsBitField.Flags.ManageGuild) && !message.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
@@ -250,16 +254,24 @@ module.exports = {
         const roleStr = settings.autorole_role_id ? `<@&${settings.autorole_role_id}>` : '*Belum diatur*';
         const autoroleStatus = `• Status: ${settings.autorole_enabled ? '✅ Aktif' : '❌ Nonaktif'}\n• Peran: ${roleStr}`;
 
+        const achChanStr = settings.achievement_channel_id ? `<#${settings.achievement_channel_id}>` : '*Belum diatur (Dinonaktifkan)*';
+        const achievementStatus = `• Saluran: ${achChanStr}`;
+
+        const logChannels = JSON.parse(settings.log_channels || '{}');
+        const granularStr = Object.entries(logChannels).map(([k, v]) => `• **${k}**: <#${v}>`).join('\n') || 'Semua kategori menggunakan Saluran Log Utama.';
+
         const embed = new EmbedBuilder()
           .setColor(settings.embed_color || '#6366f1')
           .setTitle('⚙️ Konfigurasi Log & AI Server')
           .addFields(
-            { name: 'Saluran Log', value: settings.log_channel_id ? `<#${settings.log_channel_id}>` : 'Belum diatur', inline: true },
+            { name: 'Saluran Log Utama', value: settings.log_channel_id ? `<#${settings.log_channel_id}>` : 'Belum diatur', inline: true },
             { name: 'Warna Embed', value: `\`${settings.embed_color || '#6366f1'}\``, inline: true },
             { name: 'Model AI DeepSeek', value: settings.ai_model === 'deepseek-reasoner' ? '🧠 **Pemikir (deepseek-reasoner)**' : '⚡ **Tercepat (deepseek-chat)**', inline: true },
             { name: '📥 Fitur Welcome (Sapaan)', value: welcomeStatus },
+            { name: '🏆 Saluran Notifikasi Pencapaian', value: achievementStatus },
             { name: '🛡️ Fitur Auto-Role', value: autoroleStatus },
-            { name: 'Kategori Log', value: catStr },
+            { name: '🎯 Granular Log Channels', value: granularStr },
+            { name: 'Kategori Log Aktif', value: catStr },
             { name: 'Saluran Diabaikan', value: ignStr }
           )
           .setTimestamp();
@@ -405,6 +417,80 @@ module.exports = {
         });
         return message.reply(`✅ Berhasil mengatur auto-role ke peran **${role.name}** dan otomatis mengaktifkan fitur auto-role.`);
       }
+
+      if (commandName === 'setachievement') {
+        const action = args[0]?.toLowerCase();
+        if (action === 'disable') {
+          db.setGuildSettings(guildId, { achievement_channel_id: null });
+          return message.reply('✅ Notifikasi pencapaian berhasil dinonaktifkan.');
+        }
+
+        const channel = message.mentions.channels.first();
+        if (!channel) {
+          return message.reply('❌ Format salah. Harap tag saluran atau ketik `disable`, contoh:\n`pan!setachievement #pencapaian` atau `pan!setachievement disable`');
+        }
+
+        db.setGuildSettings(guildId, { achievement_channel_id: channel.id });
+        return message.reply(`✅ Berhasil mengatur saluran notifikasi pencapaian ke ${channel}.`);
+      }
+
+      if (commandName === 'logchannel') {
+        const subCommand = args[0]?.toLowerCase();
+        
+        if (subCommand === 'reset') {
+          const categoryInput = args[1]?.toLowerCase();
+          if (!categoryInput) {
+            return message.reply('❌ Format salah. Harap ketik kategori yang ingin direset, contoh: `pan!logchannel reset voice`');
+          }
+
+          const categories = [];
+          if (categoryInput === 'voice') categories.push('voice_join_leave', 'voice_mute_deafen');
+          else if (categoryInput === 'gaming') categories.push('gaming_activity');
+          else if (categoryInput === 'spotify') categories.push('spotify_activity');
+          else if (categoryInput === 'mod') categories.push('moderation');
+          else categories.push(categoryInput);
+
+          const validCats = ['moderation', 'voice_join_leave', 'voice_mute_deafen', 'member', 'server', 'gaming_activity', 'spotify_activity'];
+          const filtered = categories.filter(c => validCats.includes(c));
+          
+          if (filtered.length === 0) {
+            return message.reply(`❌ Kategori tidak valid. Pilihan kategori:\n\`moderation\`, \`voice_join_leave\`, \`voice_mute_deafen\`, \`member\`, \`server\`, \`gaming_activity\`, \`spotify_activity\` (Alias: \`mod\`, \`voice\`, \`gaming\`, \`spotify\`)`);
+          }
+
+          const logChannels = JSON.parse(settings.log_channels || '{}');
+          filtered.forEach(c => delete logChannels[c]);
+          db.setGuildSettings(guildId, { log_channels: JSON.stringify(logChannels) });
+
+          return message.reply(`✅ Berhasil mereset saluran log untuk kategori **${filtered.join(', ')}** ke saluran log utama.`);
+        }
+
+        const categoryInput = subCommand;
+        const channel = message.mentions.channels.first();
+
+        if (!categoryInput || !channel) {
+          return message.reply('❌ Format salah. Harap gunakan format:\n`pan!logchannel <kategori> <#channel>` atau `pan!logchannel reset <kategori>`');
+        }
+
+        const categories = [];
+        if (categoryInput === 'voice') categories.push('voice_join_leave', 'voice_mute_deafen');
+        else if (categoryInput === 'gaming') categories.push('gaming_activity');
+        else if (categoryInput === 'spotify') categories.push('spotify_activity');
+        else if (categoryInput === 'mod') categories.push('moderation');
+        else categories.push(categoryInput);
+
+        const validCats = ['moderation', 'voice_join_leave', 'voice_mute_deafen', 'member', 'server', 'gaming_activity', 'spotify_activity'];
+        const filtered = categories.filter(c => validCats.includes(c));
+
+        if (filtered.length === 0) {
+          return message.reply(`❌ Kategori tidak valid. Pilihan kategori:\n\`moderation\`, \`voice_join_leave\`, \`voice_mute_deafen\`, \`member\`, \`server\`, \`gaming_activity\`, \`spotify_activity\` (Alias: \`mod\`, \`voice\`, \`gaming\`, \`spotify\`)`);
+        }
+
+        const logChannels = JSON.parse(settings.log_channels || '{}');
+        filtered.forEach(c => logChannels[c] = channel.id);
+        db.setGuildSettings(guildId, { log_channels: JSON.stringify(logChannels) });
+
+        return message.reply(`✅ Berhasil mengatur saluran log untuk kategori **${filtered.join(', ')}** ke ${channel}.`);
+      }
     }
     
     // Check if channel is ignored
@@ -412,6 +498,10 @@ module.exports = {
     const ignored = JSON.parse(settings.ignored_channels || '[]');
     if (ignored.includes(message.channel.id)) return;
 
-    db.addMessageCount(message.guild.id, message.author.id);
+    const newlyUnlocked = db.addMessageCount(message.guild.id, message.author.id);
+    if (newlyUnlocked && newlyUnlocked.length > 0) {
+      const { sendAchievementNotification } = require('../bot');
+      sendAchievementNotification(message.guild.id, message.author.id, newlyUnlocked);
+    }
   }
 };

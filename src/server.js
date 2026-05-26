@@ -142,7 +142,9 @@ const DEMO_SETTINGS = {
   welcome_channel_id: '222',
   welcome_message: 'Selamat datang, {user}!',
   autorole_enabled: true,
-  autorole_role_id: '111222'
+  autorole_role_id: '111222',
+  achievement_channel_id: '333',
+  log_channels: '{}'
 };
 
 // ----------------------------------------------------
@@ -302,14 +304,15 @@ app.get('/api/guilds/:guildId/settings', checkAuth, (req, res) => {
   res.json({
     ...settings,
     categories_enabled: JSON.parse(settings.categories_enabled || '{}'),
-    ignored_channels: JSON.parse(settings.ignored_channels || '[]')
+    ignored_channels: JSON.parse(settings.ignored_channels || '[]'),
+    log_channels: JSON.parse(settings.log_channels || '{}')
   });
 });
 
 // Update Guild Settings
 app.post('/api/guilds/:guildId/settings', checkAuth, (req, res) => {
   const { guildId } = req.params;
-  const { log_channel_id, categories_enabled, embed_color, ignored_channels, ai_model, welcome_enabled, welcome_channel_id, welcome_message, autorole_enabled, autorole_role_id } = req.body;
+  const { log_channel_id, categories_enabled, embed_color, ignored_channels, ai_model, welcome_enabled, welcome_channel_id, welcome_message, autorole_enabled, autorole_role_id, achievement_channel_id, log_channels } = req.body;
   const isDemo = req.session.user.demo;
 
   if (isDemo && guildId === '99999999999999') {
@@ -323,9 +326,16 @@ app.post('/api/guilds/:guildId/settings', checkAuth, (req, res) => {
       welcome_channel_id: welcome_channel_id !== undefined ? welcome_channel_id : DEMO_SETTINGS.welcome_channel_id,
       welcome_message: welcome_message !== undefined ? welcome_message : DEMO_SETTINGS.welcome_message,
       autorole_enabled: autorole_enabled !== undefined ? autorole_enabled : DEMO_SETTINGS.autorole_enabled,
-      autorole_role_id: autorole_role_id !== undefined ? autorole_role_id : DEMO_SETTINGS.autorole_role_id
+      autorole_role_id: autorole_role_id !== undefined ? autorole_role_id : DEMO_SETTINGS.autorole_role_id,
+      achievement_channel_id: achievement_channel_id !== undefined ? achievement_channel_id : DEMO_SETTINGS.achievement_channel_id,
+      log_channels: typeof log_channels === 'string' ? log_channels : JSON.stringify(log_channels || {})
     });
-    return res.json({ success: true, settings: DEMO_SETTINGS });
+    return res.json({ success: true, settings: {
+      ...DEMO_SETTINGS,
+      categories_enabled: JSON.parse(DEMO_SETTINGS.categories_enabled || '{}'),
+      ignored_channels: JSON.parse(DEMO_SETTINGS.ignored_channels || '[]'),
+      log_channels: JSON.parse(DEMO_SETTINGS.log_channels || '{}')
+    }});
   }
 
   const updated = db.setGuildSettings(guildId, {
@@ -338,7 +348,9 @@ app.post('/api/guilds/:guildId/settings', checkAuth, (req, res) => {
     welcome_channel_id,
     welcome_message,
     autorole_enabled,
-    autorole_role_id
+    autorole_role_id,
+    achievement_channel_id,
+    log_channels
   });
 
   res.json({
@@ -346,7 +358,8 @@ app.post('/api/guilds/:guildId/settings', checkAuth, (req, res) => {
     settings: {
       ...updated,
       categories_enabled: JSON.parse(updated.categories_enabled || '{}'),
-      ignored_channels: JSON.parse(updated.ignored_channels || '[]')
+      ignored_channels: JSON.parse(updated.ignored_channels || '[]'),
+      log_channels: JSON.parse(updated.log_channels || '{}')
     }
   });
 });

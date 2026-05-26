@@ -80,7 +80,9 @@ const DatabaseFunctions = {
         welcome_channel_id: null,
         welcome_message: 'Selamat datang, {user}!',
         autorole_enabled: false,
-        autorole_role_id: null
+        autorole_role_id: null,
+        achievement_channel_id: null,
+        log_channels: '{}'
       };
     }
 
@@ -160,6 +162,14 @@ const DatabaseFunctions = {
         row.autorole_role_id = null;
         changed = true;
       }
+      if (row.achievement_channel_id === undefined) {
+        row.achievement_channel_id = null;
+        changed = true;
+      }
+      if (row.log_channels === undefined) {
+        row.log_channels = '{}';
+        changed = true;
+      }
 
       if (changed) {
         row.categories_enabled = JSON.stringify(cats);
@@ -172,7 +182,7 @@ const DatabaseFunctions = {
     return row;
   },
 
-  setGuildSettings(guildId, { log_channel_id, categories_enabled, embed_color, ignored_channels, ai_model, welcome_enabled, welcome_channel_id, welcome_message, autorole_enabled, autorole_role_id }) {
+  setGuildSettings(guildId, { log_channel_id, categories_enabled, embed_color, ignored_channels, ai_model, welcome_enabled, welcome_channel_id, welcome_message, autorole_enabled, autorole_role_id, achievement_channel_id, log_channels }) {
     const current = this.getGuildSettings(guildId);
     
     const channel = log_channel_id !== undefined ? log_channel_id : current.log_channel_id;
@@ -185,6 +195,8 @@ const DatabaseFunctions = {
     const welcomeMsg = welcome_message !== undefined ? welcome_message : current.welcome_message !== undefined ? current.welcome_message : 'Selamat datang, {user}!';
     const autoroleEnabled = autorole_enabled !== undefined ? autorole_enabled : current.autorole_enabled !== undefined ? current.autorole_enabled : false;
     const autoroleRoleId = autorole_role_id !== undefined ? autorole_role_id : current.autorole_role_id !== undefined ? current.autorole_role_id : null;
+    const achievementChannel = achievement_channel_id !== undefined ? achievement_channel_id : current.achievement_channel_id !== undefined ? current.achievement_channel_id : null;
+    const logChans = log_channels !== undefined ? (typeof log_channels === 'string' ? log_channels : JSON.stringify(log_channels)) : current.log_channels !== undefined ? current.log_channels : '{}';
 
     data.guild_settings[guildId] = {
       guild_id: guildId,
@@ -197,7 +209,9 @@ const DatabaseFunctions = {
       welcome_channel_id: welcomeChannel,
       welcome_message: welcomeMsg,
       autorole_enabled: autoroleEnabled,
-      autorole_role_id: autoroleRoleId
+      autorole_role_id: autoroleRoleId,
+      achievement_channel_id: achievementChannel,
+      log_channels: logChans
     };
 
     triggerSave();
@@ -232,7 +246,7 @@ const DatabaseFunctions = {
 
   endVoiceSession(guildId, userId) {
     const active = data.voice_sessions.find(s => s.guild_id === guildId && s.user_id === userId && s.leave_time === null);
-    if (!active) return null;
+    if (!active) return { duration: 0, newlyUnlocked: [] };
 
     const leaveTime = Date.now();
     const duration = Math.max(0, Math.floor((leaveTime - active.join_time) / 1000));
@@ -246,10 +260,10 @@ const DatabaseFunctions = {
     userStats.voice_time = (userStats.voice_time || 0) + duration;
 
     // Check for Voice Achievements
-    this.checkAndAwardVoiceStats(guildId, userId, duration);
+    const newlyUnlocked = this.checkAndAwardVoiceStats(guildId, userId, duration);
     
     triggerSave();
-    return duration;
+    return { duration, newlyUnlocked };
   },
 
   // User History & Messaging Stats Helper Initialization
@@ -272,8 +286,9 @@ const DatabaseFunctions = {
   addMessageCount(guildId, userId) {
     this.initUserHistory(guildId, userId);
     data.user_history[guildId][userId].msg_count += 1;
-    this.checkAndAwardMessageStats(guildId, userId);
+    const newlyUnlocked = this.checkAndAwardMessageStats(guildId, userId);
     triggerSave();
+    return newlyUnlocked;
   },
 
   getUserStats(guildId, userId) {
@@ -297,8 +312,9 @@ const DatabaseFunctions = {
     data.user_history[guildId][userId].gaming_time = JSON.stringify(gaming);
     
     // Check for Gaming Achievements
-    this.checkAndAwardGamingStats(guildId, userId, gameName, gaming[gameName]);
+    const newlyUnlocked = this.checkAndAwardGamingStats(guildId, userId, gameName, gaming[gameName]);
     triggerSave();
+    return newlyUnlocked;
   },
 
   // Achievements Systems
@@ -306,49 +322,66 @@ const DatabaseFunctions = {
     const stats = this.getUserStats(guildId, userId);
     const list = new Set(stats.achievements || []);
     let updated = false;
+    const newlyUnlocked = [];
 
     if (stats.msg_count >= 1 && !list.has('first_word')) {
       list.add('first_word');
+      newlyUnlocked.push('first_word');
       updated = true;
     }
     if (stats.msg_count >= 100 && !list.has('chatterbox_basic')) {
       list.add('chatterbox_basic');
+      newlyUnlocked.push('chatterbox_basic');
       updated = true;
     }
     if (stats.msg_count >= 1000 && !list.has('chatterbox_elite')) {
       list.add('chatterbox_elite');
+      newlyUnlocked.push('chatterbox_elite');
+      updated = true;
+    }
+    if (stats.msg_count >= 10000 && !list.has('chatterbox_legend')) {
+      list.add('chatterbox_legend');
+      newlyUnlocked.push('chatterbox_legend');
       updated = true;
     }
 
     if (updated) {
       data.user_history[guildId][userId].achievements = JSON.stringify([...list]);
     }
+    return newlyUnlocked;
   },
 
   checkAndAwardVoiceStats(guildId, userId, sessionDuration) {
     const stats = this.getUserStats(guildId, userId);
     const list = new Set(stats.achievements || []);
     let updated = false;
-
-    // voice_time is in seconds
-    const hours = stats.voice_time / 3600;
+    const newlyUnlocked = [];
 
     if (stats.voice_time >= 3600 && !list.has('vc_rookie')) {
       list.add('vc_rookie');
+      newlyUnlocked.push('vc_rookie');
       updated = true;
     }
     if (stats.voice_time >= 36000 && !list.has('vc_veteran')) { // 10 Hours
       list.add('vc_veteran');
+      newlyUnlocked.push('vc_veteran');
+      updated = true;
+    }
+    if (stats.voice_time >= 180000 && !list.has('vc_master')) { // 50 Hours
+      list.add('vc_master');
+      newlyUnlocked.push('vc_master');
       updated = true;
     }
     if (stats.voice_time >= 360000 && !list.has('vc_deity')) { // 100 Hours
       list.add('vc_deity');
+      newlyUnlocked.push('vc_deity');
       updated = true;
     }
 
     // Check session achievements
     if (sessionDuration >= 18000 && !list.has('marathon_vc')) { // 5 hours straight
       list.add('marathon_vc');
+      newlyUnlocked.push('marathon_vc');
       updated = true;
     }
 
@@ -356,31 +389,60 @@ const DatabaseFunctions = {
     const hr = new Date().getHours();
     if ((hr >= 2 && hr <= 5) && !list.has('night_owl')) {
       list.add('night_owl');
+      newlyUnlocked.push('night_owl');
+      updated = true;
+    }
+
+    // Check early bird (Voice between 5 AM and 8 AM)
+    if ((hr >= 5 && hr <= 8) && !list.has('early_bird')) {
+      list.add('early_bird');
+      newlyUnlocked.push('early_bird');
+      updated = true;
+    }
+
+    // Check weekend warrior (Saturday or Sunday)
+    const day = new Date().getDay();
+    if ((day === 0 || day === 6) && !list.has('weekend_warrior')) {
+      list.add('weekend_warrior');
+      newlyUnlocked.push('weekend_warrior');
       updated = true;
     }
 
     if (updated) {
       data.user_history[guildId][userId].achievements = JSON.stringify([...list]);
     }
+    return newlyUnlocked;
   },
 
   checkAndAwardGamingStats(guildId, userId, gameName, totalSeconds) {
     const stats = this.getUserStats(guildId, userId);
     const list = new Set(stats.achievements || []);
     let updated = false;
+    const newlyUnlocked = [];
 
     if (totalSeconds >= 3600 && !list.has('gamer_initiate')) {
       list.add('gamer_initiate');
+      newlyUnlocked.push('gamer_initiate');
       updated = true;
     }
     if (totalSeconds >= 36000 && !list.has('hardcore_gamer')) { // 10 hours of a single game
       list.add('hardcore_gamer');
+      newlyUnlocked.push('hardcore_gamer');
+      updated = true;
+    }
+
+    // Check total gaming time across all games
+    const totalGamingSecs = Object.values(stats.gaming_time || {}).reduce((a, b) => a + b, 0);
+    if (totalGamingSecs >= 180000 && !list.has('gamer_expert')) { // 50 Hours
+      list.add('gamer_expert');
+      newlyUnlocked.push('gamer_expert');
       updated = true;
     }
 
     if (updated) {
       data.user_history[guildId][userId].achievements = JSON.stringify([...list]);
     }
+    return newlyUnlocked;
   },
 
   // Moderation Logging Storage

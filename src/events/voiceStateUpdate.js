@@ -32,10 +32,12 @@ module.exports = {
 
     // 2. LEAVE Voice
     else if (oldState.channelId && !newState.channelId) {
-      const durationSecs = db.endVoiceSession(guildId, userId);
+      const result = db.endVoiceSession(guildId, userId);
+      const durationSecs = result.duration;
+      const newlyUnlocked = result.newlyUnlocked;
       let durationStr = 'Tidak diketahui';
 
-      if (durationSecs !== null) {
+      if (durationSecs !== null && durationSecs !== undefined) {
         const hrs = Math.floor(durationSecs / 3600);
         const mins = Math.floor((durationSecs % 3600) / 60);
         const secs = durationSecs % 60;
@@ -46,12 +48,17 @@ module.exports = {
         .setDescription(`### **🔇 Meninggalkan Saluran Voice**\n${member} telah meninggalkan saluran Voice ${oldState.channel}.`)
         .addFields({ name: 'Durasi Sesi', value: `\`${durationStr}\`` });
       sendLog(guildId, 'voice_join_leave', embed);
+
+      if (newlyUnlocked && newlyUnlocked.length > 0) {
+        const { sendAchievementNotification } = require('../bot');
+        sendAchievementNotification(guildId, userId, newlyUnlocked);
+      }
     }
 
     // 3. MOVE Voice
     else if (oldState.channelId && newState.channelId && oldState.channelId !== newState.channelId) {
       // Re-trigger session tracking
-      db.endVoiceSession(guildId, userId);
+      const result = db.endVoiceSession(guildId, userId);
       db.startVoiceSession(guildId, userId, newState.channelId);
 
       embed.setColor('#3b82f6') // Blue
@@ -61,6 +68,11 @@ module.exports = {
           { name: 'Sesudah', value: `${newState.channel}`, inline: true }
         );
       sendLog(guildId, 'voice_join_leave', embed);
+
+      if (result.newlyUnlocked && result.newlyUnlocked.length > 0) {
+        const { sendAchievementNotification } = require('../bot');
+        sendAchievementNotification(guildId, userId, result.newlyUnlocked);
+      }
     }
 
     // 4. MUTE / DEAF / CAMERA / GO LIVE (Within same channel)
