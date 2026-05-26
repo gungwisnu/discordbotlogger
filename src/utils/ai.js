@@ -3,9 +3,10 @@ const axios = require('axios');
 /**
  * Sends a message to the DeepSeek API and retrieves the response.
  * @param {string} promptText - The user prompt to send to the AI.
+ * @param {string} model - The model name to use.
  * @returns {Promise<string>} The response from the AI.
  */
-async function askAI(promptText) {
+async function askAI(promptText, model = 'deepseek-chat') {
   const apiKey = process.env.DEEPSEEK_API_KEY;
 
   if (!apiKey || apiKey === 'your_deepseek_api_key_here') {
@@ -23,24 +24,34 @@ Aturan Penting:
 3. **Format**: Gunakan format Markdown Discord dengan indah (seperti tebal '**', miring '*', list, blockquotes, emoji, dan codeblocks jika perlu) agar jawaban Anda terlihat menarik, rapi, dan premium.
 4. **Panjang Jawaban**: Batasi jawaban Anda agar tetap ringkas, padat, dan informatif (kurang dari 1800 karakter) demi kenyamanan dibaca di layar Discord dan menghindari batas karakter Discord.`;
 
+  const isReasoner = model === 'deepseek-reasoner';
+
+  // Construct request body dynamically. deepseek-reasoner does not support temperature parameter.
+  const requestData = {
+    model: model,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: promptText || 'Halo Pandu! Perkenalkan dirimu dengan ramah.' }
+    ],
+    max_tokens: isReasoner ? 2000 : 1000
+  };
+
+  if (!isReasoner) {
+    requestData.temperature = 0.7;
+  }
+
+  const apiTimeout = isReasoner ? 90000 : 30000; // 90s for reasoning model, 30s for standard chat
+
   try {
     const response = await axios.post(
       'https://api.deepseek.com/chat/completions',
-      {
-        model: 'deepseek-chat',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: promptText || 'Halo Pandu! Perkenalkan dirimu dengan ramah.' }
-        ],
-        temperature: 0.7,
-        max_tokens: 1000
-      },
+      requestData,
       {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${apiKey}`
         },
-        timeout: 20000 // 20s timeout
+        timeout: apiTimeout
       }
     );
 

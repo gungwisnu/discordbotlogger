@@ -32,7 +32,8 @@ module.exports = {
         'setcolor',
         'log',
         'ignore',
-        'unignore'
+        'unignore',
+        'setmodel'
       ]);
 
       const isExplicitAI = (firstArg === 'ask');
@@ -47,14 +48,25 @@ module.exports = {
           prompt = commandString;
         }
 
+        const guildId = message.guild.id;
+        const settings = db.getGuildSettings(guildId);
+        const aiModel = settings.ai_model || 'deepseek-chat';
+
         // Trigger typing state to indicate the bot is preparing the response (premium UX)
         await message.channel.sendTyping();
 
+        // Loop typing indicator every 8 seconds since standard typing state lasts only ~10s in Discord
+        const typingInterval = setInterval(() => {
+          message.channel.sendTyping().catch(() => {});
+        }, 8000);
+
         try {
           const { askAI } = require('../utils/ai');
-          const aiResponse = await askAI(prompt);
+          const aiResponse = await askAI(prompt, aiModel);
+          clearInterval(typingInterval);
           return message.reply(aiResponse);
         } catch (error) {
+          clearInterval(typingInterval);
           console.error('Error handling AI response:', error);
           if (error.message === 'API_KEY_NOT_CONFIGURED') {
             return message.reply('⚠️ **Maaf, integrasi AI belum dikonfigurasi.** Administrator server harus menambahkan `DEEPSEEK_API_KEY` terlebih dahulu.');
@@ -178,7 +190,7 @@ module.exports = {
           .setDescription('Berikut adalah daftar command yang tersedia untuk server ini:')
           .addFields(
             { name: '📊 Statistik & Informasi', value: '`pan!stats [@user]` - Menampilkan statistik pengguna\n`pan!leaderboard [voice|messages|gaming]` - Menampilkan peringkat server\n`pan!achievements [@user]` - Menampilkan lencana pencapaian' },
-            { name: '⚙️ Konfigurasi Admin', value: '`pan!setlog <#channel>` - Mengatur saluran tujuan log\n`pan!log <enable|disable> <kategori>` - Mengaktifkan atau menonaktifkan kategori log\n`pan!ignore <#channel>` - Mengabaikan saluran dari pencatatan log/statistik\n`pan!unignore <#channel>` - Menghapus saluran dari daftar abaikan\n`pan!setcolor <hex_code>` - Mengubah warna embed log (contoh: `#ff0000`)\n`pan!status` - Memeriksa konfigurasi server saat ini' }
+            { name: '⚙️ Konfigurasi Admin', value: '`pan!setlog <#channel>` - Mengatur saluran tujuan log\n`pan!log <enable|disable> <kategori>` - Mengaktifkan atau menonaktifkan kategori log\n`pan!ignore <#channel>` - Mengabaikan saluran dari pencatatan log/statistik\n`pan!unignore <#channel>` - Menghapus saluran dari daftar abaikan\n`pan!setcolor <hex_code>` - Mengubah warna embed log (contoh: `#ff0000`)\n`pan!setmodel <faster|thinker>` - Mengubah model AI DeepSeek (contoh: `pan!setmodel thinker`)\n`pan!status` - Memeriksa konfigurasi server saat ini' }
           )
           .setFooter({ text: 'Sistem Logger & Analitik Server' })
           .setTimestamp();
@@ -188,7 +200,7 @@ module.exports = {
       // ----------------------------------------------------------------------
       // ADMIN COMMANDS BELOW
       // ----------------------------------------------------------------------
-      const isAdminCommand = ['setlog', 'log', 'ignore', 'unignore', 'setcolor', 'status'].includes(commandName);
+      const isAdminCommand = ['setlog', 'log', 'ignore', 'unignore', 'setcolor', 'status', 'setmodel'].includes(commandName);
       if (isAdminCommand) {
         if (!message.member.permissions.has(PermissionsBitField.Flags.ManageGuild) && !message.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
           return message.reply('❌ Anda tidak memiliki izin (Manage Server / Administrator) yang diperlukan untuk menggunakan perintah pengaturan ini.');
@@ -204,10 +216,11 @@ module.exports = {
 
         const embed = new EmbedBuilder()
           .setColor(settings.embed_color || '#6366f1')
-          .setTitle('⚙️ Konfigurasi Log Server')
+          .setTitle('⚙️ Konfigurasi Log & AI Server')
           .addFields(
             { name: 'Saluran Log', value: settings.log_channel_id ? `<#${settings.log_channel_id}>` : 'Belum diatur' },
             { name: 'Warna Embed', value: `\`${settings.embed_color || '#6366f1'}\`` },
+            { name: 'Model AI DeepSeek', value: settings.ai_model === 'deepseek-reasoner' ? '🧠 **Pemikir (deepseek-reasoner)**' : '⚡ **Tercepat (deepseek-chat)**' },
             { name: 'Kategori Log', value: catStr },
             { name: 'Saluran Diabaikan', value: ignStr }
           )
@@ -269,6 +282,19 @@ module.exports = {
         db.setGuildSettings(guildId, { ignored_channels: JSON.stringify(ign) });
         
         return message.reply(`✅ Saluran ${channel} tidak lagi diabaikan.`);
+      }
+
+      if (commandName === 'setmodel') {
+        const modelArg = args[0]?.toLowerCase();
+        if (!modelArg || !['faster', 'chat', 'thinker', 'reasoner'].includes(modelArg)) {
+          return message.reply('❌ Format salah. Harap gunakan format:\n`pan!setmodel <faster|thinker>` atau `pan!setmodel <chat|reasoner>`');
+        }
+
+        const modelValue = ['faster', 'chat'].includes(modelArg) ? 'deepseek-chat' : 'deepseek-reasoner';
+        db.setGuildSettings(guildId, { ai_model: modelValue });
+
+        const modelName = modelValue === 'deepseek-reasoner' ? 'Pemikir (deepseek-reasoner) 🧠' : 'Tercepat (deepseek-chat) ⚡';
+        return message.reply(`✅ Berhasil mengatur model otak AI server ini ke **${modelName}**.`);
       }
     }
     

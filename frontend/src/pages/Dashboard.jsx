@@ -285,6 +285,49 @@ export default function Dashboard() {
               </select>
             </div>
 
+            {/* DeepSeek AI Configuration */}
+            <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <h3 style={{ fontSize: '1.25rem', color: 'white' }}>🤖 Konfigurasi Otak AI (DeepSeek)</h3>
+              <p style={{ fontSize: '0.88rem', color: 'hsl(var(--text-secondary))' }}>
+                Pilih model kecerdasan buatan (AI) DeepSeek yang akan digunakan saat merespons obrolan di server Anda.
+              </p>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <select
+                  value={settings.ai_model || 'deepseek-chat'}
+                  onChange={(e) => setSettings(prev => ({ ...prev, ai_model: e.target.value }))}
+                  className="input-glass"
+                  style={{ cursor: 'pointer' }}
+                >
+                  <option value="deepseek-chat" style={{ backgroundColor: 'black' }}>⚡ Model Tercepat (deepseek-chat)</option>
+                  <option value="deepseek-reasoner" style={{ backgroundColor: 'black' }}>🧠 Model Terpintar / Pemikir (deepseek-reasoner)</option>
+                </select>
+                
+                <div style={{ 
+                  fontSize: '0.82rem', 
+                  color: 'hsl(var(--text-muted))', 
+                  backgroundColor: 'rgba(255, 255, 255, 0.02)', 
+                  padding: '14px', 
+                  borderRadius: '8px',
+                  border: '1px solid hsl(var(--border-glass))',
+                  lineHeight: '1.5'
+                }}>
+                  {settings.ai_model === 'deepseek-reasoner' ? (
+                    <span>
+                      ℹ️ <strong>Mode Pemikir Terpilih (deepseek-reasoner)</strong>:<br/>
+                      Sangat cocok untuk pertanyaan berat, analisis kode, dan penyelesaian masalah rumit. 
+                      <span style={{ color: '#f59e0b', fontWeight: 'bold' }}> Catatan: Waktu tunggu balasan akan lebih lama (bisa mencapai 30-60 detik) karena AI melakukan proses berpikir mendalam terlebih dahulu.</span>
+                    </span>
+                  ) : (
+                    <span>
+                      ℹ️ <strong>Mode Tercepat Terpilih (deepseek-chat)</strong>:<br/>
+                      Sangat cepat, responsif, dan hemat. Cocok untuk obrolan santai sehari-hari, sapaan, dan pertanyaan umum yang ringan.
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* Event Category Cards */}
             <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <h3 style={{ fontSize: '1.25rem', color: 'white' }}>📋 Aktifkan Kategori Log</h3>

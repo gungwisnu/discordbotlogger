@@ -74,7 +74,8 @@ const DatabaseFunctions = {
           spotify_activity: true
         }),
         embed_color: '#6366f1',
-        ignored_channels: '[]'
+        ignored_channels: '[]',
+        ai_model: 'deepseek-chat'
       };
     }
 
@@ -129,6 +130,11 @@ const DatabaseFunctions = {
         }
       }
 
+      if (!row.ai_model) {
+        row.ai_model = 'deepseek-chat';
+        changed = true;
+      }
+
       if (changed) {
         row.categories_enabled = JSON.stringify(cats);
         triggerSave();
@@ -140,20 +146,22 @@ const DatabaseFunctions = {
     return row;
   },
 
-  setGuildSettings(guildId, { log_channel_id, categories_enabled, embed_color, ignored_channels }) {
+  setGuildSettings(guildId, { log_channel_id, categories_enabled, embed_color, ignored_channels, ai_model }) {
     const current = this.getGuildSettings(guildId);
     
     const channel = log_channel_id !== undefined ? log_channel_id : current.log_channel_id;
     const cats = categories_enabled !== undefined ? (typeof categories_enabled === 'string' ? categories_enabled : JSON.stringify(categories_enabled)) : current.categories_enabled;
     const color = embed_color !== undefined ? embed_color : current.embed_color;
     const ignored = ignored_channels !== undefined ? (typeof ignored_channels === 'string' ? ignored_channels : JSON.stringify(ignored_channels)) : current.ignored_channels;
+    const model = ai_model !== undefined ? ai_model : current.ai_model || 'deepseek-chat';
 
     data.guild_settings[guildId] = {
       guild_id: guildId,
       log_channel_id: channel,
       categories_enabled: cats,
       embed_color: color,
-      ignored_channels: ignored
+      ignored_channels: ignored,
+      ai_model: model
     };
 
     triggerSave();

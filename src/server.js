@@ -136,7 +136,8 @@ const DEMO_SETTINGS = {
     activity: true
   }),
   embed_color: '#6366f1',
-  ignored_channels: '["555"]'
+  ignored_channels: '["555"]',
+  ai_model: 'deepseek-chat'
 };
 
 // ----------------------------------------------------
@@ -303,7 +304,7 @@ app.get('/api/guilds/:guildId/settings', checkAuth, (req, res) => {
 // Update Guild Settings
 app.post('/api/guilds/:guildId/settings', checkAuth, (req, res) => {
   const { guildId } = req.params;
-  const { log_channel_id, categories_enabled, embed_color, ignored_channels } = req.body;
+  const { log_channel_id, categories_enabled, embed_color, ignored_channels, ai_model } = req.body;
   const isDemo = req.session.user.demo;
 
   if (isDemo && guildId === '99999999999999') {
@@ -311,7 +312,8 @@ app.post('/api/guilds/:guildId/settings', checkAuth, (req, res) => {
       log_channel_id,
       categories_enabled: typeof categories_enabled === 'string' ? categories_enabled : JSON.stringify(categories_enabled),
       embed_color,
-      ignored_channels: typeof ignored_channels === 'string' ? ignored_channels : JSON.stringify(ignored_channels)
+      ignored_channels: typeof ignored_channels === 'string' ? ignored_channels : JSON.stringify(ignored_channels),
+      ai_model: ai_model !== undefined ? ai_model : DEMO_SETTINGS.ai_model
     });
     return res.json({ success: true, settings: DEMO_SETTINGS });
   }
@@ -320,7 +322,8 @@ app.post('/api/guilds/:guildId/settings', checkAuth, (req, res) => {
     log_channel_id,
     categories_enabled,
     embed_color,
-    ignored_channels
+    ignored_channels,
+    ai_model
   });
 
   res.json({
