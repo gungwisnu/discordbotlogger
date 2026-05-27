@@ -274,7 +274,7 @@ function ServerModal({ isOpen, onClose }) {
           overflowY: 'auto',
           paddingRight: '4px'
         }}>
-          {guilds.map(g => {
+          {[...guilds].sort((a, b) => (b.botInGuild ? 1 : 0) - (a.botInGuild ? 1 : 0)).map(g => {
             const iconUrl = g.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png` : null;
             
             return (
@@ -342,7 +342,7 @@ function Sidebar() {
   return (
     <div className={`sidebar-panel sidebar-drawer ${isMobileSidebarOpen ? 'open' : ''}`}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-        {/* Server Indicator Panel (Top Left) */}
+        {/* Server Indicator Panel (Top Left) with switch button on right */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingBottom: '18px', borderBottom: '1px solid hsl(var(--border-glass))' }}>
           {guildIconUrl ? (
             <img 
@@ -353,7 +353,8 @@ function Sidebar() {
                 height: '44px',
                 borderRadius: '12px',
                 boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
-                objectFit: 'cover'
+                objectFit: 'cover',
+                flexShrink: 0
               }}
             />
           ) : (
@@ -368,17 +369,44 @@ function Sidebar() {
               fontSize: '1.3rem',
               fontWeight: 'bold',
               color: 'white',
-              boxShadow: '0 4px 10px rgba(0,0,0,0.15)'
+              boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
+              flexShrink: 0
             }}>
               {selectedGuild.name.charAt(0)}
             </div>
           )}
-          <div>
-            <h4 style={{ fontSize: '0.95rem', fontWeight: '750', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '170px', color: 'hsl(var(--text-primary))' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h4 style={{ fontSize: '0.95rem', fontWeight: '750', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'hsl(var(--text-primary))' }}>
               {selectedGuild.name}
             </h4>
             <span style={{ fontSize: '0.72rem', color: 'hsl(var(--text-muted))', fontWeight: '600' }}>Server Aktif</span>
           </div>
+          {/* Switch Server icon button */}
+          <button
+            onClick={() => setServerModalOpen(true)}
+            title="Ganti Server"
+            style={{
+              background: 'hsla(var(--border-glass), 0.15)',
+              border: '1px solid hsl(var(--border-glass))',
+              borderRadius: '8px',
+              padding: '6px',
+              cursor: 'pointer',
+              color: 'hsl(var(--text-secondary))',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              transition: 'all 0.2s ease'
+            }}
+            className="sidebar-link-hover"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 7H9a4 4 0 0 0-4 4v3"/>
+              <path d="m16 3 4 4-4 4"/>
+              <path d="M4 17h11a4 4 0 0 0 4-4v-3"/>
+              <path d="m8 21-4-4 4-4"/>
+            </svg>
+          </button>
         </div>
 
         {/* Dashboard Navigation */}
