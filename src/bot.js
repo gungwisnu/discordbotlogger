@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, Partials, Collection, REST, Routes, EmbedBuilder } = require('discord.js');
+const { Client, GatewayIntentBits, Partials, Collection, REST, Routes, EmbedBuilder, PermissionsBitField, ChannelType } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const db = require('./database');
@@ -61,6 +61,263 @@ const commands = [
         type: 6, // USER type
         description: 'Pilih anggota untuk melihat lencana mereka.',
         required: false
+      }
+    ]
+  },
+  {
+    name: 'help',
+    description: 'Menampilkan panduan penggunaan perintah bot Pandu.',
+    options: [
+      {
+        name: 'admin',
+        type: 5, // BOOLEAN type
+        description: 'Setel ke true untuk melihat menu bantuan konfigurasi admin.',
+        required: false
+      }
+    ]
+  },
+  {
+    name: 'status',
+    description: 'Memeriksa seluruh konfigurasi logging & welcome server saat ini.'
+  },
+  {
+    name: 'setlog',
+    description: 'Mengatur saluran teks utama tujuan pengiriman log aktivitas.',
+    options: [
+      {
+        name: 'channel',
+        type: 7, // CHANNEL type
+        description: 'Pilih saluran teks yang ingin dituju.',
+        required: true
+      }
+    ]
+  },
+  {
+    name: 'setcolor',
+    description: 'Mengubah warna embed log aktivitas server.',
+    options: [
+      {
+        name: 'hex',
+        type: 3, // STRING type
+        description: 'Kode hex warna (contoh: #ff0000).',
+        required: true
+      }
+    ]
+  },
+  {
+    name: 'log',
+    description: 'Mengaktifkan atau menonaktifkan kategori log aktivitas tertentu.',
+    options: [
+      {
+        name: 'aksi',
+        type: 3, // STRING type
+        description: 'Pilih aksi log.',
+        required: true,
+        choices: [
+          { name: 'Aktifkan (Enable)', value: 'enable' },
+          { name: 'Nonaktifkan (Disable)', value: 'disable' }
+        ]
+      },
+      {
+        name: 'kategori',
+        type: 3, // STRING type
+        description: 'Pilih kategori peristiwa log.',
+        required: true,
+        choices: [
+          { name: 'Log Moderasi', value: 'moderation' },
+          { name: 'Log Voice Join/Leave', value: 'voice_join_leave' },
+          { name: 'Log Voice Mute/Deafen', value: 'voice_mute_deafen' },
+          { name: 'Log Profil Anggota', value: 'member' },
+          { name: 'Log Konfigurasi Server', value: 'server' },
+          { name: 'Log Aktivitas Game', value: 'gaming_activity' },
+          { name: 'Log Spotify', value: 'spotify_activity' }
+        ]
+      }
+    ]
+  },
+  {
+    name: 'ignore',
+    description: 'Mengabaikan saluran teks dari pencatatan log dan statistik aktivitas.',
+    options: [
+      {
+        name: 'channel',
+        type: 7, // CHANNEL type
+        description: 'Saluran yang ingin diabaikan.',
+        required: true
+      }
+    ]
+  },
+  {
+    name: 'unignore',
+    description: 'Menghapus saluran teks dari daftar saluran diabaikan.',
+    options: [
+      {
+        name: 'channel',
+        type: 7, // CHANNEL type
+        description: 'Saluran yang ingin dihapus.',
+        required: true
+      }
+    ]
+  },
+  {
+    name: 'setmodel',
+    description: 'Mengatur model kecerdasan buatan (AI) DeepSeek untuk server ini.',
+    options: [
+      {
+        name: 'model',
+        type: 3, // STRING type
+        description: 'Model DeepSeek AI.',
+        required: true,
+        choices: [
+          { name: 'Model Tercepat (deepseek-chat)', value: 'faster' },
+          { name: 'Model Pemikir (deepseek-reasoner)', value: 'thinker' }
+        ]
+      }
+    ]
+  },
+  {
+    name: 'welcome',
+    description: 'Mengaktifkan atau menonaktifkan fitur sapaan welcome anggota baru.',
+    options: [
+      {
+        name: 'aksi',
+        type: 3, // STRING type
+        description: 'Pilih aksi.',
+        required: true,
+        choices: [
+          { name: 'Aktifkan (Enable)', value: 'enable' },
+          { name: 'Nonaktifkan (Disable)', value: 'disable' }
+        ]
+      }
+    ]
+  },
+  {
+    name: 'setwelcome',
+    description: 'Mengatur saluran tujuan pengiriman pesan selamat datang.',
+    options: [
+      {
+        name: 'channel',
+        type: 7, // CHANNEL type
+        description: 'Saluran teks welcome.',
+        required: true
+      }
+    ]
+  },
+  {
+    name: 'welcomemsg',
+    description: 'Mengatur isi pesan selamat datang (Gunakan {user} sebagai mention placeholder).',
+    options: [
+      {
+        name: 'pesan',
+        type: 3, // STRING type
+        description: 'Isi teks pesan welcome baru (opsional).',
+        required: false
+      }
+    ]
+  },
+  {
+    name: 'autorole',
+    description: 'Mengaktifkan atau menonaktifkan pemberian peran otomatis bagi anggota baru.',
+    options: [
+      {
+        name: 'aksi',
+        type: 3, // STRING type
+        description: 'Pilih aksi.',
+        required: true,
+        choices: [
+          { name: 'Aktifkan (Enable)', value: 'enable' },
+          { name: 'Nonaktifkan (Disable)', value: 'disable' }
+        ]
+      }
+    ]
+  },
+  {
+    name: 'setrole',
+    description: 'Mengatur peran (role) yang diberikan otomatis bagi anggota baru.',
+    options: [
+      {
+        name: 'role',
+        type: 8, // ROLE type
+        description: 'Pilih peran Discord.',
+        required: true
+      }
+    ]
+  },
+  {
+    name: 'setachievement',
+    description: 'Mengatur atau menonaktifkan saluran notifikasi pencapaian server.',
+    options: [
+      {
+        name: 'aksi',
+        type: 3, // STRING type
+        description: 'Pilih aksi.',
+        required: true,
+        choices: [
+          { name: 'Aktifkan di Saluran (Enable)', value: 'enable' },
+          { name: 'Nonaktifkan (Disable)', value: 'disable' }
+        ]
+      },
+      {
+        name: 'channel',
+        type: 7, // CHANNEL type
+        description: 'Pilih saluran jika aksi disetel ke Aktifkan.',
+        required: false
+      }
+    ]
+  },
+  {
+    name: 'logchannel',
+    description: 'Mengatur saluran pengiriman log terpisah secara khusus per kategori.',
+    options: [
+      {
+        name: 'kategori',
+        type: 3, // STRING type
+        description: 'Pilih kategori peristiwa log.',
+        required: true,
+        choices: [
+          { name: 'Kategori Voice (VC)', value: 'voice' },
+          { name: 'Kategori Game (Gaming)', value: 'gaming' },
+          { name: 'Kategori Spotify', value: 'spotify' },
+          { name: 'Kategori Moderasi', value: 'mod' },
+          { name: 'Log Moderasi Spesifik', value: 'moderation' },
+          { name: 'Log Voice Join/Leave', value: 'voice_join_leave' },
+          { name: 'Log Voice Mute/Deafen', value: 'voice_mute_deafen' },
+          { name: 'Log Profil Anggota', value: 'member' },
+          { name: 'Log Konfigurasi Server', value: 'server' },
+          { name: 'Log Aktivitas Game Spesifik', value: 'gaming_activity' },
+          { name: 'Log Spotify Spesifik', value: 'spotify_activity' }
+        ]
+      },
+      {
+        name: 'channel',
+        type: 7, // CHANNEL type
+        description: 'Pilih saluran teks log khusus.',
+        required: true
+      }
+    ]
+  },
+  {
+    name: 'logchannel-reset',
+    description: 'Mereset saluran log kategori khusus agar kembali menggunakan Saluran Log Utama.',
+    options: [
+      {
+        name: 'kategori',
+        type: 3, // STRING type
+        description: 'Pilih kategori peristiwa log.',
+        required: true,
+        choices: [
+          { name: 'Kategori Voice (VC)', value: 'voice' },
+          { name: 'Kategori Game (Gaming)', value: 'gaming' },
+          { name: 'Kategori Spotify', value: 'spotify' },
+          { name: 'Kategori Moderasi', value: 'mod' },
+          { name: 'Log Moderasi Spesifik', value: 'moderation' },
+          { name: 'Log Voice Join/Leave', value: 'voice_join_leave' },
+          { name: 'Log Voice Mute/Deafen', value: 'voice_mute_deafen' },
+          { name: 'Log Profil Anggota', value: 'member' },
+          { name: 'Log Konfigurasi Server', value: 'server' },
+          { name: 'Log Aktivitas Game Spesifik', value: 'gaming_activity' },
+          { name: 'Log Spotify Spesifik', value: 'spotify_activity' }
+        ]
       }
     ]
   }
@@ -264,6 +521,337 @@ client.on('interactionCreate', async interaction => {
     });
 
     await interaction.editReply({ embeds: [embed] });
+  }
+
+  if (commandName === 'help') {
+    const isAdminHelp = options.getBoolean('admin') || false;
+    const settings = db.getGuildSettings(guildId);
+
+    if (isAdminHelp) {
+      if (!member.permissions.has(PermissionsBitField.Flags.ManageGuild) && !member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+        return interaction.reply({ content: '❌ Anda tidak memiliki izin (Manage Server / Administrator) yang diperlukan untuk melihat menu bantuan admin.', ephemeral: true });
+      }
+
+      const embed = new EmbedBuilder()
+        .setColor(settings.embed_color || '#6366f1')
+        .setTitle('⚙️ Daftar Command Admin Pandu')
+        .setDescription('Berikut adalah daftar command konfigurasi server untuk Administrator:')
+        .addFields(
+          { name: '🎯 Saluran & Log Utama', value: '`/setlog <#channel>` - Mengatur saluran tujuan log utama\n`/log <enable|disable> <kategori>` - Mengaktifkan/menonaktifkan kategori log\n`/ignore <#channel>` - Mengabaikan saluran dari pencatatan log/statistik\n`/unignore <#channel>` - Menghapus saluran dari daftar abaikan\n`/setcolor <hex_code>` - Mengubah warna embed log (contoh: `#ff0000`)' },
+          { name: '🤖 Pengaturan AI & Status', value: '`/setmodel <faster|thinker>` - Mengubah model AI DeepSeek\n`/status` - Memeriksa konfigurasi server saat ini' },
+          { name: '📥 Welcome & Pencapaian', value: '`/welcome <enable|disable>` - Mengaktifkan/menonaktifkan welcome\n`/setwelcome <#channel>` - Mengatur saluran welcome\n`/welcomemsg [pesan]` - Mengatur pesan welcome\n`/setachievement <enable|disable> [channel]` - Mengatur saluran notifikasi pencapaian' },
+          { name: '🛡️ Pengaturan Auto-Role', value: '`/autorole <enable|disable>` - Mengaktifkan/menonaktifkan pemberian peran otomatis\n`/setrole <@role>` - Mengatur peran otomatis bagi anggota baru' },
+          { name: '🎯 Granular Log Channels', value: '`/logchannel <kategori> <#channel>` - Mengatur log saluran terpisah per kategori (contoh: `voice #log-vc`)\n`/logchannel-reset <kategori>` - Mengembalikan kategori log ke saluran utama' }
+         )
+        .setFooter({ text: 'Sistem Logger & Analitik Server', iconURL: client.user.displayAvatarURL() })
+        .setTimestamp();
+      return interaction.reply({ embeds: [embed] });
+    } else {
+      const embed = new EmbedBuilder()
+        .setColor(settings.embed_color || '#6366f1')
+        .setTitle('🤖 Daftar Command Pandu')
+        .setDescription('Berikut adalah daftar command yang tersedia untuk server ini:')
+        .addFields(
+          { name: '📊 Statistik & Informasi', value: '`/stats [user]` - Menampilkan statistik pengguna\n`/leaderboard <voice|messages|gaming>` - Menampilkan peringkat server\n`/achievements [user]` - Menampilkan lencana pencapaian' },
+          { name: '🧠 Obrolan AI', value: 'Tandai (tag) bot atau ketik `pan!ask <pertanyaan>` untuk bertanya kepada AI.' }
+        )
+        .setFooter({ text: 'Gunakan opsi /help admin:true jika Anda adalah Administrator untuk konfigurasi bot.', iconURL: client.user.displayAvatarURL() })
+        .setTimestamp();
+      return interaction.reply({ embeds: [embed] });
+    }
+  }
+
+  if (commandName === 'status') {
+    if (!member.permissions.has(PermissionsBitField.Flags.ManageGuild) && !member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+      return interaction.reply({ content: '❌ Anda tidak memiliki izin (Manage Server / Administrator) yang diperlukan untuk menggunakan perintah pengaturan ini.', ephemeral: true });
+    }
+    
+    await interaction.deferReply();
+    const settings = db.getGuildSettings(guildId);
+    const cats = JSON.parse(settings.categories_enabled || '{}');
+    const ign = JSON.parse(settings.ignored_channels || '[]');
+    
+    const catStr = Object.entries(cats).map(([k, v]) => `• **${k}**: ${v ? '✅ Aktif' : '❌ Nonaktif'}`).join('\n') || 'Belum ada pengaturan spesifik (bawaan: semua aktif)';
+    const ignStr = ign.map(id => `<#${id}>`).join(', ') || 'Tidak ada';
+
+    const welcomeChanStr = settings.welcome_channel_id ? `<#${settings.welcome_channel_id}>` : '*Belum diatur*';
+    const welcomeStatus = `• Status: ${settings.welcome_enabled ? '✅ Aktif' : '❌ Nonaktif'}\n• Saluran: ${welcomeChanStr}\n• Pesan: \`${settings.welcome_message || 'Selamat datang, {user}!'}\``;
+
+    const roleStr = settings.autorole_role_id ? `<@&${settings.autorole_role_id}>` : '*Belum diatur*';
+    const autoroleStatus = `• Status: ${settings.autorole_enabled ? '✅ Aktif' : '❌ Nonaktif'}\n• Peran: ${roleStr}`;
+
+    const achChanStr = settings.achievement_channel_id ? `<#${settings.achievement_channel_id}>` : '*Belum diatur (Dinonaktifkan)*';
+    const achievementStatus = `• Saluran: ${achChanStr}`;
+
+    const logChannels = JSON.parse(settings.log_channels || '{}');
+    const granularStr = Object.entries(logChannels).map(([k, v]) => `• **${k}**: <#${v}>`).join('\n') || 'Semua kategori menggunakan Saluran Log Utama.';
+
+    const embed = new EmbedBuilder()
+      .setColor(settings.embed_color || '#6366f1')
+      .setTitle('⚙️ Konfigurasi Log & AI Server')
+      .addFields(
+        { name: 'Saluran Log Utama', value: settings.log_channel_id ? `<#${settings.log_channel_id}>` : 'Belum diatur', inline: true },
+        { name: 'Warna Embed', value: `\`${settings.embed_color || '#6366f1'}\``, inline: true },
+        { name: 'Model AI DeepSeek', value: settings.ai_model === 'deepseek-reasoner' ? '🧠 **Pemikir (deepseek-reasoner)**' : '⚡ **Tercepat (deepseek-chat)**', inline: true },
+        { name: 'Asisten AI Status', value: settings.ai_enabled ? '✅ **Aktif / Diizinkan**' : '❌ **Dinonaktifkan**', inline: true },
+        { name: '📥 Fitur Welcome (Sapaan)', value: welcomeStatus },
+        { name: '🏆 Saluran Notifikasi Pencapaian', value: achievementStatus },
+        { name: '🛡️ Fitur Auto-Role', value: autoroleStatus },
+        { name: '🎯 Granular Log Channels', value: granularStr },
+        { name: 'Kategori Log Aktif', value: catStr },
+        { name: 'Saluran Diabaikan', value: ignStr }
+      )
+      .setFooter({ text: 'Sistem Logger & Analitik Server', iconURL: client.user.displayAvatarURL() })
+      .setTimestamp();
+    return interaction.editReply({ embeds: [embed] });
+  }
+
+  if (commandName === 'setlog') {
+    if (!member.permissions.has(PermissionsBitField.Flags.ManageGuild) && !member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+      return interaction.reply({ content: '❌ Anda tidak memiliki izin (Manage Server / Administrator) yang diperlukan untuk menggunakan perintah pengaturan ini.', ephemeral: true });
+    }
+    
+    const channel = options.getChannel('channel');
+    if (channel.type !== ChannelType.GuildText) {
+      return interaction.reply({ content: '❌ Saluran yang dipilih harus berupa saluran teks.', ephemeral: true });
+    }
+
+    db.setGuildSettings(guildId, { log_channel_id: channel.id });
+    return interaction.reply({ content: `✅ Berhasil mengatur saluran log utama ke <#${channel.id}>` });
+  }
+
+  if (commandName === 'setcolor') {
+    if (!member.permissions.has(PermissionsBitField.Flags.ManageGuild) && !member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+      return interaction.reply({ content: '❌ Anda tidak memiliki izin (Manage Server / Administrator) yang diperlukan untuk menggunakan perintah pengaturan ini.', ephemeral: true });
+    }
+    
+    const hex = options.getString('hex');
+    if (!/^#([0-9A-F]{3}){1,2}$/i.test(hex)) {
+      return interaction.reply({ content: '❌ Harap masukkan kode hex warna yang valid, contoh: `#ff0000`', ephemeral: true });
+    }
+
+    db.setGuildSettings(guildId, { embed_color: hex });
+    const embed = new EmbedBuilder().setColor(hex).setDescription(`✅ Warna embed log berhasil diubah menjadi \`${hex}\``);
+    return interaction.reply({ embeds: [embed] });
+  }
+
+  if (commandName === 'log') {
+    if (!member.permissions.has(PermissionsBitField.Flags.ManageGuild) && !member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+      return interaction.reply({ content: '❌ Anda tidak memiliki izin (Manage Server / Administrator) yang diperlukan untuk menggunakan perintah pengaturan ini.', ephemeral: true });
+    }
+
+    const action = options.getString('aksi');
+    const category = options.getString('kategori');
+    const settings = db.getGuildSettings(guildId);
+
+    const cats = JSON.parse(settings.categories_enabled || '{}');
+    cats[category] = (action === 'enable');
+    db.setGuildSettings(guildId, { categories_enabled: JSON.stringify(cats) });
+    
+    return interaction.reply({ content: `✅ Kategori log **${category}** berhasil ${action === 'enable' ? 'diaktifkan' : 'dinonaktifkan'}.` });
+  }
+
+  if (commandName === 'ignore') {
+    if (!member.permissions.has(PermissionsBitField.Flags.ManageGuild) && !member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+      return interaction.reply({ content: '❌ Anda tidak memiliki izin (Manage Server / Administrator) yang diperlukan untuk menggunakan perintah pengaturan ini.', ephemeral: true });
+    }
+
+    const channel = options.getChannel('channel');
+    const settings = db.getGuildSettings(guildId);
+
+    const ign = JSON.parse(settings.ignored_channels || '[]');
+    if (!ign.includes(channel.id)) {
+      ign.push(channel.id);
+      db.setGuildSettings(guildId, { ignored_channels: JSON.stringify(ign) });
+    }
+    return interaction.reply({ content: `✅ Saluran <#${channel.id}> kini diabaikan dari pencatatan log dan statistik.` });
+  }
+
+  if (commandName === 'unignore') {
+    if (!member.permissions.has(PermissionsBitField.Flags.ManageGuild) && !member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+      return interaction.reply({ content: '❌ Anda tidak memiliki izin (Manage Server / Administrator) yang diperlukan untuk menggunakan perintah pengaturan ini.', ephemeral: true });
+    }
+
+    const channel = options.getChannel('channel');
+    const settings = db.getGuildSettings(guildId);
+
+    let ign = JSON.parse(settings.ignored_channels || '[]');
+    ign = ign.filter(id => id !== channel.id);
+    db.setGuildSettings(guildId, { ignored_channels: JSON.stringify(ign) });
+    
+    return interaction.reply({ content: `✅ Saluran <#${channel.id}> tidak lagi diabaikan.` });
+  }
+
+  if (commandName === 'setmodel') {
+    if (!member.permissions.has(PermissionsBitField.Flags.ManageGuild) && !member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+      return interaction.reply({ content: '❌ Anda tidak memiliki izin (Manage Server / Administrator) yang diperlukan untuk menggunakan perintah pengaturan ini.', ephemeral: true });
+    }
+
+    const modelArg = options.getString('model');
+    const modelValue = modelArg === 'faster' ? 'deepseek-chat' : 'deepseek-reasoner';
+    db.setGuildSettings(guildId, { ai_model: modelValue });
+
+    const modelName = modelValue === 'deepseek-reasoner' ? 'Pemikir (deepseek-reasoner) 🧠' : 'Tercepat (deepseek-chat) ⚡';
+    return interaction.reply({ content: `✅ Berhasil mengatur model otak AI server ini ke **${modelName}**.` });
+  }
+
+  if (commandName === 'welcome') {
+    if (!member.permissions.has(PermissionsBitField.Flags.ManageGuild) && !member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+      return interaction.reply({ content: '❌ Anda tidak memiliki izin (Manage Server / Administrator) yang diperlukan untuk menggunakan perintah pengaturan ini.', ephemeral: true });
+    }
+
+    const action = options.getString('aksi');
+    const isEnable = action === 'enable';
+    const settings = db.getGuildSettings(guildId);
+
+    if (isEnable && !settings.welcome_channel_id) {
+      return interaction.reply({ content: '⚠️ Anda belum mengatur saluran sapaan welcome. Harap atur terlebih dahulu menggunakan `/setwelcome <channel>`', ephemeral: true });
+    }
+
+    db.setGuildSettings(guildId, { welcome_enabled: isEnable });
+    return interaction.reply({ content: `✅ Fitur pesan selamat datang berhasil **${isEnable ? 'diaktifkan' : 'dinonaktifkan'}**.` });
+  }
+
+  if (commandName === 'setwelcome') {
+    if (!member.permissions.has(PermissionsBitField.Flags.ManageGuild) && !member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+      return interaction.reply({ content: '❌ Anda tidak memiliki izin (Manage Server / Administrator) yang diperlukan untuk menggunakan perintah pengaturan ini.', ephemeral: true });
+    }
+
+    const channel = options.getChannel('channel');
+    if (channel.type !== ChannelType.GuildText) {
+      return interaction.reply({ content: '❌ Saluran yang dipilih harus berupa saluran teks.', ephemeral: true });
+    }
+
+    db.setGuildSettings(guildId, {
+      welcome_channel_id: channel.id,
+      welcome_enabled: true
+    });
+    return interaction.reply({ content: `✅ Berhasil mengatur saluran welcome ke <#${channel.id}> dan otomatis mengaktifkan fitur welcome.` });
+  }
+
+  if (commandName === 'welcomemsg') {
+    if (!member.permissions.has(PermissionsBitField.Flags.ManageGuild) && !member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+      return interaction.reply({ content: '❌ Anda tidak memiliki izin (Manage Server / Administrator) yang diperlukan untuk menggunakan perintah pengaturan ini.', ephemeral: true });
+    }
+
+    const welcomeText = options.getString('pesan');
+    const settings = db.getGuildSettings(guildId);
+
+    if (!welcomeText) {
+      return interaction.reply({ content: `ℹ️ Pesan welcome saat ini:\n\`${settings.welcome_message || 'Selamat datang, {user}!'}\`\n\nUntuk mengubahnya, gunakan opsi \`pesan\` pada command ini.`, ephemeral: true });
+    }
+
+    db.setGuildSettings(guildId, { welcome_message: welcomeText });
+    return interaction.reply({ content: `✅ Pesan welcome berhasil diubah menjadi:\n\`${welcomeText}\`` });
+  }
+
+  if (commandName === 'autorole') {
+    if (!member.permissions.has(PermissionsBitField.Flags.ManageGuild) && !member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+      return interaction.reply({ content: '❌ Anda tidak memiliki izin (Manage Server / Administrator) yang diperlukan untuk menggunakan perintah pengaturan ini.', ephemeral: true });
+    }
+
+    const action = options.getString('aksi');
+    const isEnable = action === 'enable';
+    const settings = db.getGuildSettings(guildId);
+
+    if (isEnable && !settings.autorole_role_id) {
+      return interaction.reply({ content: '⚠️ Anda belum mengatur peran untuk auto-role. Harap atur terlebih dahulu menggunakan `/setrole <role>`', ephemeral: true });
+    }
+
+    db.setGuildSettings(guildId, { autorole_enabled: isEnable });
+    return interaction.reply({ content: `✅ Fitur auto-role berhasil **${isEnable ? 'diaktifkan' : 'dinonaktifkan'}**.` });
+  }
+
+  if (commandName === 'setrole') {
+    if (!member.permissions.has(PermissionsBitField.Flags.ManageGuild) && !member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+      return interaction.reply({ content: '❌ Anda tidak memiliki izin (Manage Server / Administrator) yang diperlukan untuk menggunakan perintah pengaturan ini.', ephemeral: true });
+    }
+
+    const role = options.getRole('role');
+    const botMember = interaction.guild.members.me;
+
+    if (botMember && role.position >= botMember.roles.highest.position) {
+      return interaction.reply({ content: '⚠️ **Peringatan Izin:** Peran tersebut berada di atas atau sejajar dengan peran tertinggi bot saya. Bot tidak akan bisa membagikannya kecuali posisi peran bot ditarik ke atas.', ephemeral: true });
+    }
+
+    db.setGuildSettings(guildId, {
+      autorole_role_id: role.id,
+      autorole_enabled: true
+    });
+    return interaction.reply({ content: `✅ Berhasil mengatur auto-role ke peran **${role.name}** dan otomatis mengaktifkan fitur auto-role.` });
+  }
+
+  if (commandName === 'setachievement') {
+    if (!member.permissions.has(PermissionsBitField.Flags.ManageGuild) && !member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+      return interaction.reply({ content: '❌ Anda tidak memiliki izin (Manage Server / Administrator) yang diperlukan untuk menggunakan perintah pengaturan ini.', ephemeral: true });
+    }
+
+    const action = options.getString('aksi');
+    
+    if (action === 'disable') {
+      db.setGuildSettings(guildId, { achievement_channel_id: null });
+      return interaction.reply({ content: '✅ Notifikasi pencapaian berhasil dinonaktifkan.' });
+    }
+
+    const channel = options.getChannel('channel');
+    if (!channel) {
+      return interaction.reply({ content: '❌ Anda harus memilih saluran teks ketika mengaktifkan notifikasi pencapaian.', ephemeral: true });
+    }
+
+    if (channel.type !== ChannelType.GuildText) {
+      return interaction.reply({ content: '❌ Saluran yang dipilih harus berupa saluran teks.', ephemeral: true });
+    }
+
+    db.setGuildSettings(guildId, { achievement_channel_id: channel.id });
+    return interaction.reply({ content: `✅ Berhasil mengatur saluran notifikasi pencapaian ke <#${channel.id}>.` });
+  }
+
+  if (commandName === 'logchannel') {
+    if (!member.permissions.has(PermissionsBitField.Flags.ManageGuild) && !member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+      return interaction.reply({ content: '❌ Anda tidak memiliki izin (Manage Server / Administrator) yang diperlukan untuk menggunakan perintah pengaturan ini.', ephemeral: true });
+    }
+
+    const categoryInput = options.getString('kategori');
+    const channel = options.getChannel('channel');
+
+    if (channel.type !== ChannelType.GuildText) {
+      return interaction.reply({ content: '❌ Saluran yang dipilih harus berupa saluran teks.', ephemeral: true });
+    }
+
+    const categories = [];
+    if (categoryInput === 'voice') categories.push('voice_join_leave', 'voice_mute_deafen');
+    else if (categoryInput === 'gaming') categories.push('gaming_activity');
+    else if (categoryInput === 'spotify') categories.push('spotify_activity');
+    else if (categoryInput === 'mod') categories.push('moderation');
+    else categories.push(categoryInput);
+
+    const settings = db.getGuildSettings(guildId);
+    const logChannels = JSON.parse(settings.log_channels || '{}');
+    categories.forEach(c => logChannels[c] = channel.id);
+    db.setGuildSettings(guildId, { log_channels: JSON.stringify(logChannels) });
+
+    return interaction.reply({ content: `✅ Berhasil mengatur saluran log untuk kategori **${categories.join(', ')}** ke <#${channel.id}>.` });
+  }
+
+  if (commandName === 'logchannel-reset') {
+    if (!member.permissions.has(PermissionsBitField.Flags.ManageGuild) && !member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+      return interaction.reply({ content: '❌ Anda tidak memiliki izin (Manage Server / Administrator) yang diperlukan untuk menggunakan perintah pengaturan ini.', ephemeral: true });
+    }
+
+    const categoryInput = options.getString('kategori');
+    const categories = [];
+    if (categoryInput === 'voice') categories.push('voice_join_leave', 'voice_mute_deafen');
+    else if (categoryInput === 'gaming') categories.push('gaming_activity');
+    else if (categoryInput === 'spotify') categories.push('spotify_activity');
+    else if (categoryInput === 'mod') categories.push('moderation');
+    else categories.push(categoryInput);
+
+    const settings = db.getGuildSettings(guildId);
+    const logChannels = JSON.parse(settings.log_channels || '{}');
+    categories.forEach(c => delete logChannels[c]);
+    db.setGuildSettings(guildId, { log_channels: JSON.stringify(logChannels) });
+
+    return interaction.reply({ content: `✅ Berhasil mereset saluran log untuk kategori **${categories.join(', ')}** ke saluran log utama.` });
   }
 });
 
