@@ -752,6 +752,42 @@ app.get('/api/guilds/:guildId/roles', checkAuth, async (req, res) => {
   }
 });
 
+// Get Guild Emojis list for emoji selector
+app.get('/api/guilds/:guildId/emojis', checkAuth, async (req, res) => {
+  const { guildId } = req.params;
+  const isDemo = req.session.user.demo;
+
+  if (isDemo && guildId === '99999999999999') {
+    return res.json([
+      { name: 'neonstar', id: '111111111111111111', url: 'https://cdn.discordapp.com/emojis/111111111111111111.png' },
+      { name: 'pandawave', id: '222222222222222222', url: 'https://cdn.discordapp.com/emojis/222222222222222222.png' },
+      { name: 'pepehype', id: '333333333333333333', url: 'https://cdn.discordapp.com/emojis/333333333333333333.png' }
+    ]);
+  }
+
+  try {
+    if (!client.readyAt) {
+      return res.status(503).json({ error: 'Discord bot client belum siap.' });
+    }
+
+    const guild = await client.guilds.fetch(guildId).catch(() => null);
+    if (!guild) {
+      return res.status(404).json({ error: 'Server tidak ditemukan.' });
+    }
+
+    const emojis = guild.emojis.cache.map(e => ({
+      name: e.name,
+      id: e.id,
+      animated: e.animated,
+      url: e.url
+    }));
+
+    res.json(emojis);
+  } catch (error) {
+    res.status(500).json({ error: 'Gagal mengambil custom emojis.', details: error.message });
+  }
+});
+
 // ----------------------------------------------------
 // REACTION ROLES API ENDPOINTS
 // ----------------------------------------------------
@@ -873,14 +909,19 @@ app.post('/api/guilds/:guildId/reaction-roles/:id/post', checkAuth, async (req, 
     }
 
     // 2. Build Components
+    let mappedOptions = config.options.map((opt, idx) => ({ ...opt, originalIndex: idx }));
+    if (config.shuffle_roles) {
+      mappedOptions.sort(() => Math.random() - 0.5);
+    }
+
     const components = [];
     if (config.selection_type === 'buttons') {
       // Split buttons into rows of 5 (Discord maximum is 5 buttons per ActionRow)
       let currentRow = new ActionRowBuilder();
-      config.options.forEach((opt, idx) => {
+      mappedOptions.forEach((opt, idx) => {
         const btn = new ButtonBuilder()
-          .setCustomId(`rr_btn_${config.id}_${idx}`)
-          .setLabel(opt.label || `Role ${idx + 1}`)
+          .setCustomId(`rr_btn_${config.id}_${opt.originalIndex}`)
+          .setLabel(opt.label || `Role ${opt.originalIndex + 1}`)
           .setStyle(ButtonStyle.Secondary);
 
         if (opt.emoji) {
@@ -889,7 +930,7 @@ app.post('/api/guilds/:guildId/reaction-roles/:id/post', checkAuth, async (req, 
 
         currentRow.addComponents(btn);
 
-        if (currentRow.components.length === 5 || idx === config.options.length - 1) {
+        if (currentRow.components.length === 5 || idx === mappedOptions.length - 1) {
           components.push(currentRow);
           currentRow = new ActionRowBuilder();
         }
@@ -902,10 +943,10 @@ app.post('/api/guilds/:guildId/reaction-roles/:id/post', checkAuth, async (req, 
         .setCustomId(`rr_select_${config.id}`)
         .setPlaceholder(config.plain_content || config.embed_description || 'Pilih opsi...');
 
-      const selectOptions = config.options.map((opt, idx) => {
+      const selectOptions = mappedOptions.map((opt) => {
         const selectOpt = {
-          label: opt.label || `Opsi ${idx + 1}`,
-          value: `${idx}`,
+          label: opt.label || `Opsi ${opt.originalIndex + 1}`,
+          value: `${opt.originalIndex}`,
         };
         if (opt.description) {
           selectOpt.description = opt.description.slice(0, 100);
@@ -926,7 +967,8 @@ app.post('/api/guilds/:guildId/reaction-roles/:id/post', checkAuth, async (req, 
 
     // 3. Add reactions if selection type is reactions
     if (config.selection_type === 'reactions') {
-      for (const opt of config.options) {
+      // Respect shuffle for reactions order too!
+      for (const opt of mappedOptions) {
         if (opt.emoji) {
           try {
             await sentMessage.react(opt.emoji);

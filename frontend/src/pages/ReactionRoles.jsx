@@ -1,20 +1,279 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../App';
+import './ReactionRoles.css';
+
+const STANDARD_EMOJIS = {
+  smileys: ['😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😋', '😛', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🥸', '🤩', '🥳', '😏', '😒', '😞', '😔', '🥺', '😢', '😭', '😤', '😠', '😡', '🤬', '🤯', '😳', '🥵', '🥶', '😱', '🤔', '🤫', '🫠', '🫣', '🫡', '🥱'],
+  animals: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🐔', '🐧', '🐦', '🐤', '🦆', '🦅', '🦉', '🦇', '🐺', '🐗', '🐴', '🦄', '🐝', '🐛', '🦋', '🐌', '🐞', '🐜', '🕷️', 'Scorpion', '🐢', '🐍', '🦎', ' Octopus ', ' Squid ', ' Lobster ', ' Crab ', '🐡', '🐠', '🐬', '🐳', '🦈'],
+  food: ['🍏', '🍎', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🍒', '🍑', '🥭', '🍍', '🥥', '🥝', '🍅', '🍆', '🥑', ' Broccoli ', '🥬', '🥒', '🌶️', '🌽', '🥕', '🥔', '🍞', '🥐', '🥖', '🥨', '🧀', '🍳', '🥞', ' waffle ', '🥓', '🥩', '🍔', '🍟', '🍕', '🌭', '🥪', '🌮', '🌯', '🍿', '🧁', '🍩', '🍪', '🎂', '🍫', '🍬', '🍭'],
+  activities: ['⚽', '🏀', '🏈', '⚾', '🥎', '🎾', '🏐', '🏉', '🎱', '🏓', '🏸', '🏒', '🏹', '🎣', '🥊', '🥋', '🛹', '🛼', '🏋️', '🚴', '🏊', '🤽', '🤸', '🤾', '🏌️', '🏇', '🧘', '🎮', '🕹️', '🎰', '🎲', '🧩', '🎭', '🎨', '🎬', '🎤', '🎧', '🎼', '🎹', '🥁', '🎷', '🎺', '🎸', '🪕', '🎻'],
+  travel: ['🚗', '🚕', '🚙', '🚌', '🚎', '🏎️', '🚓', '🚑', '🚒', '🚐', '🛻', '🚚', '🚛', '🚜', '🛵', '🚲', '🛴', '🛹', '🚏', '🛣️', '🚂', '✈️', '🚁', '🚀', '🛸', '⛵', '🚢', '⚓', '🌙', '☀️', '☁️', '🌧️', '❄️', '🌋', '⛺', '🏕️', '🏖️', '⛰️', '🏛️', '⛪', '🕌', '⛩️', '🎡', '🎢', '🗼', '🗻'],
+  objects: ['💡', '🔦', '🕯️', '🗑️', '🛒', '💸', '💵', '🪙', '💳', '💎', '⚖️', '🔧', '🔨', '⚒️', '⛏️', '🪓', '⚙️', '🧲', '🔫', '💣', '🛡️', '⚔️', '🔮', '🔭', '🔬', '🧪', '🩹', '🩺', '🔑', '🗝️', '📦', '📫', '✉️', '✏️', '📝', '📂', '📅', '📖', '📌', '📎', '✂️', '☎️', '💻', '📷', '📺', '⌚'],
+  symbols: ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '☮️', '✝️', '☪️', '🕉️', '☯️', '✡️', '☸️', '♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓', '⛎', '🎴', '🌀', '💤', '🛑', '⚠️', '🚫', '💯', '💲'],
+  flags: ['🏁', '🚩', '🏴', '🏳️', '🇮🇩', '🇺🇸', '🇯🇵', '🇬🇧', '🇰🇷', '🇨🇳', '🇩🇪', '🇫🇷', '🇪🇸', '🇮🇹', '🇷🇺', '🇨🇦', '🇦🇺', '🇧🇷', '🇮🇳', '🇸🇬', '🇲🇾', '🇹🇭', '🇻🇳', '🇵🇭', '🇸🇦', '🇹🇷', '🇪🇬', '🇿🇦', '🇳🇿', '🇲🇽', '🇨🇭', '🇳🇱', '🇧🇪', '🇸🇪', '🇳🇴', '🇫🇮', '🇩🇰', '🇮🇪', '🇦🇹', '🇵🇱', '🇺🇦']
+};
+
+const CATEGORY_NAMES = {
+  custom: 'Server Custom Emojis',
+  smileys: 'Smileys & People',
+  animals: 'Animals & Nature',
+  food: 'Food & Drink',
+  activities: 'Activities & Sports',
+  travel: 'Travel & Places',
+  objects: 'Objects',
+  symbols: 'Symbols',
+  flags: 'Flags'
+};
+
+// Premium Custom Reusable Emoji Picker Component
+function EmojiPicker({ selectedEmoji, onSelect, customEmojis }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState(customEmojis.length > 0 ? 'custom' : 'smileys');
+  const [searchQuery, setSearchQuery] = useState('');
+  const pickerRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (pickerRef.current && !pickerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Filter emojis based on query
+  const getFilteredEmojis = () => {
+    const query = searchQuery.toLowerCase().trim();
+    if (!query) {
+      if (activeTab === 'custom') return { custom: customEmojis };
+      return { [activeTab]: STANDARD_EMOJIS[activeTab] };
+    }
+
+    const filtered = {};
+    
+    // Filter Custom Emojis
+    const matchingCustom = customEmojis.filter(e => e.name.toLowerCase().includes(query));
+    if (matchingCustom.length > 0) filtered.custom = matchingCustom;
+
+    // Filter Standard Emojis
+    Object.entries(STANDARD_EMOJIS).forEach(([cat, list]) => {
+      const match = list.filter(emoji => emoji.includes(query) || cat.includes(query));
+      if (match.length > 0) filtered[cat] = match;
+    });
+
+    return filtered;
+  };
+
+  const filteredData = getFilteredEmojis();
+
+  // Helper to draw emoji representation
+  const renderEmojiIcon = (val) => {
+    if (!val) return '⚫';
+    // Check if Custom Emoji (e.g. numeric ID or <a:name:id> or custom object representation)
+    const matchedCustom = customEmojis.find(e => e.id === val || e.name === val || val.includes(e.id));
+    if (matchedCustom) {
+      return <img src={matchedCustom.url} alt={matchedCustom.name} style={{ width: '20px', height: '20px', objectFit: 'contain', borderRadius: '4px' }} />;
+    }
+    return val;
+  };
+
+  return (
+    <div style={{ position: 'relative' }} ref={pickerRef}>
+      <div 
+        onClick={() => setIsOpen(!isOpen)}
+        style={{
+          width: '42px',
+          height: '42px',
+          borderRadius: '10px',
+          background: 'rgba(255,255,255,0.03)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '1.2rem',
+          transition: 'all 0.2s'
+        }}
+        title="Klik untuk memilih emoji"
+      >
+        {renderEmojiIcon(selectedEmoji)}
+      </div>
+
+      {isOpen && (
+        <div className="emoji-picker-container">
+          {/* Search bar */}
+          <div className="emoji-picker-search">
+            <input 
+              type="text" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="input-glass"
+              style={{ fontSize: '0.8rem', padding: '6px 12px', width: '100%' }}
+              placeholder="🔍 Search emoji..."
+              autoFocus
+            />
+          </div>
+
+          {/* Tabs */}
+          {!searchQuery && (
+            <div className="emoji-picker-tabs">
+              {customEmojis.length > 0 && (
+                <button 
+                  onClick={() => setActiveTab('custom')}
+                  className={`emoji-picker-tab-btn ${activeTab === 'custom' ? 'active' : ''}`}
+                  title="Server Emojis"
+                >
+                  ⭐
+                </button>
+              )}
+              {Object.keys(STANDARD_EMOJIS).map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setActiveTab(cat)}
+                  className={`emoji-picker-tab-btn ${activeTab === cat ? 'active' : ''}`}
+                  title={CATEGORY_NAMES[cat]}
+                >
+                  {cat === 'smileys' ? '😀' : cat === 'animals' ? '🐶' : cat === 'food' ? '🍏' : cat === 'activities' ? '⚽' : cat === 'travel' ? '🚗' : cat === 'objects' ? '💡' : cat === 'symbols' ? '❤️' : '🏁'}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Emoji Grid Scroll */}
+          <div className="emoji-picker-scroll">
+            {Object.entries(filteredData).map(([cat, list]) => (
+              <div key={cat} style={{ display: 'flex', flexDirection: 'column' }}>
+                <span className="emoji-picker-category-title">{CATEGORY_NAMES[cat]}</span>
+                <div className="emoji-picker-grid">
+                  {cat === 'custom' ? (
+                    list.map(e => (
+                      <button
+                        key={e.id}
+                        onClick={() => {
+                          onSelect(e.id); // store by numeric custom ID
+                          setIsOpen(false);
+                        }}
+                        className="emoji-picker-btn emoji-picker-custom-btn"
+                        title={`:${e.name}:`}
+                      >
+                        <img src={e.url} alt={e.name} className="emoji-picker-custom-img" />
+                      </button>
+                    ))
+                  ) : (
+                    list.map(emoji => (
+                      <button
+                        key={emoji}
+                        onClick={() => {
+                          onSelect(emoji);
+                          setIsOpen(false);
+                        }}
+                        className="emoji-picker-btn"
+                      >
+                        {emoji}
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Premium Custom Reusable Multi-Select Role Dropdown Component
+function MultiSelect({ allRoles, selectedIds, onChange, placeholder = 'Pilih peran...' }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleToggle = (id) => {
+    const list = [...selectedIds];
+    const idx = list.indexOf(id);
+    if (idx !== -1) {
+      list.splice(idx, 1);
+    } else {
+      list.push(id);
+    }
+    onChange(list);
+  };
+
+  const handleRemove = (e, id) => {
+    e.stopPropagation();
+    onChange(selectedIds.filter(x => x !== id));
+  };
+
+  return (
+    <div className="multi-select-container" ref={containerRef}>
+      <div className="multi-select-box" onClick={() => setIsOpen(!isOpen)}>
+        {selectedIds.length === 0 ? (
+          <span className="multi-select-placeholder">{placeholder}</span>
+        ) : (
+          selectedIds.map(id => {
+            const role = allRoles.find(r => r.id === id);
+            return (
+              <span key={id} className="multi-select-chip">
+                {role ? role.name : `Peran: ${id.slice(-4)}`}
+                <button type="button" className="multi-select-chip-remove" onClick={(e) => handleRemove(e, id)}>×</button>
+              </span>
+            );
+          })
+        )}
+      </div>
+
+      {isOpen && (
+        <div className="multi-select-dropdown">
+          {allRoles.length === 0 ? (
+            <span style={{ fontSize: '0.8rem', color: 'hsl(var(--text-muted))', padding: '10px', textAlign: 'center' }}>Tidak ada peran.</span>
+          ) : (
+            allRoles.map(role => {
+              const isSelected = selectedIds.includes(role.id);
+              return (
+                <div 
+                  key={role.id}
+                  onClick={() => handleToggle(role.id)}
+                  className={`multi-select-option ${isSelected ? 'selected' : ''}`}
+                >
+                  <span>🛡️ {role.name}</span>
+                  {isSelected && <span style={{ color: '#818cf8', fontWeight: 'bold' }}>✓</span>}
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function ReactionRoles() {
   const { selectedGuild } = useApp();
   const [reactionRoles, setReactionRoles] = useState([]);
   const [channels, setChannels] = useState([]);
   const [roles, setRoles] = useState([]);
+  const [customEmojis, setCustomEmojis] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [currentConfig, setCurrentConfig] = useState(null);
   const [saving, setSaving] = useState(false);
   const [postingId, setPostingId] = useState(null);
   const [message, setMessage] = useState('');
-  const [messageType, setMessageType] = useState('success'); // success or error
+  const [messageType, setMessageType] = useState('success'); 
+  const [optionsExpanded, setOptionsExpanded] = useState(true);
 
-  // Load reaction roles, channels, and roles
+  // Load reaction roles, channels, roles, and emojis
   useEffect(() => {
     if (!selectedGuild) return;
     setLoading(true);
@@ -30,6 +289,12 @@ export default function ReactionRoles() {
       .then(res => res.json())
       .then(data => setRoles(data || []))
       .catch(err => console.error('Gagal memuat roles:', err));
+
+    // Fetch Custom Emojis
+    fetch(`/api/guilds/${selectedGuild.id}/emojis`)
+      .then(res => res.json())
+      .then(data => setCustomEmojis(data || []))
+      .catch(err => console.error('Gagal memuat custom emojis:', err));
 
     // Fetch configurations
     fetch(`/api/guilds/${selectedGuild.id}/reaction-roles`)
@@ -61,15 +326,25 @@ export default function ReactionRoles() {
       embed_description: 'Pilih peran di bawah ini untuk mendapatkan role.',
       embed_color: '#6366f1',
       selection_type: 'dropdowns',
+      
+      // Advanced Options properties matching screenshot 2
+      type: 'Normal',
+      allowed_roles: [],
+      ignored_roles: [],
+      allow_multiple_roles: false, // exclusive by default for dropdown
+      shuffle_roles: false,
+
       options: [
-        { emoji: '⚫', role_id: '', label: 'Hitam', description: 'Ganti warna nama profil menjadi Hitam' }
+        { emoji: '⚫', role_ids: [], label: 'Hitam', description: 'Ganti warna nama profil menjadi Hitam' }
       ]
     });
+    setOptionsExpanded(true);
     setIsEditing(true);
   };
 
   const handleEdit = (config) => {
     setCurrentConfig(JSON.parse(JSON.stringify(config))); // Deep copy
+    setOptionsExpanded(true);
     setIsEditing(true);
   };
 
@@ -98,8 +373,8 @@ export default function ReactionRoles() {
     if (currentConfig.options.length === 0) return showFeedback('❌ Minimal harus ada 1 opsi pilihan role.', 'error');
     
     // Check if roles are selected
-    const missingRoles = currentConfig.options.some(opt => !opt.role_id);
-    if (missingRoles) return showFeedback('❌ Seluruh opsi harus memiliki peran (Role) yang terpilih.', 'error');
+    const missingRoles = currentConfig.options.some(opt => !opt.role_ids || opt.role_ids.length === 0);
+    if (missingRoles) return showFeedback('❌ Seluruh opsi harus memiliki minimal 1 peran (Role) yang terpilih.', 'error');
 
     setSaving(true);
     const method = currentConfig.id ? 'PUT' : 'POST';
@@ -159,7 +434,7 @@ export default function ReactionRoles() {
   const handleAddOption = () => {
     setCurrentConfig(prev => ({
       ...prev,
-      options: [...prev.options, { emoji: '⚫', role_id: '', label: 'Role Baru', description: 'Deskripsi Opsi' }]
+      options: [...prev.options, { emoji: '⚫', role_ids: [], label: 'Role Baru', description: 'Deskripsi Opsi' }]
     }));
   };
 
@@ -176,6 +451,16 @@ export default function ReactionRoles() {
       opts[index] = { ...opts[index], [field]: value };
       return { ...prev, options: opts };
     });
+  };
+
+  // Helper to draw emoji representation in visual previews
+  const renderEmojiRepresentation = (val) => {
+    if (!val) return '⚫';
+    const matched = customEmojis.find(e => e.id === val || e.name === val || val.includes(e.id));
+    if (matched) {
+      return <img src={matched.url} alt={matched.name} style={{ width: '18px', height: '18px', objectFit: 'contain', display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />;
+    }
+    return <span style={{ marginRight: '4px' }}>{val}</span>;
   };
 
   if (loading) {
@@ -277,11 +562,11 @@ export default function ReactionRoles() {
                         <span>#{channels.find(c => c.id === rr.channel_id)?.name || rr.channel_id || 'Tidak diketahui'}</span>
                       </div>
                       <div style={{ display: 'flex', gap: '6px', fontSize: '0.82rem', color: 'hsl(var(--text-secondary))' }}>
-                        <span style={{ fontWeight: '600' }}>Tipe Pesan:</span>
-                        <span>{rr.message_type === 'plain' ? 'Plain Text' : 'Embed Message'}</span>
+                        <span style={{ fontWeight: '600' }}>Tipe:</span>
+                        <span>{rr.type || 'Normal'}</span>
                       </div>
                       <div style={{ display: 'flex', gap: '6px', fontSize: '0.82rem', color: 'hsl(var(--text-secondary))' }}>
-                        <span style={{ fontWeight: '600' }}>Jumlah Peran:</span>
+                        <span style={{ fontWeight: '600' }}>Jumlah Opsi:</span>
                         <span>{rr.options?.length || 0} peran</span>
                       </div>
                       <div style={{ display: 'flex', gap: '6px', fontSize: '0.82rem', color: 'hsl(var(--text-secondary))', alignItems: 'center' }}>
@@ -411,7 +696,7 @@ export default function ReactionRoles() {
                       type="radio" 
                       name="sel_type"
                       checked={currentConfig.selection_type === 'reactions'}
-                      onChange={() => setCurrentConfig(prev => ({ ...prev, selection_type: 'reactions' }))}
+                      onChange={() => setCurrentConfig(prev => ({ ...prev, selection_type: 'reactions', allow_multiple_roles: true }))}
                       style={{ cursor: 'pointer', accentColor: 'hsl(var(--primary-glow))' }}
                     />
                     Reactions
@@ -421,7 +706,7 @@ export default function ReactionRoles() {
                       type="radio" 
                       name="sel_type"
                       checked={currentConfig.selection_type === 'buttons'}
-                      onChange={() => setCurrentConfig(prev => ({ ...prev, selection_type: 'buttons' }))}
+                      onChange={() => setCurrentConfig(prev => ({ ...prev, selection_type: 'buttons', allow_multiple_roles: true }))}
                       style={{ cursor: 'pointer', accentColor: 'hsl(var(--primary-glow))' }}
                     />
                     Buttons
@@ -431,7 +716,7 @@ export default function ReactionRoles() {
                       type="radio" 
                       name="sel_type"
                       checked={currentConfig.selection_type === 'dropdowns'}
-                      onChange={() => setCurrentConfig(prev => ({ ...prev, selection_type: 'dropdowns' }))}
+                      onChange={() => setCurrentConfig(prev => ({ ...prev, selection_type: 'dropdowns', allow_multiple_roles: false }))}
                       style={{ cursor: 'pointer', accentColor: 'hsl(var(--primary-glow))' }}
                     />
                     Dropdowns
@@ -494,7 +779,7 @@ export default function ReactionRoles() {
               )}
             </div>
 
-            {/* SELECTION SETTINGS PANEL (DYNAMIC LIST) */}
+            {/* SELECTION SETTINGS PANEL (DYNAMIC LIST WITH EMOJI PICKER & MULTI-SELECT ROLES) */}
             <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid hsl(var(--border-glass))', paddingBottom: '10px' }}>
                 <h3 style={{ fontSize: '1.25rem', color: 'hsl(var(--text-primary))', fontWeight: '750' }}>
@@ -516,7 +801,7 @@ export default function ReactionRoles() {
                       key={idx} 
                       style={{ 
                         display: 'grid', 
-                        gridTemplateColumns: '60px 1.5fr 1.2fr 1.5fr 40px',
+                        gridTemplateColumns: '60px 1.8fr 1.2fr 1.2fr 40px',
                         alignItems: 'center', 
                         gap: '12px',
                         padding: '16px',
@@ -526,36 +811,25 @@ export default function ReactionRoles() {
                       }}
                       className="expandable-card-grid"
                     >
-                      {/* Emoji */}
+                      {/* Premium Emoji Picker */}
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         <label style={{ fontSize: '0.72rem', color: 'hsl(var(--text-muted))', fontWeight: 'bold' }}>Emoji</label>
-                        <input 
-                          type="text" 
-                          value={opt.emoji} 
-                          onChange={(e) => handleOptionChange(idx, 'emoji', e.target.value)}
-                          className="input-glass"
-                          style={{ textAlign: 'center', fontSize: '1rem', padding: '6px' }}
-                          maxLength="8"
-                          placeholder="⚫"
+                        <EmojiPicker 
+                          selectedEmoji={opt.emoji} 
+                          onSelect={(emojiVal) => handleOptionChange(idx, 'emoji', emojiVal)}
+                          customEmojis={customEmojis}
                         />
                       </div>
 
-                      {/* Role Picker */}
+                      {/* Multi-Select Roles (chip systems!) */}
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         <label style={{ fontSize: '0.72rem', color: 'hsl(var(--text-muted))', fontWeight: 'bold' }}>Roles</label>
-                        <select 
-                          value={opt.role_id} 
-                          onChange={(e) => handleOptionChange(idx, 'role_id', e.target.value)}
-                          className="input-glass"
-                          style={{ padding: '6px 8px', fontSize: '0.82rem', backgroundColor: 'hsl(var(--panel-glass))', color: 'hsl(var(--text-primary))' }}
-                        >
-                          <option value="" disabled>-- Pilih Peran --</option>
-                          {roles.map(r => (
-                            <option key={r.id} value={r.id} style={{ backgroundColor: 'hsl(var(--bg-space))' }}>
-                              🛡️ {r.name}
-                            </option>
-                          ))}
-                        </select>
+                        <MultiSelect 
+                          allRoles={roles} 
+                          selectedIds={opt.role_ids || []} 
+                          onChange={(ids) => handleOptionChange(idx, 'role_ids', ids)}
+                          placeholder="Pilih Peran..."
+                        />
                       </div>
 
                       {/* Option Label */}
@@ -568,8 +842,8 @@ export default function ReactionRoles() {
                           value={opt.label || ''} 
                           onChange={(e) => handleOptionChange(idx, 'label', e.target.value)}
                           className="input-glass"
-                          style={{ padding: '6px 8px', fontSize: '0.82rem' }}
-                          placeholder={roles.find(r => r.id === opt.role_id)?.name || 'Nama Tombol'}
+                          style={{ padding: '6px 8px', fontSize: '0.82rem', height: '42px' }}
+                          placeholder="Nama Tombol"
                         />
                       </div>
 
@@ -582,8 +856,8 @@ export default function ReactionRoles() {
                           disabled={currentConfig.selection_type !== 'dropdowns'}
                           onChange={(e) => handleOptionChange(idx, 'description', e.target.value)}
                           className="input-glass"
-                          style={{ padding: '6px 8px', fontSize: '0.82rem' }}
-                          placeholder="Deskripsi peran dropdown..."
+                          style={{ padding: '6px 8px', fontSize: '0.82rem', height: '42px' }}
+                          placeholder="Deskripsi..."
                         />
                       </div>
 
@@ -601,7 +875,8 @@ export default function ReactionRoles() {
                           justifyContent: 'center',
                           padding: '8px',
                           marginTop: '16px',
-                          transition: 'all 0.2s ease'
+                          height: '42px',
+                          transition: 'all 0.2s'
                         }}
                         className="sidebar-link-hover"
                         title="Hapus Opsi Ini"
@@ -612,6 +887,112 @@ export default function ReactionRoles() {
                   ))}
                 </div>
               )}
+            </div>
+
+            {/* COLLAPSIBLE OPTIONS PANEL (AS SHOWN IN PICTURE 2) */}
+            <div className="glass-panel" style={{ padding: '24px' }}>
+              <div 
+                className="collapsible-header"
+                onClick={() => setOptionsExpanded(!optionsExpanded)}
+              >
+                <h3 style={{ fontSize: '1.25rem', color: 'hsl(var(--text-primary))', fontWeight: '750', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <svg 
+                    width="14" height="8" viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="2.5"
+                    style={{ transform: optionsExpanded ? 'rotate(0deg)' : 'rotate(-90deg)', transition: 'transform 0.25s' }}
+                  >
+                    <path d="m1 1 4 4 4-4"/>
+                  </svg>
+                  OPTIONS
+                </h3>
+                <span style={{ fontSize: '0.78rem', color: 'hsl(var(--text-muted))', fontWeight: '500' }}>
+                  {optionsExpanded ? 'Tutup Parameter' : 'Buka Parameter'}
+                </span>
+              </div>
+
+              <div 
+                className="collapsible-content"
+                style={{ 
+                  maxHeight: optionsExpanded ? '1000px' : '0px', 
+                  marginTop: optionsExpanded ? '16px' : '0px',
+                  borderTop: optionsExpanded ? '1px solid hsl(var(--border-glass))' : 'none',
+                  paddingTop: optionsExpanded ? '16px' : '0px'
+                }}
+              >
+                {/* Type Selection */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: '0.88rem', color: 'hsl(var(--text-primary))', fontWeight: '600' }}>Type</label>
+                  <select
+                    value={currentConfig.type || 'Normal'}
+                    onChange={(e) => setCurrentConfig(prev => ({ ...prev, type: e.target.value }))}
+                    className="input-glass"
+                    style={{ backgroundColor: 'hsl(var(--panel-glass))', color: 'hsl(var(--text-primary))' }}
+                  >
+                    <option value="Normal" style={{ backgroundColor: 'hsl(var(--bg-space))' }}>Normal (Toggle role saat berinteraksi)</option>
+                    <option value="Toggle" style={{ backgroundColor: 'hsl(var(--bg-space))' }}>Toggle (Sama dengan Normal)</option>
+                    <option value="Give" style={{ backgroundColor: 'hsl(var(--bg-space))' }}>Give (Hanya menyematkan peran, tidak bisa dicabut)</option>
+                    <option value="Take" style={{ backgroundColor: 'hsl(var(--bg-space))' }}>Take (Hanya mencabut peran terkait)</option>
+                  </select>
+                </div>
+
+                {/* Allowed Roles & Ignored Roles (Picture 2 Double Column) */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }} className="expandable-card-grid">
+                  
+                  {/* Allowed Roles */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '0.88rem', color: 'hsl(var(--text-primary))', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      Allowed Roles 
+                      <span style={{ cursor: 'help', color: 'hsl(var(--text-muted))' }} title="Hanya anggota dengan peran ini yang bisa mengeklaim peran">🛈</span>
+                    </label>
+                    <MultiSelect 
+                      allRoles={roles} 
+                      selectedIds={currentConfig.allowed_roles || []} 
+                      onChange={(ids) => setCurrentConfig(prev => ({ ...prev, allowed_roles: ids }))}
+                      placeholder="Semua peran diizinkan..."
+                    />
+                  </div>
+
+                  {/* Ignored Roles */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '0.88rem', color: 'hsl(var(--text-primary))', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      Ignored Roles 
+                      <span style={{ cursor: 'help', color: 'hsl(var(--text-muted))' }} title="Anggota dengan peran ini diblokir dari mengeklaim peran">🛈</span>
+                    </label>
+                    <MultiSelect 
+                      allRoles={roles} 
+                      selectedIds={currentConfig.ignored_roles || []} 
+                      onChange={(ids) => setCurrentConfig(prev => ({ ...prev, ignored_roles: ids }))}
+                      placeholder="Tidak ada peran diabaikan..."
+                    />
+                  </div>
+
+                </div>
+
+                {/* Two checkboxes side by side (Picture 2 layout) */}
+                <div style={{ display: 'flex', gap: '40px', marginTop: '4px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem', color: 'hsl(var(--text-primary))' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={!!currentConfig.allow_multiple_roles}
+                      onChange={(e) => setCurrentConfig(prev => ({ ...prev, allow_multiple_roles: e.target.checked }))}
+                      style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: 'hsl(var(--primary-glow))' }}
+                    />
+                    Allow members to get multiple roles 
+                    <span style={{ cursor: 'help', color: 'hsl(var(--text-muted))', marginLeft: '2px' }} title="Jika dicentang, anggota bisa mengeklaim lebih dari 1 peran. Jika tidak dicentang, peran lama dari Reaction Roles ini akan otomatis dicabut.">🛈</span>
+                  </label>
+
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem', color: 'hsl(var(--text-primary))' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={!!currentConfig.shuffle_roles}
+                      onChange={(e) => setCurrentConfig(prev => ({ ...prev, shuffle_roles: e.target.checked }))}
+                      style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: 'hsl(var(--primary-glow))' }}
+                    />
+                    Shuffle roles and their emojis 
+                    <span style={{ cursor: 'help', color: 'hsl(var(--text-muted))', marginLeft: '2px' }} title="Jika diaktifkan, urutan peran dan emoji akan diacak saat diposting di Discord untuk variasi letak visual.">🛈</span>
+                  </label>
+                </div>
+
+              </div>
             </div>
 
             {/* Bottom Actions */}
@@ -677,145 +1058,165 @@ export default function ReactionRoles() {
                   </div>
                 )}
 
-                {/* RENDER SELECTION COMPONENTS BELOW MESSAGE */}
+                {/* RENDER SELECTION COMPONENTS BELOW MESSAGE (Respect Shuffle Preview if active) */}
+                {(() => {
+                  let options = [...currentConfig.options];
+                  // If shuffle is checked, we can simulate the random ordering!
+                  if (currentConfig.shuffle_roles) {
+                    // Let's do a deterministic shuffle so it doesn't bounce endlessly on rerenders
+                    options.reverse();
+                  }
 
-                {/* 1. REACTIONS PREVIEW */}
-                {currentConfig.selection_type === 'reactions' && (
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '8px' }}>
-                    {currentConfig.options.map((opt, idx) => {
-                      if (!opt.emoji) return null;
-                      return (
-                        <div 
-                          key={idx} 
-                          style={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            gap: '6px', 
-                            backgroundColor: '#2b2d31', 
-                            border: '1px solid #3f4248', 
-                            padding: '4px 10px', 
-                            borderRadius: '8px', 
-                            fontSize: '0.85rem',
-                            cursor: 'pointer',
-                            color: '#b5bac1'
-                          }}
-                        >
-                          <span>{opt.emoji}</span>
-                          <span style={{ fontWeight: '600', color: '#5865f2', fontSize: '0.78rem' }}>1</span>
+                  return (
+                    <>
+                      {/* 1. REACTIONS PREVIEW */}
+                      {currentConfig.selection_type === 'reactions' && (
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '8px' }}>
+                          {options.map((opt, idx) => {
+                            if (!opt.emoji) return null;
+                            return (
+                              <div 
+                                key={idx} 
+                                style={{ 
+                                  display: 'flex', 
+                                  alignItems: 'center', 
+                                  gap: '6px', 
+                                  backgroundColor: '#2b2d31', 
+                                  border: '1px solid #3f4248', 
+                                  padding: '4px 10px', 
+                                  borderRadius: '8px', 
+                                  fontSize: '0.85rem',
+                                  cursor: 'pointer',
+                                  color: '#b5bac1'
+                                }}
+                              >
+                                {renderEmojiRepresentation(opt.emoji)}
+                                <span style={{ fontWeight: '600', color: '#5865f2', fontSize: '0.78rem' }}>1</span>
+                              </div>
+                            );
+                          })}
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
+                      )}
 
-                {/* 2. BUTTONS PREVIEW */}
-                {currentConfig.selection_type === 'buttons' && (
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '8px' }}>
-                    {currentConfig.options.map((opt, idx) => (
-                      <button
-                        key={idx}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          backgroundColor: '#4e5058', /* grey button color in discord */
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '3px',
-                          padding: '6px 14px',
-                          fontSize: '0.82rem',
-                          fontWeight: '500',
-                          fontFamily: 'sans-serif',
-                          cursor: 'pointer',
-                          transition: 'background-color 0.2s'
-                        }}
-                      >
-                        {opt.emoji && <span>{opt.emoji}</span>}
-                        <span>{opt.label || roles.find(r => r.id === opt.role_id)?.name || `Role ${idx + 1}`}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
+                      {/* 2. BUTTONS PREVIEW */}
+                      {currentConfig.selection_type === 'buttons' && (
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '8px' }}>
+                          {options.map((opt, idx) => {
+                            const selectedRoleNames = (opt.role_ids || []).map(id => roles.find(r => r.id === id)?.name).filter(x => !!x).join(', ');
+                            return (
+                              <button
+                                key={idx}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '6px',
+                                  backgroundColor: '#4e5058', 
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '3px',
+                                  padding: '6px 14px',
+                                  fontSize: '0.82rem',
+                                  fontWeight: '500',
+                                  fontFamily: 'sans-serif',
+                                  cursor: 'pointer',
+                                  transition: 'background-color 0.2s'
+                                }}
+                              >
+                                {opt.emoji && renderEmojiRepresentation(opt.emoji)}
+                                <span>{opt.label || selectedRoleNames || `Role ${idx + 1}`}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
 
-                {/* 3. DROPDOWNS PREVIEW */}
-                {currentConfig.selection_type === 'dropdowns' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '8px', fontFamily: 'sans-serif' }}>
-                    <div 
-                      style={{
-                        backgroundColor: '#1e1f22',
-                        border: '1px solid #3f4248',
-                        borderRadius: '4px',
-                        padding: '10px 12px',
-                        color: '#949ba4',
-                        fontSize: '0.85rem',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      <span>
-                        {currentConfig.plain_content ? currentConfig.plain_content.slice(0, 45) : currentConfig.embed_description ? currentConfig.embed_description.slice(0, 45) : 'Pilih opsi...'}
-                        {((currentConfig.plain_content && currentConfig.plain_content.length > 45) || (currentConfig.embed_description && currentConfig.embed_description.length > 45)) ? '...' : ''}
-                      </span>
-                      <svg width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="m1 1 4 4 4-4"/></svg>
-                    </div>
-                    
-                    {/* Simulated Select Menu Dropdown Overlay */}
-                    <div 
-                      style={{
-                        backgroundColor: '#2b2d31',
-                        border: '1px solid #1e1f22',
-                        borderRadius: '4px',
-                        marginTop: '4px',
-                        boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        overflow: 'hidden'
-                      }}
-                    >
-                      {currentConfig.options.map((opt, idx) => (
-                        <div 
-                          key={idx}
-                          style={{
-                            padding: '10px 12px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '10px',
-                            borderBottom: idx === currentConfig.options.length - 1 ? 'none' : '1px solid rgba(255,255,255,0.03)',
-                            cursor: 'pointer',
-                            transition: 'background-color 0.2s'
-                          }}
-                          className="simulated-dropdown-option"
-                        >
-                          <span style={{ fontSize: '1.05rem' }}>{opt.emoji || '⚫'}</span>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                            <span style={{ color: '#dbdee1', fontSize: '0.82rem', fontWeight: '500' }}>
-                              {opt.label || roles.find(r => r.id === opt.role_id)?.name || `Opsi ${idx + 1}`}
+                      {/* 3. DROPDOWNS PREVIEW */}
+                      {currentConfig.selection_type === 'dropdowns' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '8px', fontFamily: 'sans-serif' }}>
+                          <div 
+                            style={{
+                              backgroundColor: '#1e1f22',
+                              border: '1px solid #3f4248',
+                              borderRadius: '4px',
+                              padding: '10px 12px',
+                              color: '#949ba4',
+                              fontSize: '0.85rem',
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <span>
+                              {currentConfig.plain_content ? currentConfig.plain_content.slice(0, 45) : currentConfig.embed_description ? currentConfig.embed_description.slice(0, 45) : 'Pilih opsi...'}
+                              {((currentConfig.plain_content && currentConfig.plain_content.length > 45) || (currentConfig.embed_description && currentConfig.embed_description.length > 45)) ? '...' : ''}
                             </span>
-                            {opt.description && (
-                              <span style={{ color: '#949ba4', fontSize: '0.72rem' }}>
-                                {opt.description}
-                              </span>
-                            )}
+                            <svg width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="m1 1 4 4 4-4"/></svg>
+                          </div>
+                          
+                          {/* Simulated Select Menu Dropdown Overlay */}
+                          <div 
+                            style={{
+                              backgroundColor: '#2b2d31',
+                              border: '1px solid #1e1f22',
+                              borderRadius: '4px',
+                              marginTop: '4px',
+                              boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              overflow: 'hidden'
+                            }}
+                          >
+                            {options.map((opt, idx) => {
+                              const selectedRoleNames = (opt.role_ids || []).map(id => roles.find(r => r.id === id)?.name).filter(x => !!x).join(', ');
+                              return (
+                                <div 
+                                  key={idx}
+                                  style={{
+                                    padding: '10px 12px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '10px',
+                                    borderBottom: idx === options.length - 1 ? 'none' : '1px solid rgba(255,255,255,0.03)',
+                                    cursor: 'pointer',
+                                    transition: 'background-color 0.2s'
+                                  }}
+                                  className="simulated-dropdown-option"
+                                >
+                                  <span style={{ fontSize: '1.05rem', display: 'flex', alignItems: 'center' }}>
+                                    {renderEmojiRepresentation(opt.emoji || '⚫')}
+                                  </span>
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                    <span style={{ color: '#dbdee1', fontSize: '0.82rem', fontWeight: '500' }}>
+                                      {opt.label || selectedRoleNames || `Opsi ${idx + 1}`}
+                                    </span>
+                                    {opt.description && (
+                                      <span style={{ color: '#949ba4', fontSize: '0.72rem' }}>
+                                        {opt.description}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                      )}
+                    </>
+                  );
+                })()}
 
               </div>
             </div>
 
             {/* Quick Helper Tips Card */}
             <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <h4 style={{ color: 'hsl(var(--text-primary))', fontSize: '0.98rem', fontWeight: '700' }}>💡 Tips Reaction Roles</h4>
+              <h4 style={{ color: 'hsl(var(--text-primary))', fontSize: '0.98rem', fontWeight: '750' }}>💡 Tips Setelan Lanjutan</h4>
               <ul style={{ padding: '0 0 0 16px', margin: 0, fontSize: '0.8rem', color: 'hsl(var(--text-secondary))', display: 'flex', flexDirection: 'column', gap: '6px', lineHeight: '1.4' }}>
-                <li>Pastikan peran bot <strong>Pandu Discord Bot</strong> berada di urutan atas dalam daftar peran (roles) server.</li>
-                <li>Gunakan <strong>Unicode Emoji</strong> standar untuk menjamin kompabilitas reaksi.</li>
-                <li><strong>Dropdowns</strong> mendukung penonaktifan secara otomatis antar pilihan role jika salah satu opsi dipilih (eksklusif).</li>
-                <li>Klik tombol <strong>"Simpan Setelan"</strong> terlebih dahulu sebelum melakukan posting pertama kali.</li>
+                <li><strong>Allowed/Ignored Roles</strong> membatasi secara spesifik siapa saja anggota yang boleh mengeklaim setelan peran ini.</li>
+                <li>Matikan <strong>"Allow members to get multiple roles"</strong> jika Anda membuat pilihan warna eksklusif seperti di mockup.</li>
+                <li><strong>Custom Emojis Picker</strong> mendukung penelusuran custom emoji resmi langsung dari *database* server Discord aktif Anda.</li>
+                <li>Pastikan urutan peran bot Anda berada di urutan teratas agar bot diizinkan menyematkan peran tersebut.</li>
               </ul>
             </div>
           </div>

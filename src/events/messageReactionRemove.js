@@ -26,6 +26,10 @@ module.exports = {
     const config = configs.find(c => c.message_id === message.id);
     if (!config || config.selection_type !== 'reactions') return;
 
+    // Fetch member
+    const member = await guild.members.fetch(user.id).catch(() => null);
+    if (!member) return;
+
     // Find the option matching the emoji
     const emojiName = reaction.emoji.name;
     const emojiId = reaction.emoji.id;
@@ -35,18 +39,39 @@ module.exports = {
       return opt.emoji === emojiName || opt.emoji === emojiId || opt.emoji.includes(emojiName);
     });
 
-    if (!option || !option.role_id) return;
-
-    // Fetch member
-    const member = await guild.members.fetch(user.id).catch(() => null);
-    if (!member) return;
+    const roleIds = option?.role_ids || (option?.role_id ? [option.role_id] : []);
+    if (roleIds.length === 0) return;
 
     try {
-      if (member.roles.cache.has(option.role_id)) {
-        await member.roles.remove(option.role_id);
-        
-        // Send DM to user notifying them
-        await user.send(`✓ Peran **${guild.roles.cache.get(option.role_id)?.name || 'Role'}** telah dihapus dari profil Anda di server **${guild.name}** karena Anda menghapus reaksi.`).catch(() => {});
+      const type = config.type || 'Normal';
+
+      if (type === 'Give') {
+        // GIVE: REMOVING REACTION DOES NOTHING!
+        return;
+      } else if (type === 'Take') {
+        // TAKE: REMOVING REACTION ADDS ROLES BACK!
+        let addedNames = [];
+        for (const id of roleIds) {
+          if (!member.roles.cache.has(id)) {
+            await member.roles.add(id);
+            addedNames.push(guild.roles.cache.get(id)?.name || 'Role');
+          }
+        }
+        if (addedNames.length > 0) {
+          await user.send(`✓ Peran **${addedNames.join(', ')}** telah dikembalikan kepada Anda di server **${guild.name}**.`).catch(() => {});
+        }
+      } else {
+        // NORMAL OR TOGGLE: REMOVING REACTION REMOVES ROLES!
+        let removedNames = [];
+        for (const id of roleIds) {
+          if (member.roles.cache.has(id)) {
+            await member.roles.remove(id);
+            removedNames.push(guild.roles.cache.get(id)?.name || 'Role');
+          }
+        }
+        if (removedNames.length > 0) {
+          await user.send(`✓ Peran **${removedNames.join(', ')}** telah dihapus dari profil Anda di server **${guild.name}**.`).catch(() => {});
+        }
       }
     } catch (err) {
       console.error('Gagal menghapus role dari reaction role:', err);

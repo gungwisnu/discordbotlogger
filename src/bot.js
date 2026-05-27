@@ -351,6 +351,28 @@ async function sendAchievementNotification(guildId, userId, newlyUnlocked) {
   }
 }
 
+// Helper to check Allowed & Ignored roles for Reaction Roles
+function checkRolePermissions(member, config) {
+  const allowed = config.allowed_roles || [];
+  const ignored = config.ignored_roles || [];
+
+  if (ignored.length > 0) {
+    const hasIgnored = ignored.some(id => member.roles.cache.has(id));
+    if (hasIgnored) {
+      return { allowed: false, reason: 'Anda memiliki peran yang dilarang untuk mengeklaim role dari Reaction Roles ini.' };
+    }
+  }
+
+  if (allowed.length > 0) {
+    const hasAllowed = allowed.some(id => member.roles.cache.has(id));
+    if (!hasAllowed) {
+      return { allowed: false, reason: 'Anda tidak memiliki peran yang diizinkan untuk mengeklaim role dari Reaction Roles ini.' };
+    }
+  }
+
+  return { allowed: true };
+}
+
 // Handlers for Reaction Roles Buttons and Dropdowns
 async function handleReactionRoleButton(interaction) {
   const parts = interaction.customId.split('_'); // rr, btn, configId, optionIndex
@@ -365,29 +387,89 @@ async function handleReactionRoleButton(interaction) {
   if (!config) {
     return interaction.reply({ content: 'Konfigurasi Reaction Roles tidak ditemukan.', ephemeral: true });
   }
+
+  const member = interaction.member;
+  
+  // Check Allowed & Ignored roles
+  const permCheck = checkRolePermissions(member, config);
+  if (!permCheck.allowed) {
+    return interaction.reply({ content: `❌ Akses Ditolak: ${permCheck.reason}`, ephemeral: true });
+  }
   
   const option = config.options[optionIndex];
-  if (!option || !option.role_id) {
+  const roleIds = option?.role_ids || (option?.role_id ? [option.role_id] : []);
+  if (roleIds.length === 0) {
     return interaction.reply({ content: 'Role untuk tombol ini tidak ditemukan.', ephemeral: true });
-  }
-
-  const roleId = option.role_id;
-  const member = interaction.member;
-  const role = interaction.guild.roles.cache.get(roleId);
-
-  if (!role) {
-    return interaction.reply({ content: 'Role tersebut tidak ada di server ini lagi.', ephemeral: true });
   }
 
   try {
     await interaction.deferReply({ ephemeral: true });
+
+    const guild = interaction.guild;
+    const type = config.type || 'Normal';
     
-    if (member.roles.cache.has(roleId)) {
-      await member.roles.remove(roleId);
-      await interaction.editReply({ content: `✓ Peran **${role.name}** telah dihapus dari profil Anda.` });
+    // Check if user has the roles (for toggling, we check if they have the first role)
+    const hasRole = member.roles.cache.has(roleIds[0]);
+
+    if (type === 'Take') {
+      // ONLY REMOVE ROLES
+      let removedNames = [];
+      for (const id of roleIds) {
+        if (member.roles.cache.has(id)) {
+          await member.roles.remove(id);
+          removedNames.push(guild.roles.cache.get(id)?.name || 'Role');
+        }
+      }
+      if (removedNames.length > 0) {
+        await interaction.editReply({ content: `✓ Peran **${removedNames.join(', ')}** telah dihapus dari profil Anda.` });
+      } else {
+        await interaction.editReply({ content: `Anda tidak memiliki peran terkait untuk dicabut.` });
+      }
+    } else if (type === 'Give') {
+      // ONLY GIVE ROLES
+      let addedNames = [];
+      for (const id of roleIds) {
+        if (!member.roles.cache.has(id)) {
+          await member.roles.add(id);
+          addedNames.push(guild.roles.cache.get(id)?.name || 'Role');
+        }
+      }
+      if (addedNames.length > 0) {
+        await interaction.editReply({ content: `✓ Peran **${addedNames.join(', ')}** telah ditambahkan ke profil Anda.` });
+      } else {
+        await interaction.editReply({ content: `Anda sudah memiliki peran terkait.` });
+      }
     } else {
-      await member.roles.add(roleId);
-      await interaction.editReply({ content: `✓ Peran **${role.name}** telah ditambahkan ke profil Anda.` });
+      // NORMAL OR TOGGLE
+      if (hasRole) {
+        // REMOVE ROLES
+        for (const id of roleIds) {
+          if (member.roles.cache.has(id)) await member.roles.remove(id);
+        }
+        const roleNames = roleIds.map(id => guild.roles.cache.get(id)?.name || 'Role').join(', ');
+        await interaction.editReply({ content: `✓ Peran **${roleNames}** telah dihapus dari profil Anda.` });
+      } else {
+        // ADD ROLES
+        // If allow_multiple_roles is false, we should remove roles of other options in this config first!
+        if (config.allow_multiple_roles === false) {
+          const allOtherOptionRoleIds = [];
+          config.options.forEach((opt, idx) => {
+            if (idx !== optionIndex) {
+              const ids = opt.role_ids || (opt.role_id ? [opt.role_id] : []);
+              allOtherOptionRoleIds.push(...ids);
+            }
+          });
+          for (const id of allOtherOptionRoleIds) {
+            if (member.roles.cache.has(id)) await member.roles.remove(id);
+          }
+        }
+
+        for (const id of roleIds) {
+          if (!member.roles.cache.has(id)) await member.roles.add(id);
+        }
+        const roleNames = roleIds.map(id => guild.roles.cache.get(id)?.name || 'Role').join(', ');
+        await interaction.editReply({ content: `✓ Peran **${roleNames}** telah ditambahkan ke profil Anda.` });
+      }
     }
   } catch (err) {
     console.error('Gagal memproses tombol reaction role:', err);
@@ -409,45 +491,95 @@ async function handleReactionRoleSelect(interaction) {
     return interaction.reply({ content: 'Konfigurasi Reaction Roles tidak ditemukan.', ephemeral: true });
   }
 
-  const option = config.options[selectedIndex];
-  if (!option || !option.role_id) {
-    return interaction.reply({ content: 'Role untuk opsi ini tidak ditemukan.', ephemeral: true });
+  const member = interaction.member;
+
+  // Check Allowed & Ignored roles
+  const permCheck = checkRolePermissions(member, config);
+  if (!permCheck.allowed) {
+    return interaction.reply({ content: `❌ Akses Ditolak: ${permCheck.reason}`, ephemeral: true });
   }
 
-  const selectedRoleId = option.role_id;
-  const member = interaction.member;
-  const guild = interaction.guild;
+  const option = config.options[selectedIndex];
+  const roleIds = option?.role_ids || (option?.role_id ? [option.role_id] : []);
+  if (roleIds.length === 0) {
+    return interaction.reply({ content: 'Role untuk opsi ini tidak ditemukan.', ephemeral: true });
+  }
 
   try {
     await interaction.deferReply({ ephemeral: true });
 
-    // Collect all role IDs associated with this select menu
-    const allMenuRoleIds = config.options.map(opt => opt.role_id).filter(id => !!id);
+    const guild = interaction.guild;
+    const type = config.type || 'Normal';
 
-    // Filter roles to remove (roles in the menu that the user currently has, excluding the selected one)
-    const rolesToRemove = allMenuRoleIds.filter(id => id !== selectedRoleId && member.roles.cache.has(id));
-    
-    // Check if the user already has the selected role
-    const alreadyHasSelected = member.roles.cache.has(selectedRoleId);
-
-    // If they already have the selected role, we toggle (remove it) and remove any other menu roles
-    if (alreadyHasSelected) {
-      const rolesToStrip = [...rolesToRemove, selectedRoleId];
-      for (const id of rolesToStrip) {
-        await member.roles.remove(id);
+    if (type === 'Take') {
+      // ONLY REMOVE ROLES
+      let removedNames = [];
+      for (const id of roleIds) {
+        if (member.roles.cache.has(id)) {
+          await member.roles.remove(id);
+          removedNames.push(guild.roles.cache.get(id)?.name || 'Role');
+        }
       }
-      const roleName = guild.roles.cache.get(selectedRoleId)?.name || 'Role';
-      await interaction.editReply({ content: `✓ Peran **${roleName}** telah dihapus dari profil Anda.` });
+      if (removedNames.length > 0) {
+        await interaction.editReply({ content: `✓ Peran **${removedNames.join(', ')}** telah dihapus dari profil Anda.` });
+      } else {
+        await interaction.editReply({ content: `Anda tidak memiliki peran terkait untuk dicabut.` });
+      }
+    } else if (type === 'Give') {
+      // ONLY GIVE ROLES
+      let addedNames = [];
+      for (const id of roleIds) {
+        if (!member.roles.cache.has(id)) {
+          await member.roles.add(id);
+          addedNames.push(guild.roles.cache.get(id)?.name || 'Role');
+        }
+      }
+      if (addedNames.length > 0) {
+        await interaction.editReply({ content: `✓ Peran **${addedNames.join(', ')}** telah ditambahkan ke profil Anda.` });
+      } else {
+        await interaction.editReply({ content: `Anda sudah memiliki peran terkait.` });
+      }
     } else {
-      // Remove other menu roles first
-      for (const id of rolesToRemove) {
-        await member.roles.remove(id);
+      // NORMAL OR TOGGLE
+      // If allow_multiple_roles is false, we strip all other options' roles!
+      if (config.allow_multiple_roles === false) {
+        const allMenuRoleIds = [];
+        config.options.forEach((opt, idx) => {
+          if (idx !== selectedIndex) {
+            const ids = opt.role_ids || (opt.role_id ? [opt.role_id] : []);
+            allMenuRoleIds.push(...ids);
+          }
+        });
+        
+        // Strip other roles
+        for (const id of allMenuRoleIds) {
+          if (member.roles.cache.has(id)) await member.roles.remove(id);
+        }
       }
-      // Add the selected role
-      await member.roles.add(selectedRoleId);
-      const roleName = guild.roles.cache.get(selectedRoleId)?.name || 'Role';
-      await interaction.editReply({ content: `✓ Peran **${roleName}** telah ditambahkan ke profil Anda (dan peran pilihan lain dari menu ini telah diselaraskan).` });
+
+      // Check if they already have all the selected roles. If yes, we toggle (remove them).
+      // Otherwise, we add them.
+      const alreadyHasSelected = member.roles.cache.has(roleIds[0]);
+
+      if (alreadyHasSelected) {
+        for (const id of roleIds) {
+          if (member.roles.cache.has(id)) await member.roles.remove(id);
+        }
+        const roleNames = roleIds.map(id => guild.roles.cache.get(id)?.name || 'Role').join(', ');
+        await interaction.editReply({ content: `✓ Peran **${roleNames}** telah dihapus dari profil Anda.` });
+      } else {
+        for (const id of roleIds) {
+          if (!member.roles.cache.has(id)) await member.roles.add(id);
+        }
+        const roleNames = roleIds.map(id => guild.roles.cache.get(id)?.name || 'Role').join(', ');
+        await interaction.editReply({ content: `✓ Peran **${roleNames}** telah ditambahkan ke profil Anda (dan peran pilihan lain dari menu ini telah diselaraskan jika berlaku).` });
+      }
     }
+  } catch (err) {
+    console.error('Gagal memproses pilihan dropdown reaction role:', err);
+    await interaction.editReply({ content: '❌ Terjadi kesalahan saat memproses peran Anda. Pastikan role bot berada di atas role tersebut dalam daftar peran server.' });
+  }
+}
   } catch (err) {
     console.error('Gagal memproses pilihan dropdown reaction role:', err);
     await interaction.editReply({ content: '❌ Terjadi kesalahan saat memproses peran Anda. Pastikan role bot berada di atas role tersebut dalam daftar peran server.' });

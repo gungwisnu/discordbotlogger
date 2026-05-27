@@ -611,7 +611,47 @@ const DatabaseFunctions = {
   // Reaction Roles API
   getReactionRoles(guildId) {
     if (!data.reaction_roles) data.reaction_roles = [];
-    return data.reaction_roles.filter(rr => rr.guild_id === guildId);
+    const list = data.reaction_roles.filter(rr => rr.guild_id === guildId);
+    
+    // Perform migrations for new options to maintain backward compatibility
+    let migrated = false;
+    list.forEach(rr => {
+      if (rr.allow_multiple_roles === undefined) {
+        // Dropdown default is false (exclusive), button/reactions is true by default
+        rr.allow_multiple_roles = rr.selection_type !== 'dropdowns';
+        migrated = true;
+      }
+      if (rr.type === undefined) {
+        rr.type = 'Normal';
+        migrated = true;
+      }
+      if (!rr.allowed_roles) {
+        rr.allowed_roles = [];
+        migrated = true;
+      }
+      if (!rr.ignored_roles) {
+        rr.ignored_roles = [];
+        migrated = true;
+      }
+      if (rr.shuffle_roles === undefined) {
+        rr.shuffle_roles = false;
+        migrated = true;
+      }
+      if (rr.options) {
+        rr.options.forEach(opt => {
+          if (!opt.role_ids) {
+            opt.role_ids = opt.role_id ? [opt.role_id] : [];
+            migrated = true;
+          }
+        });
+      }
+    });
+
+    if (migrated) {
+      triggerSave();
+    }
+
+    return list;
   },
 
   saveReactionRole(guildId, config) {
