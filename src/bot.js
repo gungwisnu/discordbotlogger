@@ -88,20 +88,20 @@ const ACHIEVEMENTS_METADATA = {
 // Ready event handling & slash command registration
 client.once('ready', async () => {
   console.log(`Bot Discord online sebagai ${client.user.tag}!`);
-  
+
   const token = process.env.DISCORD_TOKEN;
   const clientId = process.env.DISCORD_CLIENT_ID || client.user.id;
-  
+
   if (token && token !== 'your_bot_token_here') {
     try {
       const rest = new REST({ version: '10' }).setToken(token);
       console.log('Mendaftarkan slash commands (/)...');
-      
+
       await rest.put(
         Routes.applicationCommands(clientId),
         { body: commands }
       );
-      
+
       console.log('Slash commands mumpuni terdaftar secara global!');
     } catch (error) {
       console.error('Gagal mendaftarkan slash commands:', error);
@@ -123,7 +123,7 @@ function loadEvents() {
     const filePath = path.join(eventsPath, file);
     const event = require(filePath);
     const eventName = file.split('.')[0];
-    
+
     if (event.once) {
       client.once(eventName, (...args) => event.execute(...args, client));
     } else {
@@ -164,7 +164,7 @@ client.on('interactionCreate', async interaction => {
     const settings = db.getGuildSettings(guildId);
 
     const hrs = Math.round((stats.voice_time / 3600) * 100) / 100;
-    
+
     // Process game activity text
     let gameStatsStr = 'Tidak ada aktivitas bermain game yang terdeteksi.';
     const games = Object.entries(stats.gaming_time || {});
@@ -199,7 +199,7 @@ client.on('interactionCreate', async interaction => {
     await interaction.deferReply();
     const category = options.getString('kategori');
     const settings = db.getGuildSettings(guildId);
-    
+
     const rows = db.getLeaderboard(guildId, category, 10);
 
     const embed = new EmbedBuilder()
@@ -245,7 +245,7 @@ client.on('interactionCreate', async interaction => {
     await interaction.deferReply();
     const stats = db.getUserStats(guildId, targetUser.id);
     const settings = db.getGuildSettings(guildId);
-    
+
     const unlockedSet = new Set(stats.achievements || []);
 
     const embed = new EmbedBuilder()
@@ -270,16 +270,16 @@ client.on('interactionCreate', async interaction => {
 // Helper function to send log to guild channel
 async function sendLog(guildId, category, embed) {
   const settings = db.getGuildSettings(guildId);
-  
+
   // Resolve category specific channel or fallback to main log channel
   const logChannels = JSON.parse(settings.log_channels || '{}');
   const targetChannelId = logChannels[category] || settings.log_channel_id;
 
   if (!targetChannelId) return;
-  
+
   // Check if category is enabled
   const cats = JSON.parse(settings.categories_enabled || '{}');
-  
+
   // Fallback check for new granular categories to maintain backward compatibility
   if (category === 'voice_join_leave' || category === 'voice_mute_deafen') {
     if (cats[category] === false || (cats[category] === undefined && cats['voice'] === false)) {
@@ -377,11 +377,11 @@ function checkRolePermissions(member, config) {
 async function handleReactionRoleButton(interaction) {
   const parts = interaction.customId.split('_'); // rr, btn, configId, optionIndex
   if (parts.length < 4) return;
-  
+
   const configId = parts[2];
   const optionIndex = parseInt(parts[3]);
   const guildId = interaction.guildId;
-  
+
   const configs = db.getReactionRoles(guildId);
   const config = configs.find(c => c.id === configId);
   if (!config) {
@@ -389,13 +389,13 @@ async function handleReactionRoleButton(interaction) {
   }
 
   const member = interaction.member;
-  
+
   // Check Allowed & Ignored roles
   const permCheck = checkRolePermissions(member, config);
   if (!permCheck.allowed) {
     return interaction.reply({ content: `❌ Akses Ditolak: ${permCheck.reason}`, ephemeral: true });
   }
-  
+
   const option = config.options[optionIndex];
   const roleIds = option?.role_ids || (option?.role_id ? [option.role_id] : []);
   if (roleIds.length === 0) {
@@ -407,7 +407,7 @@ async function handleReactionRoleButton(interaction) {
 
     const guild = interaction.guild;
     const type = config.type || 'Normal';
-    
+
     // Check if user has the roles (for toggling, we check if they have the first role)
     const hasRole = member.roles.cache.has(roleIds[0]);
 
@@ -550,7 +550,7 @@ async function handleReactionRoleSelect(interaction) {
             allMenuRoleIds.push(...ids);
           }
         });
-        
+
         // Strip other roles
         for (const id of allMenuRoleIds) {
           if (member.roles.cache.has(id)) await member.roles.remove(id);
@@ -580,11 +580,6 @@ async function handleReactionRoleSelect(interaction) {
     await interaction.editReply({ content: '❌ Terjadi kesalahan saat memproses peran Anda. Pastikan role bot berada di atas role tersebut dalam daftar peran server.' });
   }
 }
-  } catch (err) {
-    console.error('Gagal memproses pilihan dropdown reaction role:', err);
-    await interaction.editReply({ content: '❌ Terjadi kesalahan saat memproses peran Anda. Pastikan role bot berada di atas role tersebut dalam daftar peran server.' });
-  }
-}
 
 // Function to start the Discord Client
 function startBot() {
@@ -593,13 +588,13 @@ function startBot() {
     console.warn('\x1b[33m%s\x1b[0m', '[WARN] DISCORD_TOKEN tidak diatur dengan benar di file .env. Bot tidak akan berjalan.');
     return null;
   }
-  
+
   loadEvents();
-  
+
   client.login(token).catch(err => {
     console.error('\x1b[31m%s\x1b[0m', 'Gagal masuk ke client Discord. Silakan periksa kembali Token Anda.', err.message);
   });
-  
+
   return client;
 }
 
