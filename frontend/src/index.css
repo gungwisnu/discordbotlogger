@@ -175,6 +175,31 @@ h1, h2, h3, h4, h5, h6, .font-display {
   box-shadow: var(--shadow-panel), var(--shadow-glow);
 }
 
+/* Premium Sidebar Panel (Desktop default) */
+.sidebar-panel {
+  background: hsl(var(--panel-glass));
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid hsl(var(--border-glass));
+  border-radius: 16px;
+  box-shadow: var(--shadow-panel);
+  transition: all var(--transition-speed) var(--transition-bezier);
+  padding: 24px 20px;
+  height: calc(100vh - 32px);
+  margin: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: sticky;
+  top: 16px;
+  z-index: 10;
+}
+
+.sidebar-panel:hover {
+  border-color: hsla(var(--primary-glow), 0.25);
+  box-shadow: var(--shadow-panel), 0 0 15px hsla(var(--primary-glow), 0.08);
+}
+
 /* Premium Buttons styling */
 .btn-primary {
   font-family: var(--font-sans);
@@ -406,8 +431,6 @@ h1, h2, h3, h4, h5, h6, .font-display {
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0);
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
     z-index: 998;
     opacity: 0;
     pointer-events: none;
@@ -419,29 +442,28 @@ h1, h2, h3, h4, h5, h6, .font-display {
     opacity: 1;
     pointer-events: auto;
     visibility: visible;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(6px) !important;
-    -webkit-backdrop-filter: blur(6px) !important;
+    background: rgba(0, 0, 0, 0.65);
   }
 
   .sidebar-drawer {
     position: fixed !important;
-    top: 0;
-    left: -320px;
-    bottom: 0;
-    width: 290px;
-    z-index: 999;
-    transition: left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    top: 0 !important;
+    left: -320px !important;
+    bottom: 0 !important;
+    width: 290px !important;
+    z-index: 9999 !important;
+    transition: left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
     margin: 0 !important;
     height: 100vh !important;
     border-radius: 0 !important;
     border-top: none !important;
     border-bottom: none !important;
     border-left: none !important;
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.35) !important;
   }
 
   .sidebar-drawer.open {
-    left: 0;
+    left: 0 !important;
   }
 }
 

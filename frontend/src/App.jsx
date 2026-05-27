@@ -340,17 +340,7 @@ function Sidebar() {
   const userAvatarUrl = user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : null;
 
   return (
-    <div className={`glass-panel sidebar-drawer ${isMobileSidebarOpen ? 'open' : ''}`} style={{
-      padding: '24px 20px',
-      height: 'calc(100vh - 32px)',
-      margin: '16px',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'space-between',
-      position: 'sticky',
-      top: '16px',
-      zIndex: 10
-    }}>
+    <div className={`sidebar-panel sidebar-drawer ${isMobileSidebarOpen ? 'open' : ''}`}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
         {/* Server Indicator Panel (Top Left) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingBottom: '18px', borderBottom: '1px solid hsl(var(--border-glass))' }}>
