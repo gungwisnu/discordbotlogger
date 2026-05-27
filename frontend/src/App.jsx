@@ -18,11 +18,17 @@ export function useApp() {
 function SidebarLink({ to, children, icon, onClick }) {
   const location = useLocation();
   const isActive = location.pathname === to;
+  const { setMobileSidebarOpen } = useApp() || {};
+
+  const handleClick = (e) => {
+    if (setMobileSidebarOpen) setMobileSidebarOpen(false);
+    if (onClick) onClick(e);
+  };
   
   if (onClick) {
     return (
       <button 
-        onClick={onClick} 
+        onClick={handleClick} 
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -53,6 +59,7 @@ function SidebarLink({ to, children, icon, onClick }) {
   return (
     <Link 
       to={to} 
+      onClick={handleClick}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -323,7 +330,7 @@ function ServerModal({ isOpen, onClose }) {
 }
 
 function Sidebar() {
-  const { user, selectedGuild, setServerModalOpen, logout } = useApp();
+  const { user, selectedGuild, setServerModalOpen, logout, isMobileSidebarOpen } = useApp();
   if (!user || !selectedGuild) return null;
 
   // Selected guild icon
@@ -333,7 +340,7 @@ function Sidebar() {
   const userAvatarUrl = user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : null;
 
   return (
-    <div className="glass-panel" style={{
+    <div className={`glass-panel sidebar-drawer ${isMobileSidebarOpen ? 'open' : ''}`} style={{
       padding: '24px 20px',
       height: 'calc(100vh - 32px)',
       margin: '16px',
@@ -484,13 +491,62 @@ function Sidebar() {
 }
 
 function DashboardLayout() {
+  const { isMobileSidebarOpen, setMobileSidebarOpen, selectedGuild } = useApp();
+  const guildIconUrl = selectedGuild && selectedGuild.icon ? `https://cdn.discordapp.com/icons/${selectedGuild.id}/${selectedGuild.icon}.png` : null;
+
   return (
-    <div className="dashboard-grid">
-      <Sidebar />
-      <div style={{ padding: '30px 24px', overflowY: 'auto', maxHeight: '100vh', width: '100%' }}>
-        <Outlet />
+    <>
+      {/* Mobile Top Bar */}
+      <div className="mobile-top-nav">
+        <button 
+          onClick={() => setMobileSidebarOpen(true)}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: 'hsl(var(--text-primary))',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '4px'
+          }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {guildIconUrl ? (
+            <img src={guildIconUrl} alt={selectedGuild.name} style={{ width: '28px', height: '28px', borderRadius: '8px', objectFit: 'cover' }} />
+          ) : (
+            <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: 'hsl(var(--primary-glow))', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '0.8rem' }}>
+              {selectedGuild.name.charAt(0)}
+            </div>
+          )}
+          <span style={{ fontWeight: '700', fontSize: '0.92rem', color: 'hsl(var(--text-primary))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '160px' }}>
+            {selectedGuild.name}
+          </span>
+        </div>
+
+        <div style={{ width: '24px' }} />
       </div>
-    </div>
+
+      {/* Drawer Overlay for Mobile */}
+      <div 
+        className={`sidebar-drawer-overlay ${isMobileSidebarOpen ? 'open' : ''}`} 
+        onClick={() => setMobileSidebarOpen(false)} 
+      />
+
+      <div className="dashboard-grid">
+        <Sidebar />
+        <div style={{ padding: '30px 24px', overflowY: 'auto', maxHeight: '100vh', width: '100%' }} className="dashboard-content-container">
+          <Outlet />
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -500,6 +556,7 @@ export default function App() {
   const [selectedGuild, setSelectedGuildState] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isServerModalOpen, setServerModalOpen] = useState(false);
+  const [isMobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // Custom setter that also caches the selected guild ID in local storage
   const setSelectedGuild = (guild) => {
@@ -610,7 +667,7 @@ export default function App() {
   }
 
   return (
-    <AppContext.Provider value={{ user, setUser, guilds, setGuilds, selectedGuild, setSelectedGuild, logout, theme, setTheme, isServerModalOpen, setServerModalOpen }}>
+    <AppContext.Provider value={{ user, setUser, guilds, setGuilds, selectedGuild, setSelectedGuild, logout, theme, setTheme, isServerModalOpen, setServerModalOpen, isMobileSidebarOpen, setMobileSidebarOpen }}>
       <BrowserRouter>
         <Routes>
           {/* Landing Page is ALWAYS accessible */}

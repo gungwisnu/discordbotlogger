@@ -248,13 +248,9 @@ export default function Logs() {
                 return (
                   <div 
                     key={log.id} 
-                    className="glass-panel"
+                    className="glass-panel log-card-grid"
                     style={{
                       padding: '18px 24px',
-                      display: 'grid',
-                      gridTemplateColumns: '140px 1fr 180px',
-                      alignItems: 'center',
-                      gap: '20px',
                       borderLeft: `4px solid ${style.color}`,
                       boxShadow: 'var(--shadow-panel)'
                     }}
@@ -400,10 +396,8 @@ export default function Logs() {
                     {item.changes && item.changes.map((change, cIdx) => (
                       <div 
                         key={cIdx} 
+                        className="audit-card-grid"
                         style={{ 
-                          display: 'grid', 
-                          gridTemplateColumns: '220px 1fr', 
-                          gap: '16px', 
                           fontSize: '0.88rem', 
                           alignItems: 'center' 
                         }}

@@ -301,7 +301,7 @@ export default function Dashboard() {
       </div>
 
       {settings ? (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px', alignItems: 'start' }}>
+        <div className="settings-grid" style={{ alignItems: 'start' }}>
           
           {/* Main settings form */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -395,7 +395,7 @@ export default function Dashboard() {
                 Sapa anggota baru yang bergabung ke server Anda secara otomatis dan sematkan peran langsung.
               </p>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', flexWrap: 'wrap' }}>
+              <div className="columns-grid-2">
                 
                 {/* Welcomer Column */}
                 <div style={{ 
@@ -809,7 +809,7 @@ export default function Dashboard() {
                           </span>
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', flexWrap: 'wrap' }}>
+                        <div className="expandable-card-grid">
                           {/* Tracked Events List */}
                           <div>
                             <span style={{ fontSize: '0.75rem', color: 'hsl(var(--text-muted))', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}>

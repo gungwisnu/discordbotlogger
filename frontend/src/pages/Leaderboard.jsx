@@ -136,7 +136,7 @@ export default function Leaderboard() {
       ) : null}
 
       {/* Grid: Popular Games and Leaderboard */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '28px', alignItems: 'start' }}>
+      <div className="analytics-grid" style={{ alignItems: 'start' }}>
         
         {/* Leaderboard panel */}
         <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>

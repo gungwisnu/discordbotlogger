@@ -159,7 +159,7 @@ export default function SuperAdmin() {
           </div>
 
           {/* Aggregated Stats Row */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+          <div className="super-admin-row">
             <div className="glass-panel" style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
               <div style={{ 
                 width: '42px', 
@@ -229,13 +229,9 @@ export default function SuperAdmin() {
                 {stats.guilds.map((g) => (
                   <div 
                     key={g.id}
-                    className="glass-panel"
+                    className="glass-panel super-admin-guild-card"
                     style={{
                       padding: '16px 20px',
-                      display: 'grid',
-                      gridTemplateColumns: '50px 1fr 150px 180px',
-                      alignItems: 'center',
-                      gap: '16px',
                       backgroundColor: 'hsla(var(--border-glass), 0.04)',
                       transition: 'all 0.2s ease'
                     }}

@@ -375,3 +375,193 @@ h1, h2, h3, h4, h5, h6, .font-display {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   border: 1px solid hsl(var(--border-glass));
 }
+
+/* ====================================================
+   RESPONSIVE LAYOUT SYSTEM UTILITIES
+   ==================================================== */
+
+/* Dashboard Layout adjustments for Mobile Drawer Sidebar */
+.mobile-top-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-top-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    background: hsl(var(--panel-glass));
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border-bottom: 1px solid hsl(var(--border-glass));
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .sidebar-drawer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 998;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .sidebar-drawer-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .sidebar-drawer {
+    position: fixed !important;
+    top: 0;
+    left: -320px;
+    bottom: 0;
+    width: 290px;
+    z-index: 999;
+    transition: left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    margin: 0 !important;
+    height: 100vh !important;
+    border-radius: 0 !important;
+    border-top: none !important;
+    border-bottom: none !important;
+    border-left: none !important;
+  }
+
+  .sidebar-drawer.open {
+    left: 0;
+  }
+}
+
+/* Responsive configurations grids */
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.columns-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 768px) {
+  .columns-grid-2 {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+.expandable-card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .expandable-card-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+/* Logs and Settings history grids */
+.log-card-grid {
+  display: grid;
+  grid-template-columns: 140px 1fr 180px;
+  align-items: center;
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .log-card-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    text-align: left;
+  }
+  .log-card-grid > div:last-child {
+    text-align: left !important;
+    flex-direction: row !important;
+    gap: 10px !important;
+    border-top: 1px solid hsl(var(--border-glass));
+    padding-top: 8px;
+  }
+}
+
+.audit-card-grid {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .audit-card-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
+/* Analytics and Leaderboard grid */
+.analytics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+@media (max-width: 968px) {
+  .analytics-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+/* Super Admin system grid */
+.super-admin-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 768px) {
+  .super-admin-row {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+.super-admin-guild-card {
+  display: grid;
+  grid-template-columns: 50px 1fr 150px 180px;
+  align-items: center;
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .super-admin-guild-card {
+    display: grid;
+    grid-template-columns: 50px 1fr;
+    gap: 12px;
+  }
+  .super-admin-guild-card > div:nth-child(3),
+  .super-admin-guild-card > div:nth-child(4) {
+    grid-column: 2;
+    text-align: left !important;
+  }
+}
