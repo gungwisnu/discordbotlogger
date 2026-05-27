@@ -412,12 +412,14 @@ h1, h2, h3, h4, h5, h6, .font-display {
     z-index: 998;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.3s ease;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
   }
 
   .sidebar-drawer-overlay.open {
     opacity: 1;
     pointer-events: auto;
+    visibility: visible;
   }
 
   .sidebar-drawer {
