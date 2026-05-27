@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, Collection, REST, Routes, EmbedBuilder } = require('discord.js');
+const { Client, GatewayIntentBits, Partials, Collection, REST, Routes, EmbedBuilder } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const db = require('./database');
@@ -13,8 +13,10 @@ const client = new Client({
     GatewayIntentBits.GuildVoiceStates,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildModeration
-  ]
+    GatewayIntentBits.GuildModeration,
+    GatewayIntentBits.GuildMessageReactions
+  ],
+  partials: [Partials.Message, Partials.Channel, Partials.Reaction]
 });
 
 client.commands = new Collection();
@@ -133,6 +135,21 @@ function loadEvents() {
 
 // Slash Command router handler
 client.on('interactionCreate', async interaction => {
+  // Handle reaction roles buttons & select menus
+  if (interaction.isButton()) {
+    const customId = interaction.customId;
+    if (customId.startsWith('rr_btn_')) {
+      return handleReactionRoleButton(interaction);
+    }
+  }
+
+  if (interaction.isStringSelectMenu()) {
+    const customId = interaction.customId;
+    if (customId.startsWith('rr_select_')) {
+      return handleReactionRoleSelect(interaction);
+    }
+  }
+
   if (!interaction.isChatInputCommand()) return;
 
   const { commandName, options, guildId, member } = interaction;
@@ -331,6 +348,109 @@ async function sendAchievementNotification(guildId, userId, newlyUnlocked) {
     }
   } catch (error) {
     console.error('Error saat mengirim notifikasi pencapaian:', error);
+  }
+}
+
+// Handlers for Reaction Roles Buttons and Dropdowns
+async function handleReactionRoleButton(interaction) {
+  const parts = interaction.customId.split('_'); // rr, btn, configId, optionIndex
+  if (parts.length < 4) return;
+  
+  const configId = parts[2];
+  const optionIndex = parseInt(parts[3]);
+  const guildId = interaction.guildId;
+  
+  const configs = db.getReactionRoles(guildId);
+  const config = configs.find(c => c.id === configId);
+  if (!config) {
+    return interaction.reply({ content: 'Konfigurasi Reaction Roles tidak ditemukan.', ephemeral: true });
+  }
+  
+  const option = config.options[optionIndex];
+  if (!option || !option.role_id) {
+    return interaction.reply({ content: 'Role untuk tombol ini tidak ditemukan.', ephemeral: true });
+  }
+
+  const roleId = option.role_id;
+  const member = interaction.member;
+  const role = interaction.guild.roles.cache.get(roleId);
+
+  if (!role) {
+    return interaction.reply({ content: 'Role tersebut tidak ada di server ini lagi.', ephemeral: true });
+  }
+
+  try {
+    await interaction.deferReply({ ephemeral: true });
+    
+    if (member.roles.cache.has(roleId)) {
+      await member.roles.remove(roleId);
+      await interaction.editReply({ content: `✓ Peran **${role.name}** telah dihapus dari profil Anda.` });
+    } else {
+      await member.roles.add(roleId);
+      await interaction.editReply({ content: `✓ Peran **${role.name}** telah ditambahkan ke profil Anda.` });
+    }
+  } catch (err) {
+    console.error('Gagal memproses tombol reaction role:', err);
+    await interaction.editReply({ content: '❌ Terjadi kesalahan saat memproses peran Anda. Pastikan role bot berada di atas role tersebut dalam daftar peran server.' });
+  }
+}
+
+async function handleReactionRoleSelect(interaction) {
+  const parts = interaction.customId.split('_'); // rr, select, configId
+  if (parts.length < 3) return;
+
+  const configId = parts[2];
+  const selectedIndex = parseInt(interaction.values[0]);
+  const guildId = interaction.guildId;
+
+  const configs = db.getReactionRoles(guildId);
+  const config = configs.find(c => c.id === configId);
+  if (!config) {
+    return interaction.reply({ content: 'Konfigurasi Reaction Roles tidak ditemukan.', ephemeral: true });
+  }
+
+  const option = config.options[selectedIndex];
+  if (!option || !option.role_id) {
+    return interaction.reply({ content: 'Role untuk opsi ini tidak ditemukan.', ephemeral: true });
+  }
+
+  const selectedRoleId = option.role_id;
+  const member = interaction.member;
+  const guild = interaction.guild;
+
+  try {
+    await interaction.deferReply({ ephemeral: true });
+
+    // Collect all role IDs associated with this select menu
+    const allMenuRoleIds = config.options.map(opt => opt.role_id).filter(id => !!id);
+
+    // Filter roles to remove (roles in the menu that the user currently has, excluding the selected one)
+    const rolesToRemove = allMenuRoleIds.filter(id => id !== selectedRoleId && member.roles.cache.has(id));
+    
+    // Check if the user already has the selected role
+    const alreadyHasSelected = member.roles.cache.has(selectedRoleId);
+
+    // If they already have the selected role, we toggle (remove it) and remove any other menu roles
+    if (alreadyHasSelected) {
+      const rolesToStrip = [...rolesToRemove, selectedRoleId];
+      for (const id of rolesToStrip) {
+        await member.roles.remove(id);
+      }
+      const roleName = guild.roles.cache.get(selectedRoleId)?.name || 'Role';
+      await interaction.editReply({ content: `✓ Peran **${roleName}** telah dihapus dari profil Anda.` });
+    } else {
+      // Remove other menu roles first
+      for (const id of rolesToRemove) {
+        await member.roles.remove(id);
+      }
+      // Add the selected role
+      await member.roles.add(selectedRoleId);
+      const roleName = guild.roles.cache.get(selectedRoleId)?.name || 'Role';
+      await interaction.editReply({ content: `✓ Peran **${roleName}** telah ditambahkan ke profil Anda (dan peran pilihan lain dari menu ini telah diselaraskan).` });
+    }
+  } catch (err) {
+    console.error('Gagal memproses pilihan dropdown reaction role:', err);
+    await interaction.editReply({ content: '❌ Terjadi kesalahan saat memproses peran Anda. Pastikan role bot berada di atas role tersebut dalam daftar peran server.' });
   }
 }
 

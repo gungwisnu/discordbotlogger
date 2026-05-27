@@ -5,7 +5,7 @@ const axios = require('axios');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
 const db = require('./database');
 const { client, sendLog } = require('./bot');
 
@@ -279,6 +279,29 @@ const DEMO_SETTINGS = {
   achievement_channel_id: '333',
   log_channels: '{}'
 };
+
+let DEMO_REACTION_ROLES = [
+  {
+    id: 'demo-rr-1',
+    guild_id: '99999999999999',
+    name: 'Warnai Aku',
+    channel_id: '222',
+    message_id: '999999999999999',
+    message_type: 'plain',
+    plain_content: 'Pilih dropdown dibawah untuk memilih warna yang kalian sukai!',
+    embed_title: 'Warna Aku',
+    embed_description: 'Pilih dropdown dibawah untuk memilih warna yang kalian sukai!',
+    embed_color: '#6366f1',
+    selection_type: 'dropdowns',
+    options: [
+      { emoji: '⚫', role_id: '111222', label: 'Hitam', description: 'Ganti warna nama profil menjadi Hitam' },
+      { emoji: '🔴', role_id: '333444', label: 'Merah', description: 'Ganti warna nama profil menjadi Merah' },
+      { emoji: '🟠', role_id: '555666', label: 'Oranye', description: 'Ganti warna nama profil menjadi Oranye' },
+      { emoji: '🟡', role_id: '111222', label: 'Kuning', description: 'Ganti warna nama profil menjadi Kuning' },
+      { emoji: '🟢', role_id: '333444', label: 'Hijau', description: 'Ganti warna nama profil menjadi Hijau' }
+    ]
+  }
+];
 
 // ----------------------------------------------------
 // AUTHENTICATION ROUTES
@@ -726,6 +749,202 @@ app.get('/api/guilds/:guildId/roles', checkAuth, async (req, res) => {
     res.json(roles);
   } catch (error) {
     res.status(500).json({ error: 'Gagal mengambil roles.', details: error.message });
+  }
+});
+
+// ----------------------------------------------------
+// REACTION ROLES API ENDPOINTS
+// ----------------------------------------------------
+
+// Get all reaction roles for a guild
+app.get('/api/guilds/:guildId/reaction-roles', checkAuth, (req, res) => {
+  const { guildId } = req.params;
+  const isDemo = req.session.user.demo;
+
+  if (isDemo && guildId === '99999999999999') {
+    return res.json(DEMO_REACTION_ROLES);
+  }
+
+  const list = db.getReactionRoles(guildId);
+  res.json(list);
+});
+
+// Create new reaction role configuration
+app.post('/api/guilds/:guildId/reaction-roles', checkAuth, (req, res) => {
+  const { guildId } = req.params;
+  const config = req.body;
+  const isDemo = req.session.user.demo;
+
+  // Generate ID if not present
+  if (!config.id) {
+    config.id = Date.now().toString() + Math.floor(Math.random() * 1000).toString();
+  }
+
+  if (isDemo && guildId === '99999999999999') {
+    config.guild_id = guildId;
+    DEMO_REACTION_ROLES.push(config);
+    return res.json({ success: true, config });
+  }
+
+  const saved = db.saveReactionRole(guildId, config);
+  res.json({ success: true, config: saved });
+});
+
+// Update existing reaction role configuration
+app.put('/api/guilds/:guildId/reaction-roles/:id', checkAuth, (req, res) => {
+  const { guildId, id } = req.params;
+  const config = req.body;
+  const isDemo = req.session.user.demo;
+
+  config.id = id;
+
+  if (isDemo && guildId === '99999999999999') {
+    const idx = DEMO_REACTION_ROLES.findIndex(rr => rr.id === id);
+    if (idx !== -1) {
+      DEMO_REACTION_ROLES[idx] = { ...DEMO_REACTION_ROLES[idx], ...config, guild_id: guildId };
+      return res.json({ success: true, config: DEMO_REACTION_ROLES[idx] });
+    }
+    return res.status(404).json({ error: 'Konfigurasi tidak ditemukan.' });
+  }
+
+  const saved = db.saveReactionRole(guildId, config);
+  res.json({ success: true, config: saved });
+});
+
+// Delete reaction role configuration
+app.delete('/api/guilds/:guildId/reaction-roles/:id', checkAuth, (req, res) => {
+  const { guildId, id } = req.params;
+  const isDemo = req.session.user.demo;
+
+  if (isDemo && guildId === '99999999999999') {
+    DEMO_REACTION_ROLES = DEMO_REACTION_ROLES.filter(rr => rr.id !== id);
+    return res.json({ success: true });
+  }
+
+  const success = db.deleteReactionRole(guildId, id);
+  if (success) {
+    res.json({ success: true });
+  } else {
+    res.status(404).json({ error: 'Konfigurasi tidak ditemukan.' });
+  }
+});
+
+// Post/Sync the reaction role message to Discord!
+app.post('/api/guilds/:guildId/reaction-roles/:id/post', checkAuth, async (req, res) => {
+  const { guildId, id } = req.params;
+  const isDemo = req.session.user.demo;
+  
+  if (isDemo && guildId === '99999999999999') {
+    return res.json({ success: true, messageId: '999999999999999' });
+  }
+
+  try {
+    if (!client.readyAt) {
+      return res.status(503).json({ error: 'Discord bot client belum siap.' });
+    }
+
+    const guild = await client.guilds.fetch(guildId).catch(() => null);
+    if (!guild) {
+      return res.status(404).json({ error: 'Server tidak ditemukan.' });
+    }
+
+    const configs = db.getReactionRoles(guildId);
+    const config = configs.find(c => c.id === id);
+    if (!config) {
+      return res.status(404).json({ error: 'Konfigurasi Reaction Roles tidak ditemukan.' });
+    }
+
+    const channel = await guild.channels.fetch(config.channel_id).catch(() => null);
+    if (!channel || !channel.isTextBased()) {
+      return res.status(400).json({ error: 'Saluran tidak ditemukan atau bukan saluran teks.' });
+    }
+
+    const messagePayload = {};
+
+    // 1. Build Content or Embed
+    if (config.message_type === 'plain') {
+      messagePayload.content = config.plain_content || 'Pilih peran di bawah ini:';
+    } else {
+      const embed = new EmbedBuilder()
+        .setTitle(config.embed_title || 'Reaction Roles')
+        .setDescription(config.embed_description || 'Pilih peran di bawah ini untuk mendapatkan role.')
+        .setColor(config.embed_color || '#6366f1');
+      messagePayload.embeds = [embed];
+    }
+
+    // 2. Build Components
+    const components = [];
+    if (config.selection_type === 'buttons') {
+      // Split buttons into rows of 5 (Discord maximum is 5 buttons per ActionRow)
+      let currentRow = new ActionRowBuilder();
+      config.options.forEach((opt, idx) => {
+        const btn = new ButtonBuilder()
+          .setCustomId(`rr_btn_${config.id}_${idx}`)
+          .setLabel(opt.label || `Role ${idx + 1}`)
+          .setStyle(ButtonStyle.Secondary);
+
+        if (opt.emoji) {
+          btn.setEmoji(opt.emoji);
+        }
+
+        currentRow.addComponents(btn);
+
+        if (currentRow.components.length === 5 || idx === config.options.length - 1) {
+          components.push(currentRow);
+          currentRow = new ActionRowBuilder();
+        }
+      });
+      if (components.length > 0) {
+        messagePayload.components = components;
+      }
+    } else if (config.selection_type === 'dropdowns') {
+      const selectMenu = new StringSelectMenuBuilder()
+        .setCustomId(`rr_select_${config.id}`)
+        .setPlaceholder(config.plain_content || config.embed_description || 'Pilih opsi...');
+
+      const selectOptions = config.options.map((opt, idx) => {
+        const selectOpt = {
+          label: opt.label || `Opsi ${idx + 1}`,
+          value: `${idx}`,
+        };
+        if (opt.description) {
+          selectOpt.description = opt.description.slice(0, 100);
+        }
+        if (opt.emoji) {
+          selectOpt.emoji = opt.emoji;
+        }
+        return selectOpt;
+      });
+
+      selectMenu.addOptions(selectOptions);
+      components.push(new ActionRowBuilder().addComponents(selectMenu));
+      messagePayload.components = components;
+    }
+
+    // Send the message
+    const sentMessage = await channel.send(messagePayload);
+
+    // 3. Add reactions if selection type is reactions
+    if (config.selection_type === 'reactions') {
+      for (const opt of config.options) {
+        if (opt.emoji) {
+          try {
+            await sentMessage.react(opt.emoji);
+          } catch (reactErr) {
+            console.error(`Gagal bereaksi dengan ${opt.emoji}:`, reactErr.message);
+          }
+        }
+      }
+    }
+
+    // Save message ID to database
+    config.message_id = sentMessage.id;
+    db.saveReactionRole(guildId, config);
+
+    res.json({ success: true, messageId: sentMessage.id });
+  } catch (error) {
+    console.error('Gagal mengirim pesan reaction role ke Discord:', error);
+    res.status(500).json({ error: 'Gagal mengirim pesan ke Discord.', details: error.message });
   }
 });
 

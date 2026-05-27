@@ -18,7 +18,8 @@ let data = {
   mod_logs: [],
   audit_cache: {},
   settings_history: [],
-  sessions: {}
+  sessions: {},
+  reaction_roles: []
 };
 
 // Load data on startup
@@ -35,6 +36,7 @@ if (fs.existsSync(dbPath)) {
     if (!data.audit_cache) data.audit_cache = {};
     if (!data.settings_history) data.settings_history = [];
     if (!data.sessions) data.sessions = {};
+    if (!data.reaction_roles) data.reaction_roles = [];
 
     console.log('Database JSON loaded successfully from', dbPath);
   } catch (err) {
@@ -604,6 +606,44 @@ const DatabaseFunctions = {
     if (!data.sessions) data.sessions = {};
     delete data.sessions[token];
     triggerSave();
+  },
+
+  // Reaction Roles API
+  getReactionRoles(guildId) {
+    if (!data.reaction_roles) data.reaction_roles = [];
+    return data.reaction_roles.filter(rr => rr.guild_id === guildId);
+  },
+
+  saveReactionRole(guildId, config) {
+    if (!data.reaction_roles) data.reaction_roles = [];
+    const index = data.reaction_roles.findIndex(rr => rr.id === config.id && rr.guild_id === guildId);
+    
+    const record = {
+      ...config,
+      guild_id: guildId,
+      updated_at: Date.now()
+    };
+
+    if (index !== -1) {
+      data.reaction_roles[index] = record;
+    } else {
+      record.created_at = Date.now();
+      data.reaction_roles.push(record);
+    }
+    
+    triggerSave();
+    return record;
+  },
+
+  deleteReactionRole(guildId, id) {
+    if (!data.reaction_roles) data.reaction_roles = [];
+    const initialLength = data.reaction_roles.length;
+    data.reaction_roles = data.reaction_roles.filter(rr => !(rr.id === id && rr.guild_id === guildId));
+    if (data.reaction_roles.length !== initialLength) {
+      triggerSave();
+      return true;
+    }
+    return false;
   }
 };
 
