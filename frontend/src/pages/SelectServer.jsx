@@ -111,7 +111,7 @@ export default function SelectServer() {
           paddingRight: '6px'
         }}>
           {guilds && guilds.length > 0 ? (
-            guilds.map((g) => {
+            [...guilds].sort((a, b) => (b.botInGuild ? 1 : 0) - (a.botInGuild ? 1 : 0)).map((g) => {
               const iconUrl = g.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png` : null;
               
               return (
