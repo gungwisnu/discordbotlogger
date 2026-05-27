@@ -25,7 +25,7 @@ app.use(express.json());
 
 // Session setup
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'antigravity-logging-bot-secret-key',
+  secret: process.env.SESSION_SECRET || 'pandu-discord-bot-secret-key',
   resave: false,
   saveUninitialized: false,
   cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 Hours
@@ -418,6 +418,11 @@ app.get('/api/auth/user', (req, res) => {
   } else {
     res.status(401).json({ error: 'Not authenticated' });
   }
+});
+
+// Get Discord Client ID
+app.get('/api/auth/client-id', (req, res) => {
+  res.json({ clientId: process.env.DISCORD_CLIENT_ID });
 });
 
 // Logout Session

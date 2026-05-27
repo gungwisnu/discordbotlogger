@@ -64,7 +64,7 @@ export default function Logs() {
       
       {/* Header Panel */}
       <div>
-        <h2 style={{ fontSize: '2rem', fontFamily: 'var(--font-display)', color: 'hsl(var(--text-primary))' }}>📋 Audit Logs Feed</h2>
+        <h2 style={{ fontSize: '2rem', fontFamily: 'var(--font-display)', color: 'hsl(var(--text-primary))' }}>Audit Logs Feed</h2>
         <p style={{ color: 'hsl(var(--text-secondary))', marginTop: '4px' }}>Log riwayat moderasi server dari basis data secara real-time.</p>
       </div>
 

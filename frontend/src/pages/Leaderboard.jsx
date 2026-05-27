@@ -87,11 +87,11 @@ export default function Leaderboard() {
       
       {/* Header Panel */}
       <div>
-        <h2 style={{ fontSize: '2rem', fontFamily: 'var(--font-display)', color: 'hsl(var(--text-primary))' }}>🏆 Server Analytics & Achievements</h2>
+        <h2 style={{ fontSize: '2rem', fontFamily: 'var(--font-display)', color: 'hsl(var(--text-primary))', fontWeight: '800' }}>Server Analytics & Achievements</h2>
         <p style={{ color: 'hsl(var(--text-secondary))', marginTop: '4px' }}>Statistik aktivitas, grafik game paling populer, serta pencapaian lencana server.</p>
       </div>
 
-      {/* Analytics Summary Stats Row cards */}
+      {/* Analytics Summary Stats Row cards (Clean, no floating emojis) */}
       {loadingStats ? (
         <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>
           <div style={{
@@ -106,7 +106,6 @@ export default function Leaderboard() {
       ) : analytics ? (
         <div className="stats-card-container">
           <div className="glass-panel" style={{ padding: '24px', position: 'relative', overflow: 'hidden' }}>
-            <span style={{ fontSize: '2rem', position: 'absolute', top: '20px', right: '20px', opacity: 0.85 }}>💬</span>
             <span style={{ color: 'hsl(var(--text-muted))', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Pesan Chat</span>
             <h2 style={{ fontSize: '2.2rem', color: 'hsl(var(--text-primary))', marginTop: '10px', fontFamily: 'var(--font-display)', fontWeight: '800' }}>
               {analytics.total_messages.toLocaleString()}
@@ -114,7 +113,6 @@ export default function Leaderboard() {
           </div>
 
           <div className="glass-panel" style={{ padding: '24px', position: 'relative', overflow: 'hidden' }}>
-            <span style={{ fontSize: '2rem', position: 'absolute', top: '20px', right: '20px', opacity: 0.85 }}>🎙️</span>
             <span style={{ color: 'hsl(var(--text-muted))', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Durasi Voice</span>
             <h2 style={{ fontSize: '2.2rem', color: 'hsl(var(--text-primary))', marginTop: '10px', fontFamily: 'var(--font-display)', fontWeight: '800' }}>
               {analytics.total_voice_hours.toLocaleString()} <span style={{ fontSize: '1.25rem', fontWeight: '600' }}>jam</span>
@@ -122,7 +120,6 @@ export default function Leaderboard() {
           </div>
 
           <div className="glass-panel" style={{ padding: '24px', position: 'relative', overflow: 'hidden' }}>
-            <span style={{ fontSize: '2rem', position: 'absolute', top: '20px', right: '20px', opacity: 0.85 }}>🔊</span>
             <span style={{ color: 'hsl(var(--text-muted))', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Sesi Voice Aktif</span>
             <h2 style={{ fontSize: '2.2rem', color: 'hsl(var(--success-emerald))', marginTop: '10px', fontFamily: 'var(--font-display)', fontWeight: '800' }}>
               {analytics.active_voice_count} <span style={{ fontSize: '1.25rem', fontWeight: '600', color: 'hsl(var(--text-muted))' }}>anggota</span>
@@ -130,7 +127,6 @@ export default function Leaderboard() {
           </div>
 
           <div className="glass-panel" style={{ padding: '24px', position: 'relative', overflow: 'hidden' }}>
-            <span style={{ fontSize: '2rem', position: 'absolute', top: '20px', right: '20px', opacity: 0.85 }}>⚙️</span>
             <span style={{ color: 'hsl(var(--text-muted))', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Aksi Moderasi</span>
             <h2 style={{ fontSize: '2.2rem', color: 'hsl(var(--text-primary))', marginTop: '10px', fontFamily: 'var(--font-display)', fontWeight: '800' }}>
               {analytics.total_moderations}
@@ -145,7 +141,7 @@ export default function Leaderboard() {
         {/* Leaderboard panel */}
         <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-            <h3 style={{ fontSize: '1.25rem', color: 'hsl(var(--text-primary))' }}>🥇 Peringkat Keaktifan Server</h3>
+            <h3 style={{ fontSize: '1.25rem', color: 'hsl(var(--text-primary))', fontWeight: '750' }}>Peringkat Keaktifan Server</h3>
             
             {/* Ranks selection tabs */}
             <div style={{ display: 'flex', gap: '4px', backgroundColor: 'hsla(var(--border-glass), 0.15)', padding: '4px', borderRadius: '10px', border: '1px solid hsl(var(--border-glass))' }}>
@@ -261,7 +257,7 @@ export default function Leaderboard() {
 
         {/* Popular games horizontal bar chart */}
         <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <h3 style={{ fontSize: '1.25rem', color: 'hsl(var(--text-primary))' }}>🎮 Jam Gaming Teraktif Server</h3>
+          <h3 style={{ fontSize: '1.25rem', color: 'hsl(var(--text-primary))', fontWeight: '750' }}>Jam Gaming Teraktif Server</h3>
           <p style={{ fontSize: '0.85rem', color: 'hsl(var(--text-secondary))', marginTop: '-12px' }}>
             Judul game terpopuler yang dimainkan member di server ini.
           </p>
@@ -309,7 +305,7 @@ export default function Leaderboard() {
 
       {/* Achievements visual showcase panels grid */}
       <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        <h3 style={{ fontSize: '1.25rem', color: 'hsl(var(--text-primary))' }}>🏅 Lencana & Achievements Anda</h3>
+        <h3 style={{ fontSize: '1.25rem', color: 'hsl(var(--text-primary))', fontWeight: '750' }}>Lencana & Achievements Anda</h3>
         
         <div style={{
           display: 'grid',
