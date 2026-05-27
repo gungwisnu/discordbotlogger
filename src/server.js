@@ -414,7 +414,15 @@ app.get('/api/auth/callback', async (req, res) => {
 // Get Session User profile details
 app.get('/api/auth/user', (req, res) => {
   if (req.session.user) {
-    res.json({ user: req.session.user, guilds: req.session.guilds });
+    const superAdminIds = (process.env.SUPER_ADMIN_IDS || '').split(',');
+    const isSuperAdmin = superAdminIds.includes(req.session.user.id);
+    res.json({ 
+      user: {
+        ...req.session.user,
+        superAdmin: isSuperAdmin
+      }, 
+      guilds: req.session.guilds 
+    });
   } else {
     res.status(401).json({ error: 'Not authenticated' });
   }
@@ -445,6 +453,60 @@ app.get('/api/auth/logout', (req, res) => {
       return res.status(500).json({ error: 'Gagal logout.' });
     }
     res.json({ success: true });
+  });
+});
+
+// Middleware to verify Super Admin status
+const checkSuperAdmin = (req, res, next) => {
+  if (!req.session.user) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+  const superAdminIds = (process.env.SUPER_ADMIN_IDS || '').split(',');
+  if (!superAdminIds.includes(req.session.user.id)) {
+    return res.status(403).json({ error: 'Forbidden: Akses Super Admin diperlukan.' });
+  }
+  next();
+};
+
+// GET Bot Global stats & Joined guilds for Super Admin dashboard
+app.get('/api/admin/bot-stats', checkSuperAdmin, (req, res) => {
+  const isReady = !!client.readyAt;
+  
+  let guilds = [];
+  let guildsCount = 0;
+  let usersCount = 0;
+  let ping = -1;
+
+  if (isReady) {
+    guildsCount = client.guilds.cache.size;
+    ping = client.ws.ping;
+    
+    // Sum up cached users across guilds
+    usersCount = client.users.cache.size;
+
+    guilds = client.guilds.cache.map(g => {
+      const iconUrl = g.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png` : null;
+      return {
+        id: g.id,
+        name: g.name,
+        iconUrl,
+        memberCount: g.memberCount,
+        joinedAt: g.joinedAt ? g.joinedAt.getTime() : null,
+        ownerId: g.ownerId
+      };
+    });
+  }
+
+  res.json({
+    isReady,
+    uptime: process.uptime(),
+    ping,
+    memory: process.memoryUsage(),
+    stats: {
+      guildsCount,
+      usersCount
+    },
+    guilds
   });
 });
 

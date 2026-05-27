@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Logs from './pages/Logs';
 import Leaderboard from './pages/Leaderboard';
 import SelectServer from './pages/SelectServer';
+import SuperAdmin from './pages/SuperAdmin';
 
 // Session Context
 export const AppContext = createContext(null);
@@ -41,7 +42,7 @@ function SidebarLink({ to, children, icon, onClick }) {
         }}
         className="sidebar-link-hover"
       >
-        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.8 }}>
+        <span style={{ display: 'flex', alignItems: 'center', justifyContext: 'center', opacity: 0.8 }}>
           {icon}
         </span>
         {children}
@@ -84,32 +85,89 @@ function SidebarLink({ to, children, icon, onClick }) {
 
 function ThemeSelector() {
   const { theme, setTheme } = useApp();
-  
+
+  const cycleTheme = () => {
+    if (theme === 'system') setTheme('light');
+    else if (theme === 'light') setTheme('dark');
+    else setTheme('system');
+  };
+
+  const getThemeIcon = () => {
+    if (theme === 'system') {
+      return (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.4s ease' }}>
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+          <line x1="8" y1="21" x2="16" y2="21"/>
+          <line x1="12" y1="17" x2="12" y2="21"/>
+        </svg>
+      );
+    } else if (theme === 'light') {
+      return (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.4s ease' }}>
+          <circle cx="12" cy="12" r="5" fill="currentColor"/>
+          <line x1="12" y1="1" x2="12" y2="3"/>
+          <line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1" y1="12" x2="3" y2="12"/>
+          <line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+      );
+    } else {
+      return (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.4s ease' }}>
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      );
+    }
+  };
+
+  const getThemeText = () => {
+    if (theme === 'system') return 'Sistem';
+    if (theme === 'light') return 'Terang';
+    return 'Gelap';
+  };
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '8px' }}>
-      <span style={{ fontSize: '0.72rem', color: 'hsl(var(--text-muted))', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-        TEMA APLIKASI
+    <div style={{ 
+      display: 'flex', 
+      justifyContent: 'space-between', 
+      alignItems: 'center', 
+      padding: '10px 14px', 
+      background: 'hsla(var(--border-glass), 0.08)', 
+      border: '1px solid hsl(var(--border-glass))', 
+      borderRadius: '12px' 
+    }}>
+      <span style={{ 
+        fontSize: '0.88rem', 
+        color: 'hsl(var(--text-primary))', 
+        fontWeight: '600', 
+        fontFamily: 'var(--font-display)' 
+      }}>
+        Tema
       </span>
-      <div className="theme-selector-container">
-        <button 
-          className={`theme-selector-btn ${theme === 'system' ? 'active' : ''}`}
-          onClick={() => setTheme('system')}
-        >
-          Sistem
-        </button>
-        <button 
-          className={`theme-selector-btn ${theme === 'light' ? 'active' : ''}`}
-          onClick={() => setTheme('light')}
-        >
-          Terang
-        </button>
-        <button 
-          className={`theme-selector-btn ${theme === 'dark' ? 'active' : ''}`}
-          onClick={() => setTheme('dark')}
-        >
-          Gelap
-        </button>
-      </div>
+      <button 
+        onClick={cycleTheme}
+        style={{
+          background: 'transparent',
+          border: 'none',
+          cursor: 'pointer',
+          color: 'hsl(var(--text-primary))',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '6px',
+          borderRadius: '8px',
+          transition: 'all 0.2s ease',
+          lineHeight: 1
+        }}
+        className="sidebar-link-hover"
+        title={`Tema saat ini: ${getThemeText()}`}
+      >
+        {getThemeIcon()}
+      </button>
     </div>
   );
 }
@@ -346,6 +404,14 @@ function Sidebar() {
             Analisis & Peringkat
           </SidebarLink>
 
+          {user.superAdmin && (
+            <SidebarLink to="/admin" icon={
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            }>
+              Super Admin Panel
+            </SidebarLink>
+          )}
+
           {/* Switch Server Link (Opens Pop Up Modal) */}
           <div style={{ borderTop: '1px solid hsl(var(--border-glass))', marginTop: '12px', paddingTop: '12px' }}>
             <SidebarLink to="#" icon={
@@ -399,6 +465,9 @@ function Sidebar() {
             </span>
             <span style={{ fontSize: '0.72rem', color: 'hsl(var(--success-emerald))', fontWeight: '600' }}>
               Discord Connected
+            </span>
+            <span style={{ fontSize: '0.66rem', color: 'hsl(var(--text-muted))', fontFamily: 'monospace', marginTop: '2px' }}>
+              ID: {user.id}
             </span>
           </div>
         </div>
@@ -564,6 +633,7 @@ export default function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/logs" element={<Logs />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/admin" element={user?.superAdmin ? <SuperAdmin /> : <Navigate to="/dashboard" replace />} />
           </Route>
           
           <Route path="*" element={<Navigate to="/" replace />} />

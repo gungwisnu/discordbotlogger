@@ -134,14 +134,12 @@ const categoryDetails = {
 };
 
 export default function Dashboard() {
-  const { selectedGuild, guilds, setSelectedGuild } = useApp();
+  const { selectedGuild, setServerModalOpen } = useApp();
   const [channels, setChannels] = useState([]);
   const [roles, setRoles] = useState([]);
   const [settings, setSettings] = useState(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
-  const [history, setHistory] = useState([]);
-  const [loadingHistory, setLoadingHistory] = useState(false);
   const [expandedCats, setExpandedCats] = useState({
     moderation: false,
     voice_join_leave: false,
@@ -151,21 +149,6 @@ export default function Dashboard() {
     gaming_activity: false,
     spotify_activity: false
   });
-
-  const fetchHistory = () => {
-    if (!selectedGuild) return;
-    setLoadingHistory(true);
-    fetch(`/api/guilds/${selectedGuild.id}/settings-history`)
-      .then(res => {
-        if (!res.ok) throw new Error();
-        return res.json();
-      })
-      .then(data => {
-        setHistory(data);
-      })
-      .catch(err => console.error('Failed to load history:', err))
-      .finally(() => setLoadingHistory(false));
-  };
 
   // Fetch settings & channels list when selected guild changes
   useEffect(() => {
@@ -203,9 +186,6 @@ export default function Dashboard() {
         setRoles(data);
       })
       .catch(err => console.error('Failed to load roles:', err));
-
-    // Fetch settings history
-    fetchHistory();
   }, [selectedGuild]);
 
   const handleCategoryToggle = (category) => {
@@ -237,12 +217,11 @@ export default function Dashboard() {
       const data = await res.json();
       if (data.success) {
         setSettings(data.settings);
-        setMessage('✅ Konfigurasi bot berhasil disimpan!');
-        fetchHistory(); // Refresh settings history log
+        setMessage('✓ Konfigurasi bot berhasil disimpan!');
       }
     } catch (err) {
       console.error(err);
-      setMessage('❌ Gagal menyimpan konfigurasi.');
+      setMessage('Gagal menyimpan konfigurasi.');
     } finally {
       setSaving(false);
     }
@@ -262,12 +241,22 @@ export default function Dashboard() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
       
-      {/* Top Banner & Server Selector */}
+      {/* Top Banner & Server Selector (Ganti Server button placed in top-right) */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
         <div>
           <h2 style={{ fontSize: '2rem', fontFamily: 'var(--font-display)', color: 'hsl(var(--text-primary))', fontWeight: '800' }}>Konfigurasi Server</h2>
           <p style={{ color: 'hsl(var(--text-secondary))', marginTop: '4px' }}>Sesuaikan saluran log dan kategori peristiwa untuk bot Anda.</p>
         </div>
+
+        {/* Top-Right Ganti Server Button */}
+        <button 
+          className="btn-secondary" 
+          onClick={() => setServerModalOpen(true)}
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '10px', fontSize: '0.88rem' }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 7H9a4 4 0 0 0-4 4v3"/><path d="m16 3 4 4-4 4"/><path d="M4 17h11a4 4 0 0 0 4-4v-3"/><path d="m8 21-4-4 4-4"/></svg>
+          Ganti Server
+        </button>
       </div>
 
       {settings ? (
@@ -278,7 +267,10 @@ export default function Dashboard() {
             
             {/* General Log Target Channel */}
             <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <h3 style={{ fontSize: '1.25rem', color: 'hsl(var(--text-primary))', fontWeight: '750' }}>Saluran Log Utama</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'hsl(var(--primary-glow))' }}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                <h3 style={{ fontSize: '1.25rem', color: 'hsl(var(--text-primary))', fontWeight: '750' }}>Saluran Log Utama</h3>
+              </div>
               <p style={{ fontSize: '0.88rem', color: 'hsl(var(--text-secondary))' }}>
                 Seluruh aktivitas server yang dipantau akan dikirimkan sebagai pesan embed ke saluran ini.
               </p>
@@ -304,7 +296,10 @@ export default function Dashboard() {
 
             {/* DeepSeek AI Configuration */}
             <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <h3 style={{ fontSize: '1.25rem', color: 'hsl(var(--text-primary))', fontWeight: '750' }}>Konfigurasi Otak AI (DeepSeek)</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'hsl(var(--primary-glow))' }}><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 6v12"/><path d="M8 10h8"/></svg>
+                <h3 style={{ fontSize: '1.25rem', color: 'hsl(var(--text-primary))', fontWeight: '750' }}>Konfigurasi Otak AI (DeepSeek)</h3>
+              </div>
               <p style={{ fontSize: '0.88rem', color: 'hsl(var(--text-secondary))' }}>
                 Pilih model kecerdasan buatan (AI) DeepSeek yang akan digunakan saat merespons obrolan di server Anda.
               </p>
@@ -320,8 +315,8 @@ export default function Dashboard() {
                     color: 'hsl(var(--text-primary))'
                   }}
                 >
-                  <option value="deepseek-chat" style={{ backgroundColor: 'hsl(var(--bg-space))', color: 'hsl(var(--text-primary))' }}>⚡ Model Tercepat (deepseek-chat)</option>
-                  <option value="deepseek-reasoner" style={{ backgroundColor: 'hsl(var(--bg-space))', color: 'hsl(var(--text-primary))' }}>🧠 Model Terpintar / Pemikir (deepseek-reasoner)</option>
+                  <option value="deepseek-chat" style={{ backgroundColor: 'hsl(var(--bg-space))', color: 'hsl(var(--text-primary))' }}>Model Tercepat (deepseek-chat)</option>
+                  <option value="deepseek-reasoner" style={{ backgroundColor: 'hsl(var(--bg-space))', color: 'hsl(var(--text-primary))' }}>Model Terpintar / Pemikir (deepseek-reasoner)</option>
                 </select>
                 
                 <div style={{ 
@@ -335,13 +330,13 @@ export default function Dashboard() {
                 }}>
                   {settings.ai_model === 'deepseek-reasoner' ? (
                     <span>
-                      ℹ️ <strong>Mode Pemikir Terpilih (deepseek-reasoner)</strong>:<br/>
+                      <strong>[Info] Mode Pemikir Terpilih (deepseek-reasoner)</strong>:<br/>
                       Sangat cocok untuk pertanyaan berat, analisis kode, dan penyelesaian masalah rumit. 
                       <span style={{ color: 'hsl(var(--warning-amber))', fontWeight: 'bold' }}> Catatan: Waktu tunggu balasan akan lebih lama (bisa mencapai 30-60 detik) karena AI melakukan proses berpikir mendalam terlebih dahulu.</span>
                     </span>
                   ) : (
                     <span>
-                      ℹ️ <strong>Mode Tercepat Terpilih (deepseek-chat)</strong>:<br/>
+                      <strong>[Info] Mode Tercepat Terpilih (deepseek-chat)</strong>:<br/>
                       Sangat cepat, responsif, dan hemat. Cocok untuk obrolan santai sehari-hari, sapaan, dan pertanyaan umum yang ringan.
                     </span>
                   )}
@@ -351,14 +346,13 @@ export default function Dashboard() {
 
             {/* Welcome & Auto-Role Settings */}
             <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <h3 style={{ fontSize: '1.25rem', color: 'hsl(var(--text-primary))', fontWeight: '750' }}>Fitur Welcome & Auto-Role</h3>
-                  <p style={{ fontSize: '0.82rem', color: 'hsl(var(--text-secondary))', marginTop: '2px' }}>
-                    Sapa anggota baru yang bergabung ke server Anda secara otomatis dan sematkan peran langsung.
-                  </p>
-                </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'hsl(var(--primary-glow))' }}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+                <h3 style={{ fontSize: '1.25rem', color: 'hsl(var(--text-primary))', fontWeight: '750' }}>Fitur Welcome & Auto-Role</h3>
               </div>
+              <p style={{ fontSize: '0.82rem', color: 'hsl(var(--text-secondary))', marginTop: '-8px' }}>
+                Sapa anggota baru yang bergabung ke server Anda secara otomatis dan sematkan peran langsung.
+              </p>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', flexWrap: 'wrap' }}>
                 
@@ -447,7 +441,7 @@ export default function Dashboard() {
                         placeholder="Contoh: Selamat datang, {user}!"
                       />
                       <span style={{ fontSize: '0.75rem', color: 'hsl(var(--text-muted))', lineHeight: '1.4' }}>
-                        💡 Gunakan tag <code>{"{user}"}</code> untuk menyebut/mention anggota baru secara dinamis.
+                        Gunakan tag <code>{"{user}"}</code> untuk menyebut/mention anggota baru secara dinamis.
                       </span>
                     </div>
                   )}
@@ -517,7 +511,7 @@ export default function Dashboard() {
                         ))}
                       </select>
                       <span style={{ fontSize: '0.75rem', color: 'hsl(var(--text-muted))', lineHeight: '1.4' }}>
-                        ⚠️ Pastikan peran bot berada di atas peran yang dipilih ini agar proses penugasan tidak gagal.
+                        Penting: Pastikan peran bot berada di atas peran yang dipilih ini agar proses penugasan tidak gagal.
                       </span>
                     </div>
                   )}
@@ -592,7 +586,7 @@ export default function Dashboard() {
                         ))}
                       </select>
                       <span style={{ fontSize: '0.75rem', color: 'hsl(var(--text-muted))', lineHeight: '1.4' }}>
-                        💡 Ketika anggota membuka pencapaian baru, bot akan otomatis mengirimkan ucapan selamat premium di saluran ini.
+                        Keterangan: Ketika anggota membuka pencapaian baru, bot akan otomatis mengirimkan ucapan selamat premium di saluran ini.
                       </span>
                     </div>
                   )}
@@ -603,8 +597,11 @@ export default function Dashboard() {
 
             {/* Event Category Cards */}
             <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <h3 style={{ fontSize: '1.25rem', color: 'hsl(var(--text-primary))', fontWeight: '750' }}>Aktifkan Kategori Log</h3>
-              <p style={{ fontSize: '0.88rem', color: 'hsl(var(--text-secondary))' }}>Tentukan kategori log yang ingin dicatat oleh bot Anda.</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'hsl(var(--primary-glow))' }}><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                <h3 style={{ fontSize: '1.25rem', color: 'hsl(var(--text-primary))', fontWeight: '750' }}>Aktifkan Kategori Log</h3>
+              </div>
+              <p style={{ fontSize: '0.88rem', color: 'hsl(var(--text-secondary))', marginTop: '-8px' }}>Tentukan kategori log yang ingin dicatat oleh bot Anda.</p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 
@@ -765,8 +762,8 @@ export default function Dashboard() {
                           </select>
                           <span style={{ fontSize: '0.75rem', color: 'hsl(var(--text-muted))', fontWeight: '500' }}>
                             {settings.log_channels?.[catKey] ? 
-                              `✅ Log untuk kategori ini dialihkan secara khusus ke saluran di atas.` : 
-                              `ℹ️ Kategori ini menggunakan Saluran Log Utama (${settings.log_channel_id ? '#' + (channels.find(c => c.id === settings.log_channel_id)?.name || '') : 'Belum disetel'}).`
+                              `✓ Log untuk kategori ini dialihkan secara khusus ke saluran di atas.` : 
+                              `Kategori ini menggunakan Saluran Log Utama (${settings.log_channel_id ? '#' + (channels.find(c => c.id === settings.log_channel_id)?.name || '') : 'Belum disetel'}).`
                             }
                           </span>
                         </div>
@@ -869,7 +866,7 @@ export default function Dashboard() {
 
             {/* Feedback message and Save Trigger */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '10px' }}>
-              <span style={{ fontFamily: 'var(--font-display)', fontWeight: '600', fontSize: '0.95rem', color: message.includes('✅') ? 'hsl(var(--success-emerald))' : 'hsl(var(--danger-crimson))' }}>
+              <span style={{ fontFamily: 'var(--font-display)', fontWeight: '600', fontSize: '0.95rem', color: message.includes('✓') ? 'hsl(var(--success-emerald))' : 'hsl(var(--danger-crimson))' }}>
                 {message}
               </span>
               <button 
@@ -884,12 +881,15 @@ export default function Dashboard() {
 
           </div>
 
-          {/* Right sidebar theme color & live visual preview panel */}
+          {/* Right sidebar theme color & live visual preview panel (Riwayat audit trail deleted!) */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', position: 'sticky', top: '16px' }}>
             
             {/* Embed Theme Color Picker */}
             <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <h3 style={{ fontSize: '1.25rem', color: 'hsl(var(--text-primary))', fontWeight: '750' }}>Warna Tema Embed</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'hsl(var(--primary-glow))' }}><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 2 12 22Z"/><path d="M12 2V22"/></svg>
+                <h3 style={{ fontSize: '1.25rem', color: 'hsl(var(--text-primary))', fontWeight: '750' }}>Warna Tema Embed</h3>
+              </div>
               <p style={{ fontSize: '0.82rem', color: 'hsl(var(--text-secondary))', lineHeight: '1.4' }}>
                 Warna garis tepi embed pesan log yang akan ditampilkan di Discord Anda.
               </p>
@@ -940,70 +940,6 @@ export default function Dashboard() {
                     dipa: 333105200942546946 | #Belajar!: 1486233076160925881 • Hari ini pukul 03:10
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Settings Change History (Audit Logs) */}
-            <div className="glass-panel" style={{ padding: '0px', overflow: 'hidden' }}>
-              <div style={{ 
-                padding: '12px 18px', 
-                background: 'hsla(var(--border-glass), 0.1)', 
-                borderBottom: '1px solid hsl(var(--border-glass))', 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center' 
-              }}>
-                <span style={{ fontSize: '0.72rem', color: 'hsl(var(--text-primary))', fontWeight: '700', letterSpacing: '0.05em' }}>RIWAYAT PERUBAHAN</span>
-                <span style={{ fontSize: '0.68rem', color: 'hsl(var(--text-muted))', fontWeight: '700', letterSpacing: '0.03em' }}>AUDIT TRAIL</span>
-              </div>
-              
-              <div style={{ 
-                padding: '16px', 
-                display: 'flex', 
-                flexDirection: 'column', 
-                gap: '12px', 
-                maxHeight: '340px', 
-                overflowY: 'auto' 
-              }}>
-                {loadingHistory ? (
-                  <div style={{ textAlign: 'center', padding: '20px', color: 'hsl(var(--text-muted))', fontSize: '0.82rem', fontWeight: '500' }}>
-                    Memuat riwayat perubahan...
-                  </div>
-                ) : history.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '20px', color: 'hsl(var(--text-muted))', fontSize: '0.82rem', fontWeight: '500' }}>
-                    Belum ada riwayat perubahan konfigurasi.
-                  </div>
-                ) : (
-                  history.map((item) => (
-                    <div 
-                      key={item.id} 
-                      style={{ 
-                        padding: '12px', 
-                        borderRadius: '10px', 
-                        backgroundColor: 'hsla(var(--border-glass), 0.08)', 
-                        border: '1px solid hsl(var(--border-glass))',
-                        fontSize: '0.82rem'
-                      }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '4px' }}>
-                        <span style={{ color: 'hsl(var(--text-primary))', fontWeight: '600' }}>👤 {item.executor}</span>
-                        <span style={{ color: 'hsl(var(--text-muted))', fontSize: '0.72rem', fontWeight: '500' }}>
-                          {new Date(item.timestamp).toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', day: 'numeric', month: 'short' })}
-                        </span>
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        {item.changes.map((change, cIdx) => (
-                          <div key={cIdx} style={{ color: 'hsl(var(--text-secondary))', lineHeight: '1.4' }}>
-                            • <strong>{change.label}</strong>:<br/>
-                            <span style={{ color: '#ef4444', textDecoration: 'line-through', marginRight: '6px' }}>{change.old}</span>
-                            <span style={{ color: 'hsl(var(--text-muted))', marginRight: '6px' }}>→</span>
-                            <span style={{ color: 'hsl(var(--success-emerald))', fontWeight: '600' }}>{change.new}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))
-                )}
               </div>
             </div>
 
