@@ -591,3 +591,185 @@ h1, h2, h3, h4, h5, h6, .font-display {
     text-align: left !important;
   }
 }
+
+/* ========================================
+   LANDING PAGE ANIMATION SYSTEM
+======================================== */
+
+/* ---- Scroll-reveal base ---- */
+.reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Direction variants */
+.reveal-left {
+  opacity: 0;
+  transform: translateX(-48px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+.reveal-left.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.reveal-right {
+  opacity: 0;
+  transform: translateX(48px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+.reveal-right.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.reveal-scale {
+  opacity: 0;
+  transform: scale(0.92);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+.reveal-scale.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Stagger delay utility — add via style={{ transitionDelay }} */
+
+/* ---- Hero entrance choreography ---- */
+@keyframes heroFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+.hero-entrance {
+  animation: heroFadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.hero-entrance-d1 { animation-delay: 0.05s; }
+.hero-entrance-d2 { animation-delay: 0.18s; }
+.hero-entrance-d3 { animation-delay: 0.32s; }
+.hero-entrance-d4 { animation-delay: 0.48s; }
+.hero-entrance-d5 { animation-delay: 0.62s; }
+
+/* ---- Gradient text shimmer ---- */
+@keyframes gradientShimmer {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.shimmer-text {
+  background-size: 200% auto;
+  animation: gradientShimmer 6s ease-in-out infinite;
+}
+
+/* ---- Ambient glow pulse ---- */
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50%      { opacity: 0.9; transform: scale(1.08); }
+}
+.glow-pulse {
+  animation: glowPulse 6s ease-in-out infinite;
+}
+.glow-pulse-alt {
+  animation: glowPulse 8s ease-in-out infinite;
+  animation-delay: 3s;
+}
+
+/* ---- Floating particle dots ---- */
+@keyframes particleDrift {
+  0%   { transform: translateY(0) translateX(0); opacity: 0; }
+  15%  { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { transform: translateY(-120vh) translateX(30px); opacity: 0; }
+}
+
+.particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: hsla(var(--primary-glow), 0.35);
+  animation: particleDrift linear infinite;
+  pointer-events: none;
+}
+
+/* ---- Gentle floating for cards ---- */
+@keyframes gentleFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+.gentle-float {
+  animation: gentleFloat 5s ease-in-out infinite;
+}
+.gentle-float-alt {
+  animation: gentleFloat 6s ease-in-out infinite;
+  animation-delay: 1.5s;
+}
+
+/* ---- Line draw / border reveal ---- */
+@keyframes borderReveal {
+  from { opacity: 0; width: 0; }
+  to   { opacity: 1; width: 100%; }
+}
+.border-reveal::after {
+  content: '';
+  display: block;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, hsl(var(--primary-glow)), transparent);
+  animation: borderReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both;
+}
+
+/* ---- CTA button pulse glow ---- */
+@keyframes ctaPulse {
+  0%, 100% { box-shadow: 0 0 0 0 hsla(var(--primary-glow), 0.45); }
+  50%      { box-shadow: 0 0 28px 4px hsla(var(--primary-glow), 0.2); }
+}
+.cta-glow {
+  animation: ctaPulse 3s ease-in-out infinite;
+}
+
+/* ---- Counter / number roll-up ---- */
+@keyframes countFade {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Respect user preference ---- */
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .reveal-left, .reveal-right, .reveal-scale {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .hero-entrance {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+  .shimmer-text { animation: none !important; }
+  .glow-pulse, .glow-pulse-alt { animation: none !important; }
+  .particle { display: none !important; }
+  .gentle-float, .gentle-float-alt { animation: none !important; }
+  .cta-glow { animation: none !important; }
+}
+
