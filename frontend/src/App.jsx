@@ -412,14 +412,7 @@ function Sidebar() {
             </SidebarLink>
           )}
 
-          {/* Switch Server Link (Opens Pop Up Modal) */}
-          <div style={{ borderTop: '1px solid hsl(var(--border-glass))', marginTop: '12px', paddingTop: '12px' }}>
-            <SidebarLink to="#" icon={
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 7H9a4 4 0 0 0-4 4v3"/><path d="m16 3 4 4-4 4"/><path d="M4 17h11a4 4 0 0 0 4-4v-3"/><path d="m8 21-4-4 4-4"/></svg>
-            } onClick={() => setServerModalOpen(true)}>
-              Ganti Server
-            </SidebarLink>
-          </div>
+
         </div>
       </div>
 

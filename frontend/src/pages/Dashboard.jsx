@@ -135,6 +135,7 @@ const categoryDetails = {
 
 export default function Dashboard() {
   const { selectedGuild, setServerModalOpen } = useApp();
+  const guildIconUrl = selectedGuild && selectedGuild.icon ? `https://cdn.discordapp.com/icons/${selectedGuild.id}/${selectedGuild.icon}.png` : null;
   const [channels, setChannels] = useState([]);
   const [roles, setRoles] = useState([]);
   const [settings, setSettings] = useState(null);
@@ -248,15 +249,55 @@ export default function Dashboard() {
           <p style={{ color: 'hsl(var(--text-secondary))', marginTop: '4px' }}>Sesuaikan saluran log dan kategori peristiwa untuk bot Anda.</p>
         </div>
 
-        {/* Top-Right Ganti Server Button */}
-        <button 
-          className="btn-secondary" 
-          onClick={() => setServerModalOpen(true)}
-          style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '10px', fontSize: '0.88rem' }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 7H9a4 4 0 0 0-4 4v3"/><path d="m16 3 4 4-4 4"/><path d="M4 17h11a4 4 0 0 0 4-4v-3"/><path d="m8 21-4-4 4-4"/></svg>
-          Ganti Server
-        </button>
+        {/* Top-Right Ganti Server Button & Selected Guild Icon */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button 
+            className="btn-secondary" 
+            onClick={() => setServerModalOpen(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '10px', fontSize: '0.88rem' }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 7H9a4 4 0 0 0-4 4v3"/><path d="m16 3 4 4-4 4"/><path d="M4 17h11a4 4 0 0 0 4-4v-3"/><path d="m8 21-4-4 4-4"/></svg>
+            Ganti Server
+          </button>
+          
+          {selectedGuild && (
+            guildIconUrl ? (
+              <img 
+                src={guildIconUrl} 
+                alt={selectedGuild.name}
+                style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '50%',
+                  border: '1px solid hsl(var(--border-glass))',
+                  objectFit: 'cover',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                }}
+                title={selectedGuild.name}
+              />
+            ) : (
+              <div 
+                style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '50%',
+                  backgroundColor: 'hsl(var(--primary-glow))',
+                  color: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 'bold',
+                  fontSize: '1rem',
+                  border: '1px solid hsl(var(--border-glass))',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                }}
+                title={selectedGuild.name}
+              >
+                {selectedGuild.name.charAt(0)}
+              </div>
+            )
+          )}
+        </div>
       </div>
 
       {settings ? (
