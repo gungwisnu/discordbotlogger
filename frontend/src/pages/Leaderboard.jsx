@@ -78,7 +78,6 @@ export default function Leaderboard() {
     if (cat === 'messages') {
       return `${score.toLocaleString()} pesan`;
     }
-    // voice and gaming score is in seconds
     const hrs = Math.round((score / 3600) * 10) / 10;
     return `${hrs} jam`;
   };
@@ -88,43 +87,52 @@ export default function Leaderboard() {
       
       {/* Header Panel */}
       <div>
-        <h2 style={{ fontSize: '2rem', fontFamily: 'var(--font-display)', color: 'white' }}>🏆 Server Analytics & Achievements</h2>
+        <h2 style={{ fontSize: '2rem', fontFamily: 'var(--font-display)', color: 'hsl(var(--text-primary))' }}>🏆 Server Analytics & Achievements</h2>
         <p style={{ color: 'hsl(var(--text-secondary))', marginTop: '4px' }}>Statistik aktivitas, grafik game paling populer, serta pencapaian lencana server.</p>
       </div>
 
       {/* Analytics Summary Stats Row cards */}
       {loadingStats ? (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>Loading Stats...</div>
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>
+          <div style={{
+            width: '32px',
+            height: '32px',
+            border: '2px solid hsla(var(--primary-glow), 0.15)',
+            borderTopColor: 'hsl(var(--primary-glow))',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }} />
+        </div>
       ) : analytics ? (
         <div className="stats-card-container">
-          <div className="glass-panel" style={{ padding: '20px', position: 'relative' }}>
-            <span style={{ fontSize: '1.8rem', position: 'absolute', top: '20px', right: '20px' }}>💬</span>
-            <span style={{ color: 'hsl(var(--text-secondary))', fontSize: '0.82rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Total Pesan Chat</span>
-            <h2 style={{ fontSize: '2.2rem', color: 'white', marginTop: '8px', fontFamily: 'var(--font-display)' }}>
+          <div className="glass-panel" style={{ padding: '24px', position: 'relative', overflow: 'hidden' }}>
+            <span style={{ fontSize: '2rem', position: 'absolute', top: '20px', right: '20px', opacity: 0.85 }}>💬</span>
+            <span style={{ color: 'hsl(var(--text-muted))', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Pesan Chat</span>
+            <h2 style={{ fontSize: '2.2rem', color: 'hsl(var(--text-primary))', marginTop: '10px', fontFamily: 'var(--font-display)', fontWeight: '800' }}>
               {analytics.total_messages.toLocaleString()}
             </h2>
           </div>
 
-          <div className="glass-panel" style={{ padding: '20px', position: 'relative' }}>
-            <span style={{ fontSize: '1.8rem', position: 'absolute', top: '20px', right: '20px' }}>🎙️</span>
-            <span style={{ color: 'hsl(var(--text-secondary))', fontSize: '0.82rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Total Durasi Voice</span>
-            <h2 style={{ fontSize: '2.2rem', color: 'white', marginTop: '8px', fontFamily: 'var(--font-display)' }}>
-              {analytics.total_voice_hours.toLocaleString()} jam
+          <div className="glass-panel" style={{ padding: '24px', position: 'relative', overflow: 'hidden' }}>
+            <span style={{ fontSize: '2rem', position: 'absolute', top: '20px', right: '20px', opacity: 0.85 }}>🎙️</span>
+            <span style={{ color: 'hsl(var(--text-muted))', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Durasi Voice</span>
+            <h2 style={{ fontSize: '2.2rem', color: 'hsl(var(--text-primary))', marginTop: '10px', fontFamily: 'var(--font-display)', fontWeight: '800' }}>
+              {analytics.total_voice_hours.toLocaleString()} <span style={{ fontSize: '1.25rem', fontWeight: '600' }}>jam</span>
             </h2>
           </div>
 
-          <div className="glass-panel" style={{ padding: '20px', position: 'relative' }}>
-            <span style={{ fontSize: '1.8rem', position: 'absolute', top: '20px', right: '20px' }}>🔊</span>
-            <span style={{ color: 'hsl(var(--text-secondary))', fontSize: '0.82rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Sesi Voice Aktif</span>
-            <h2 style={{ fontSize: '2.2rem', color: 'hsl(var(--success-emerald))', marginTop: '8px', fontFamily: 'var(--font-display)' }}>
-              {analytics.active_voice_count} pengguna
+          <div className="glass-panel" style={{ padding: '24px', position: 'relative', overflow: 'hidden' }}>
+            <span style={{ fontSize: '2rem', position: 'absolute', top: '20px', right: '20px', opacity: 0.85 }}>🔊</span>
+            <span style={{ color: 'hsl(var(--text-muted))', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Sesi Voice Aktif</span>
+            <h2 style={{ fontSize: '2.2rem', color: 'hsl(var(--success-emerald))', marginTop: '10px', fontFamily: 'var(--font-display)', fontWeight: '800' }}>
+              {analytics.active_voice_count} <span style={{ fontSize: '1.25rem', fontWeight: '600', color: 'hsl(var(--text-muted))' }}>anggota</span>
             </h2>
           </div>
 
-          <div className="glass-panel" style={{ padding: '20px', position: 'relative' }}>
-            <span style={{ fontSize: '1.8rem', position: 'absolute', top: '20px', right: '20px' }}>⚙️</span>
-            <span style={{ color: 'hsl(var(--text-secondary))', fontSize: '0.82rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Total Aksi Moderasi</span>
-            <h2 style={{ fontSize: '2.2rem', color: 'white', marginTop: '8px', fontFamily: 'var(--font-display)' }}>
+          <div className="glass-panel" style={{ padding: '24px', position: 'relative', overflow: 'hidden' }}>
+            <span style={{ fontSize: '2rem', position: 'absolute', top: '20px', right: '20px', opacity: 0.85 }}>⚙️</span>
+            <span style={{ color: 'hsl(var(--text-muted))', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Aksi Moderasi</span>
+            <h2 style={{ fontSize: '2.2rem', color: 'hsl(var(--text-primary))', marginTop: '10px', fontFamily: 'var(--font-display)', fontWeight: '800' }}>
               {analytics.total_moderations}
             </h2>
           </div>
@@ -132,26 +140,28 @@ export default function Leaderboard() {
       ) : null}
 
       {/* Grid: Popular Games and Leaderboard */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '28px', alignItems: 'start' }}>
         
         {/* Leaderboard panel */}
         <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ fontSize: '1.25rem', color: 'white' }}>🥇 Peringkat Keaktifan Server</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+            <h3 style={{ fontSize: '1.25rem', color: 'hsl(var(--text-primary))' }}>🥇 Peringkat Keaktifan Server</h3>
             
             {/* Ranks selection tabs */}
-            <div style={{ display: 'flex', gap: '4px', backgroundColor: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '8px' }}>
+            <div style={{ display: 'flex', gap: '4px', backgroundColor: 'hsla(var(--border-glass), 0.15)', padding: '4px', borderRadius: '10px', border: '1px solid hsl(var(--border-glass))' }}>
               <button 
                 onClick={() => setCategory('voice')}
                 style={{
                   border: 'none',
-                  padding: '6px 12px',
-                  borderRadius: '6px',
+                  padding: '6px 14px',
+                  borderRadius: '8px',
                   cursor: 'pointer',
-                  backgroundColor: category === 'voice' ? 'hsla(var(--primary-glow), 0.15)' : 'transparent',
-                  color: category === 'voice' ? 'white' : 'hsl(var(--text-secondary))',
+                  backgroundColor: category === 'voice' ? 'hsl(var(--panel-glass))' : 'transparent',
+                  color: category === 'voice' ? 'hsl(var(--primary-glow))' : 'hsl(var(--text-secondary))',
                   fontWeight: '600',
-                  fontSize: '0.8rem'
+                  fontSize: '0.8rem',
+                  transition: 'all 0.2s ease',
+                  boxShadow: category === 'voice' ? '0 2px 8px rgba(0,0,0,0.05)' : 'none'
                 }}
               >
                 Voice
@@ -160,13 +170,15 @@ export default function Leaderboard() {
                 onClick={() => setCategory('messages')}
                 style={{
                   border: 'none',
-                  padding: '6px 12px',
-                  borderRadius: '6px',
+                  padding: '6px 14px',
+                  borderRadius: '8px',
                   cursor: 'pointer',
-                  backgroundColor: category === 'messages' ? 'hsla(var(--primary-glow), 0.15)' : 'transparent',
-                  color: category === 'messages' ? 'white' : 'hsl(var(--text-secondary))',
+                  backgroundColor: category === 'messages' ? 'hsl(var(--panel-glass))' : 'transparent',
+                  color: category === 'messages' ? 'hsl(var(--primary-glow))' : 'hsl(var(--text-secondary))',
                   fontWeight: '600',
-                  fontSize: '0.8rem'
+                  fontSize: '0.8rem',
+                  transition: 'all 0.2s ease',
+                  boxShadow: category === 'messages' ? '0 2px 8px rgba(0,0,0,0.05)' : 'none'
                 }}
               >
                 Chat
@@ -175,13 +187,15 @@ export default function Leaderboard() {
                 onClick={() => setCategory('gaming')}
                 style={{
                   border: 'none',
-                  padding: '6px 12px',
-                  borderRadius: '6px',
+                  padding: '6px 14px',
+                  borderRadius: '8px',
                   cursor: 'pointer',
-                  backgroundColor: category === 'gaming' ? 'hsla(var(--primary-glow), 0.15)' : 'transparent',
-                  color: category === 'gaming' ? 'white' : 'hsl(var(--text-secondary))',
+                  backgroundColor: category === 'gaming' ? 'hsl(var(--panel-glass))' : 'transparent',
+                  color: category === 'gaming' ? 'hsl(var(--primary-glow))' : 'hsl(var(--text-secondary))',
                   fontWeight: '600',
-                  fontSize: '0.8rem'
+                  fontSize: '0.8rem',
+                  transition: 'all 0.2s ease',
+                  boxShadow: category === 'gaming' ? '0 2px 8px rgba(0,0,0,0.05)' : 'none'
                 }}
               >
                 Gamer
@@ -190,7 +204,17 @@ export default function Leaderboard() {
           </div>
 
           {loadingLeader ? (
-            <div style={{ padding: '40px', textAlign: 'center' }}>Loading Leaderboard...</div>
+            <div style={{ padding: '40px', textAlign: 'center', color: 'hsl(var(--text-muted))' }}>
+              <div style={{
+                width: '28px',
+                height: '28px',
+                margin: '0 auto',
+                border: '2px solid hsla(var(--primary-glow), 0.15)',
+                borderTopColor: 'hsl(var(--primary-glow))',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite'
+              }} />
+            </div>
           ) : leaderboard.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {leaderboard.map((item, idx) => (
@@ -200,27 +224,28 @@ export default function Leaderboard() {
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    padding: '12px 16px',
-                    borderRadius: '10px',
-                    background: idx === 0 ? 'hsla(var(--primary-glow), 0.05)' : 'rgba(255,255,255,0.01)',
-                    border: idx === 0 ? '1px solid hsla(var(--primary-glow), 0.25)' : '1px solid hsl(var(--border-glass))'
+                    padding: '12px 18px',
+                    borderRadius: '12px',
+                    background: idx === 0 ? 'hsla(var(--primary-glow), 0.06)' : 'hsla(var(--border-glass), 0.1)',
+                    border: idx === 0 ? '1px solid hsla(var(--primary-glow), 0.3)' : '1px solid hsl(var(--border-glass))'
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <span style={{ 
-                      fontSize: '1rem', 
-                      fontWeight: 'bold',
+                      fontSize: '0.95rem', 
+                      fontWeight: '800',
                       color: idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? '#cd7f32' : 'hsl(var(--text-muted))',
                       width: '24px'
                     }}>
                       #{idx + 1}
                     </span>
-                    <span style={{ color: 'white', fontWeight: idx === 0 ? '700' : '500' }}>{item.username}</span>
+                    <span style={{ color: 'hsl(var(--text-primary))', fontWeight: idx === 0 ? '700' : '600' }}>{item.username}</span>
                   </div>
                   <span style={{ 
                     fontFamily: 'monospace', 
-                    color: idx === 0 ? 'hsl(var(--accent-cyan))' : 'white', 
-                    fontWeight: 'bold' 
+                    color: idx === 0 ? 'hsl(var(--accent-cyan))' : 'hsl(var(--text-primary))', 
+                    fontWeight: '700',
+                    fontSize: '0.9rem'
                   }}>
                     {formatScore(item.score, category)}
                   </span>
@@ -228,7 +253,7 @@ export default function Leaderboard() {
               ))}
             </div>
           ) : (
-            <div style={{ padding: '20px', textAlign: 'center', color: 'hsl(var(--text-secondary))' }}>
+            <div style={{ padding: '20px', textAlign: 'center', color: 'hsl(var(--text-muted))', fontWeight: '500' }}>
               Belum ada peringkat tercatat dalam kategori ini.
             </div>
           )}
@@ -236,13 +261,23 @@ export default function Leaderboard() {
 
         {/* Popular games horizontal bar chart */}
         <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <h3 style={{ fontSize: '1.25rem', color: 'white' }}>🎮 Jam Gaming Teraktif Server</h3>
+          <h3 style={{ fontSize: '1.25rem', color: 'hsl(var(--text-primary))' }}>🎮 Jam Gaming Teraktif Server</h3>
           <p style={{ fontSize: '0.85rem', color: 'hsl(var(--text-secondary))', marginTop: '-12px' }}>
             Judul game terpopuler yang dimainkan member di server ini.
           </p>
 
           {loadingStats ? (
-            <div style={{ padding: '40px', textAlign: 'center' }}>Loading Chart...</div>
+            <div style={{ padding: '40px', textAlign: 'center' }}>
+              <div style={{
+                width: '28px',
+                height: '28px',
+                margin: '0 auto',
+                border: '2px solid hsla(var(--primary-glow), 0.15)',
+                borderTopColor: 'hsl(var(--primary-glow))',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite'
+              }} />
+            </div>
           ) : analytics?.popular_games?.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {analytics.popular_games.map((g, idx) => {
@@ -250,13 +285,13 @@ export default function Leaderboard() {
                 const pct = Math.max(5, Math.min(100, (g.hours / maxVal) * 100));
                 
                 return (
-                  <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                      <span style={{ color: 'white', fontWeight: '500' }}>{g.game}</span>
-                      <span style={{ color: 'hsl(var(--accent-cyan))', fontFamily: 'monospace', fontWeight: 'bold' }}>{g.hours} jam</span>
+                  <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', fontWeight: '600' }}>
+                      <span style={{ color: 'hsl(var(--text-primary))' }}>{g.game}</span>
+                      <span style={{ color: 'hsl(var(--accent-cyan))', fontFamily: 'monospace', fontWeight: '700' }}>{g.hours} jam</span>
                     </div>
                     {/* SVG/CSS Progress bar */}
-                    <div style={{ width: '100%', height: '8px', borderRadius: '99px', backgroundColor: 'rgba(0,0,0,0.3)', overflow: 'hidden' }}>
+                    <div style={{ width: '100%', height: '8px', borderRadius: '99px', backgroundColor: 'hsla(var(--border-glass), 0.25)', overflow: 'hidden' }}>
                       <div className="chart-bar-fill" style={{ width: `${pct}%` }} />
                     </div>
                   </div>
@@ -264,7 +299,7 @@ export default function Leaderboard() {
               })}
             </div>
           ) : (
-            <div style={{ padding: '40px', textAlign: 'center', color: 'hsl(var(--text-secondary))' }}>
+            <div style={{ padding: '40px', textAlign: 'center', color: 'hsl(var(--text-muted))', fontWeight: '500' }}>
               Belum ada data game terdeteksi di server.
             </div>
           )}
@@ -274,12 +309,12 @@ export default function Leaderboard() {
 
       {/* Achievements visual showcase panels grid */}
       <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        <h3 style={{ fontSize: '1.25rem', color: 'white' }}>🏅 Lencana & Achievements Anda</h3>
+        <h3 style={{ fontSize: '1.25rem', color: 'hsl(var(--text-primary))' }}>🏅 Lencana & Achievements Anda</h3>
         
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-          gap: '16px'
+          gap: '18px'
         }}>
           {BADGES.map(badge => {
             const isUnlocked = unlockedBadges.includes(badge.id);
@@ -290,8 +325,8 @@ export default function Leaderboard() {
               >
                 <div className="badge-emoji">{badge.emoji}</div>
                 <div>
-                  <h4 style={{ color: 'white', fontSize: '0.98rem' }}>{badge.name}</h4>
-                  <p style={{ fontSize: '0.78rem', color: 'hsl(var(--text-secondary))', marginTop: '2px' }}>{badge.desc}</p>
+                  <h4 style={{ color: 'hsl(var(--text-primary))', fontSize: '0.98rem', fontWeight: '700' }}>{badge.name}</h4>
+                  <p style={{ fontSize: '0.78rem', color: 'hsl(var(--text-secondary))', marginTop: '4px', lineHeight: '1.4' }}>{badge.desc}</p>
                 </div>
               </div>
             );
