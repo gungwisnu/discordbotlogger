@@ -252,3 +252,59 @@
   flex-direction: column;
   gap: 16px;
 }
+
+/* Light Mode overrides for Emoji Picker and Multi-Select dropdown */
+.light-mode .emoji-picker-container {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08), 0 0 20px rgba(99, 102, 241, 0.03);
+}
+
+.light-mode .multi-select-dropdown {
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+}
+
+.light-mode .emoji-picker-search input {
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #000;
+}
+
+.light-mode .emoji-picker-search input::placeholder {
+  color: #8e9297;
+}
+
+.light-mode .emoji-picker-tab-btn {
+  color: #5865f2;
+}
+
+.light-mode .emoji-picker-tab-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: #000;
+}
+
+.light-mode .emoji-picker-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.light-mode .multi-select-option {
+  color: #2e3035;
+}
+
+.light-mode .multi-select-option:hover {
+  background: rgba(0, 0, 0, 0.03);
+  color: #000;
+}
+
+.light-mode .multi-select-option.selected {
+  background: rgba(99, 102, 241, 0.08);
+  color: #818cf8;
+}
+
+.light-mode .emoji-picker-category-title {
+  color: #4e5058;
+}
