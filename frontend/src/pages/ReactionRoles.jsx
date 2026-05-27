@@ -780,7 +780,7 @@ export default function ReactionRoles() {
             </div>
 
             {/* SELECTION SETTINGS PANEL (DYNAMIC LIST WITH EMOJI PICKER & MULTI-SELECT ROLES) */}
-            <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', position: 'relative', zIndex: 2 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid hsl(var(--border-glass))', paddingBottom: '10px' }}>
                 <h3 style={{ fontSize: '1.25rem', color: 'hsl(var(--text-primary))', fontWeight: '750' }}>
                   {currentConfig.selection_type.toUpperCase()} SETTINGS
@@ -890,7 +890,7 @@ export default function ReactionRoles() {
             </div>
 
             {/* COLLAPSIBLE OPTIONS PANEL (AS SHOWN IN PICTURE 2) */}
-            <div className="glass-panel" style={{ padding: '24px' }}>
+            <div className="glass-panel" style={{ padding: '24px', position: 'relative', zIndex: 1 }}>
               <div 
                 className="collapsible-header"
                 onClick={() => setOptionsExpanded(!optionsExpanded)}
