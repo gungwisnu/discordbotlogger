@@ -704,15 +704,22 @@ export default function Landing() {
         margin: '40px auto 24px auto',
         textAlign: 'center',
         color: 'hsl(var(--text-muted))',
-        fontSize: '0.85rem',
+        fontSize: '0.82rem',
         zIndex: 2,
         maxWidth: '1200px',
         width: '100%',
         borderTop: '1px solid hsl(var(--border-glass))',
         paddingTop: '20px',
         fontWeight: '600',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '4px',
+        alignItems: 'center'
       }}>
-        © 2026 Pandu Bot
+        <div>© 2026 Pandu Bot</div>
+        <div style={{ fontSize: '0.74rem', color: 'hsl(var(--text-muted))', opacity: 0.85, fontWeight: '500' }}>
+          Pandu for discord bot - @gngwisnuuu
+        </div>
       </footer>
     </div>
   );

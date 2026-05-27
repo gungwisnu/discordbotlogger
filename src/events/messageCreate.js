@@ -59,6 +59,11 @@ module.exports = {
         const settings = db.getGuildSettings(guildId);
         const aiModel = settings.ai_model || 'deepseek-chat';
 
+        // Check if AI is enabled for this guild
+        if (settings.ai_enabled !== true) {
+          return message.reply('⚠️ **Fitur AI dinonaktifkan di server ini.**\nPenggunaan AI dibatasi oleh izin khusus untuk menghemat API. Hubungi Administrator server untuk mengaktifkan fitur ini melalui Web Dashboard.');
+        }
+
         // Trigger typing state to indicate the bot is preparing the response (premium UX)
         await message.channel.sendTyping();
 

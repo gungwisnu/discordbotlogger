@@ -19,7 +19,8 @@ let data = {
   audit_cache: {},
   settings_history: [],
   sessions: {},
-  reaction_roles: []
+  reaction_roles: [],
+  ai_whitelist: []
 };
 
 // Load data on startup
@@ -37,6 +38,7 @@ if (fs.existsSync(dbPath)) {
     if (!data.settings_history) data.settings_history = [];
     if (!data.sessions) data.sessions = {};
     if (!data.reaction_roles) data.reaction_roles = [];
+    if (!data.ai_whitelist) data.ai_whitelist = [];
 
     console.log('Database JSON loaded successfully from', dbPath);
   } catch (err) {
@@ -88,7 +90,8 @@ const DatabaseFunctions = {
         autorole_enabled: false,
         autorole_role_id: null,
         achievement_channel_id: null,
-        log_channels: '{}'
+        log_channels: '{}',
+        ai_enabled: false
       };
     }
 
@@ -176,6 +179,10 @@ const DatabaseFunctions = {
         row.log_channels = '{}';
         changed = true;
       }
+      if (row.ai_enabled === undefined) {
+        row.ai_enabled = false;
+        changed = true;
+      }
 
       if (changed) {
         row.categories_enabled = JSON.stringify(cats);
@@ -188,7 +195,7 @@ const DatabaseFunctions = {
     return row;
   },
 
-  setGuildSettings(guildId, { log_channel_id, categories_enabled, embed_color, ignored_channels, ai_model, welcome_enabled, welcome_channel_id, welcome_message, autorole_enabled, autorole_role_id, achievement_channel_id, log_channels }) {
+  setGuildSettings(guildId, { log_channel_id, categories_enabled, embed_color, ignored_channels, ai_model, welcome_enabled, welcome_channel_id, welcome_message, autorole_enabled, autorole_role_id, achievement_channel_id, log_channels, ai_enabled }) {
     const current = this.getGuildSettings(guildId);
     
     const channel = log_channel_id !== undefined ? log_channel_id : current.log_channel_id;
@@ -203,6 +210,7 @@ const DatabaseFunctions = {
     const autoroleRoleId = autorole_role_id !== undefined ? autorole_role_id : current.autorole_role_id !== undefined ? current.autorole_role_id : null;
     const achievementChannel = achievement_channel_id !== undefined ? achievement_channel_id : current.achievement_channel_id !== undefined ? current.achievement_channel_id : null;
     const logChans = log_channels !== undefined ? (typeof log_channels === 'string' ? log_channels : JSON.stringify(log_channels)) : current.log_channels !== undefined ? current.log_channels : '{}';
+    const aiEnabled = ai_enabled !== undefined ? ai_enabled : current.ai_enabled !== undefined ? current.ai_enabled : false;
 
     data.guild_settings[guildId] = {
       guild_id: guildId,
@@ -217,7 +225,8 @@ const DatabaseFunctions = {
       autorole_enabled: autoroleEnabled,
       autorole_role_id: autoroleRoleId,
       achievement_channel_id: achievementChannel,
-      log_channels: logChans
+      log_channels: logChans,
+      ai_enabled: aiEnabled
     };
 
     triggerSave();
@@ -684,6 +693,33 @@ const DatabaseFunctions = {
       return true;
     }
     return false;
+  },
+
+  // AI Whitelist API
+  getAIWhitelist() {
+    if (!data.ai_whitelist) data.ai_whitelist = [];
+    return data.ai_whitelist;
+  },
+
+  addToAIWhitelist(userId) {
+    if (!data.ai_whitelist) data.ai_whitelist = [];
+    if (!data.ai_whitelist.includes(userId)) {
+      data.ai_whitelist.push(userId);
+      triggerSave();
+    }
+    return data.ai_whitelist;
+  },
+
+  removeFromAIWhitelist(userId) {
+    if (!data.ai_whitelist) data.ai_whitelist = [];
+    data.ai_whitelist = data.ai_whitelist.filter(id => id !== userId);
+    triggerSave();
+    return data.ai_whitelist;
+  },
+
+  isUserAIWhitelisted(userId) {
+    if (!data.ai_whitelist) data.ai_whitelist = [];
+    return data.ai_whitelist.includes(userId);
   }
 };
 

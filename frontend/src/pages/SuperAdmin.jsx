@@ -7,6 +7,13 @@ export default function SuperAdmin() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // AI Whitelist state hooks
+  const [whitelist, setWhitelist] = useState([]);
+  const [newUserId, setNewUserId] = useState('');
+  const [whitelistLoading, setWhitelistLoading] = useState(false);
+  const [actionError, setActionError] = useState(null);
+  const [actionSuccess, setActionSuccess] = useState(null);
+
   const fetchBotStats = () => {
     setLoading(true);
     fetch('/api/admin/bot-stats')
@@ -29,9 +36,82 @@ export default function SuperAdmin() {
       });
   };
 
+  const fetchWhitelist = () => {
+    setWhitelistLoading(true);
+    fetch('/api/admin/ai-whitelist')
+      .then(res => {
+        if (!res.ok) throw new Error('Gagal memuat whitelist AI.');
+        return res.json();
+      })
+      .then(data => {
+        setWhitelist(data);
+        setWhitelistLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setWhitelistLoading(false);
+      });
+  };
+
   useEffect(() => {
     fetchBotStats();
+    fetchWhitelist();
   }, []);
+
+  const handleAddWhitelist = (e) => {
+    e.preventDefault();
+    if (!newUserId || !/^\d{17,19}$/.test(newUserId)) {
+      setActionError('Harap masukkan Discord User ID 17-19 digit angka yang valid.');
+      return;
+    }
+    setActionError(null);
+    setActionSuccess(null);
+    setWhitelistLoading(true);
+
+    fetch('/api/admin/ai-whitelist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: newUserId })
+    })
+      .then(async res => {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Gagal menambahkan user ke whitelist.');
+        return data;
+      })
+      .then(() => {
+        setActionSuccess('✓ Pengguna berhasil ditambahkan ke whitelist AI!');
+        setNewUserId('');
+        fetchWhitelist();
+      })
+      .catch(err => {
+        setActionError(err.message);
+        setWhitelistLoading(false);
+      });
+  };
+
+  const handleRemoveWhitelist = (userId) => {
+    if (!window.confirm('Apakah Anda yakin ingin menghapus izin khusus AI untuk pengguna ini?')) return;
+    setActionError(null);
+    setActionSuccess(null);
+    setWhitelistLoading(true);
+
+    fetch(`/api/admin/ai-whitelist/${userId}`, {
+      method: 'DELETE'
+    })
+      .then(async res => {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Gagal menghapus user dari whitelist.');
+        return data;
+      })
+      .then(() => {
+        setActionSuccess('✓ Pengguna berhasil dihapus dari whitelist AI.');
+        fetchWhitelist();
+      })
+      .catch(err => {
+        setActionError(err.message);
+        setWhitelistLoading(false);
+      });
+  };
 
   const formatUptime = (secs) => {
     const days = Math.floor(secs / (3600 * 24));
@@ -98,7 +178,7 @@ export default function SuperAdmin() {
         
         <button 
           className="btn-secondary" 
-          onClick={fetchBotStats}
+          onClick={() => { fetchBotStats(); fetchWhitelist(); }}
           style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '10px', fontSize: '0.88rem' }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -212,6 +292,159 @@ export default function SuperAdmin() {
                   {stats.stats?.guildsCount || 0} server
                 </h4>
               </div>
+            </div>
+          </div>
+
+          {/* AI Whitelist Management Panel */}
+          <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'hsl(var(--primary-glow))' }}>
+                <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
+                <path d="M12 6v12"/>
+                <path d="M8 10h8"/>
+              </svg>
+              <h3 style={{ fontSize: '1.25rem', color: 'hsl(var(--text-primary))', fontWeight: '750', margin: 0 }}>
+                Manajemen Izin Fitur AI (Whitelist ID)
+              </h3>
+            </div>
+            <p style={{ fontSize: '0.85rem', color: 'hsl(var(--text-secondary))', marginTop: '-12px' }}>
+              Tambahkan Discord User ID agar pengguna tersebut dapat mengaktifkan fitur asisten AI (DeepSeek) di server yang mereka kelola.
+            </p>
+
+            {/* Add User Form */}
+            <form onSubmit={handleAddWhitelist} style={{ 
+              display: 'flex', 
+              gap: '12px', 
+              alignItems: 'flex-start', 
+              flexWrap: 'wrap', 
+              backgroundColor: 'hsla(var(--border-glass), 0.04)', 
+              padding: '16px', 
+              borderRadius: '12px',
+              border: '1px solid hsl(var(--border-glass))'
+            }}>
+              <div style={{ flex: 1, minWidth: '250px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <input 
+                  type="text"
+                  placeholder="Masukkan Discord User ID (contoh: 333105200942546946)"
+                  value={newUserId}
+                  onChange={(e) => setNewUserId(e.target.value)}
+                  className="input-glass"
+                  style={{
+                    padding: '10px 14px',
+                    fontSize: '0.88rem',
+                    backgroundColor: 'hsl(var(--panel-glass))',
+                    color: 'hsl(var(--text-primary))'
+                  }}
+                  disabled={whitelistLoading}
+                />
+                {actionError && (
+                  <span style={{ fontSize: '0.75rem', color: 'hsl(var(--danger-crimson))', fontWeight: '600' }}>
+                    {actionError}
+                  </span>
+                )}
+                {actionSuccess && (
+                  <span style={{ fontSize: '0.75rem', color: 'hsl(var(--success-emerald))', fontWeight: '600' }}>
+                    {actionSuccess}
+                  </span>
+                )}
+              </div>
+              <button 
+                type="submit"
+                className="btn-primary"
+                style={{ padding: '10px 24px', borderRadius: '10px', fontSize: '0.88rem', flexShrink: 0 }}
+                disabled={whitelistLoading || !newUserId}
+              >
+                {whitelistLoading ? 'Memproses...' : 'Tambah Izin'}
+              </button>
+            </form>
+
+            {/* Whitelisted Users List */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <span style={{ fontSize: '0.75rem', color: 'hsl(var(--text-muted))', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Daftar Pengguna Berizin Khusus ({whitelist.length})
+              </span>
+              
+              {whitelist.length > 0 ? (
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
+                  gap: '12px',
+                  maxHeight: '300px',
+                  overflowY: 'auto',
+                  paddingRight: '4px'
+                }}>
+                  {whitelist.map((w) => (
+                    <div 
+                      key={w.id}
+                      className="glass-panel"
+                      style={{
+                        padding: '12px 16px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '12px',
+                        backgroundColor: 'hsla(var(--border-glass), 0.02)',
+                        borderColor: 'hsl(var(--border-glass))'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                        {w.avatarUrl ? (
+                          <img src={w.avatarUrl} alt={w.username} style={{ width: '32px', height: '32px', borderRadius: '50%' }} />
+                        ) : (
+                          <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'hsl(var(--primary-glow))', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '0.85rem' }}>
+                            {w.username?.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                          <span style={{ fontSize: '0.85rem', fontWeight: '600', color: 'hsl(var(--text-primary))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={w.username}>
+                            {w.username}
+                          </span>
+                          <span style={{ fontSize: '0.7rem', color: 'hsl(var(--text-muted))', fontFamily: 'monospace' }}>
+                            ID: {w.id}
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => handleRemoveWhitelist(w.id)}
+                        title="Hapus Izin"
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: 'hsl(var(--danger-crimson))',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          padding: '6px',
+                          borderRadius: '6px',
+                          transition: 'all 0.2s ease'
+                        }}
+                        className="sidebar-link-hover"
+                        disabled={whitelistLoading}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="3 6 5 6 21 6"/>
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                          <line x1="10" y1="11" x2="10" y2="17"/>
+                          <line x1="14" y1="11" x2="14" y2="17"/>
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ 
+                  padding: '24px', 
+                  textAlign: 'center', 
+                  color: 'hsl(var(--text-muted))', 
+                  fontSize: '0.85rem',
+                  border: '1px dashed hsl(var(--border-glass))',
+                  borderRadius: '12px'
+                }}>
+                  Belum ada Discord User ID yang terdaftar dalam Whitelist AI.
+                </div>
+              )}
             </div>
           </div>
 

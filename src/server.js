@@ -68,7 +68,8 @@ function getSettingsDiff(oldSettings, newSettings) {
     welcome_message: 'Pesan Welcome',
     autorole_enabled: 'Status Auto-Role',
     autorole_role_id: 'Role Auto-Role',
-    achievement_channel_id: 'Saluran Pencapaian'
+    achievement_channel_id: 'Saluran Pencapaian',
+    ai_enabled: 'Status Asisten AI'
   };
 
   // Compare standard fields
@@ -277,7 +278,8 @@ const DEMO_SETTINGS = {
   autorole_enabled: true,
   autorole_role_id: '111222',
   achievement_channel_id: '333',
-  log_channels: '{}'
+  log_channels: '{}',
+  ai_enabled: false
 };
 
 let DEMO_REACTION_ROLES = [
@@ -439,10 +441,12 @@ app.get('/api/auth/user', (req, res) => {
   if (req.session.user) {
     const superAdminIds = (process.env.SUPER_ADMIN_IDS || '').split(',');
     const isSuperAdmin = superAdminIds.includes(req.session.user.id);
+    const isAIWhitelisted = db.isUserAIWhitelisted(req.session.user.id);
     res.json({ 
       user: {
         ...req.session.user,
-        superAdmin: isSuperAdmin
+        superAdmin: isSuperAdmin,
+        aiWhitelisted: isAIWhitelisted
       }, 
       guilds: req.session.guilds 
     });
@@ -533,6 +537,56 @@ app.get('/api/admin/bot-stats', checkSuperAdmin, (req, res) => {
   });
 });
 
+// GET AI Whitelist for Super Admin dashboard
+app.get('/api/admin/ai-whitelist', checkSuperAdmin, async (req, res) => {
+  const list = db.getAIWhitelist();
+  const detailedList = [];
+  for (const userId of list) {
+    try {
+      if (client.readyAt) {
+        const user = await client.users.fetch(userId);
+        detailedList.push({
+          id: userId,
+          username: user.username,
+          avatar: user.avatar,
+          avatarUrl: user.displayAvatarURL({ dynamic: true })
+        });
+      } else {
+        detailedList.push({ id: userId, username: `User ${userId}`, avatar: null });
+      }
+    } catch (e) {
+      detailedList.push({ id: userId, username: `ID: ${userId} (Unknown Discord User)`, avatar: null });
+    }
+  }
+  res.json(detailedList);
+});
+
+// POST AI Whitelist (Add User ID)
+app.post('/api/admin/ai-whitelist', checkSuperAdmin, async (req, res) => {
+  const { userId } = req.body;
+  if (!userId || !/^\d{17,19}$/.test(userId)) {
+    return res.status(400).json({ error: 'ID Pengguna Discord tidak valid.' });
+  }
+
+  if (client.readyAt) {
+    try {
+      await client.users.fetch(userId);
+    } catch (e) {
+      return res.status(400).json({ error: 'Pengguna Discord tidak ditemukan dengan ID tersebut.' });
+    }
+  }
+
+  db.addToAIWhitelist(userId);
+  res.json({ success: true });
+});
+
+// DELETE AI Whitelist (Remove User ID)
+app.delete('/api/admin/ai-whitelist/:userId', checkSuperAdmin, (req, res) => {
+  const { userId } = req.params;
+  db.removeFromAIWhitelist(userId);
+  res.json({ success: true });
+});
+
 // ----------------------------------------------------
 // GUILDS CONFIGURATIONS & ANALYTICS API
 // ----------------------------------------------------
@@ -591,16 +645,29 @@ app.get('/api/guilds/:guildId/settings-history', checkAuth, (req, res) => {
 // Update Guild Settings
 app.post('/api/guilds/:guildId/settings', checkAuth, (req, res) => {
   const { guildId } = req.params;
-  const { log_channel_id, categories_enabled, embed_color, ignored_channels, ai_model, welcome_enabled, welcome_channel_id, welcome_message, autorole_enabled, autorole_role_id, achievement_channel_id, log_channels } = req.body;
+  const { log_channel_id, categories_enabled, embed_color, ignored_channels, ai_model, welcome_enabled, welcome_channel_id, welcome_message, autorole_enabled, autorole_role_id, achievement_channel_id, log_channels, ai_enabled } = req.body;
   const isDemo = req.session.user.demo;
   const username = req.session.user ? req.session.user.username : 'Web Dashboard';
+
+  const superAdminIds = (process.env.SUPER_ADMIN_IDS || '').split(',');
+  const isSuperAdmin = superAdminIds.includes(req.session.user?.id);
+  const isAIWhitelisted = db.isUserAIWhitelisted(req.session.user?.id);
+  const current = db.getGuildSettings(guildId);
+
+  // Security check: Only whitelisted users or Super Admins can enable AI
+  if (ai_enabled === true && current.ai_enabled !== true && !isDemo) {
+    if (!isSuperAdmin && !isAIWhitelisted) {
+      return res.status(403).json({ error: 'Akses ditolak: Anda tidak memiliki izin khusus (AI Whitelist) untuk mengaktifkan fitur AI di server ini.' });
+    }
+  }
 
   if (isDemo && guildId === '99999999999999') {
     const oldClean = {
       ...DEMO_SETTINGS,
       categories_enabled: JSON.parse(DEMO_SETTINGS.categories_enabled || '{}'),
       ignored_channels: JSON.parse(DEMO_SETTINGS.ignored_channels || '[]'),
-      log_channels: JSON.parse(DEMO_SETTINGS.log_channels || '{}')
+      log_channels: JSON.parse(DEMO_SETTINGS.log_channels || '{}'),
+      ai_enabled: DEMO_SETTINGS.ai_enabled
     };
 
     const diffs = getSettingsDiff(oldClean, req.body);
@@ -620,17 +687,18 @@ app.post('/api/guilds/:guildId/settings', checkAuth, (req, res) => {
       autorole_enabled: autorole_enabled !== undefined ? autorole_enabled : DEMO_SETTINGS.autorole_enabled,
       autorole_role_id: autorole_role_id !== undefined ? autorole_role_id : DEMO_SETTINGS.autorole_role_id,
       achievement_channel_id: achievement_channel_id !== undefined ? achievement_channel_id : DEMO_SETTINGS.achievement_channel_id,
-      log_channels: typeof log_channels === 'string' ? log_channels : JSON.stringify(log_channels || {})
+      log_channels: typeof log_channels === 'string' ? log_channels : JSON.stringify(log_channels || {}),
+      ai_enabled: ai_enabled !== undefined ? ai_enabled : DEMO_SETTINGS.ai_enabled
     });
     return res.json({ success: true, settings: {
       ...DEMO_SETTINGS,
       categories_enabled: JSON.parse(DEMO_SETTINGS.categories_enabled || '{}'),
       ignored_channels: JSON.parse(DEMO_SETTINGS.ignored_channels || '[]'),
-      log_channels: JSON.parse(DEMO_SETTINGS.log_channels || '{}')
+      log_channels: JSON.parse(DEMO_SETTINGS.log_channels || '{}'),
+      ai_enabled: DEMO_SETTINGS.ai_enabled
     }});
   }
 
-  const current = db.getGuildSettings(guildId);
   const cleanCurrent = {
     ...current,
     categories_enabled: JSON.parse(current.categories_enabled || '{}'),
@@ -675,7 +743,8 @@ app.post('/api/guilds/:guildId/settings', checkAuth, (req, res) => {
     autorole_enabled,
     autorole_role_id,
     achievement_channel_id,
-    log_channels
+    log_channels,
+    ai_enabled
   });
 
   res.json({

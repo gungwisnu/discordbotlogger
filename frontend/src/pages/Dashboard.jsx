@@ -134,7 +134,7 @@ const categoryDetails = {
 };
 
 export default function Dashboard() {
-  const { selectedGuild, setServerModalOpen } = useApp();
+  const { user, selectedGuild, setServerModalOpen } = useApp();
   const guildIconUrl = selectedGuild && selectedGuild.icon ? `https://cdn.discordapp.com/icons/${selectedGuild.id}/${selectedGuild.icon}.png` : null;
   const [channels, setChannels] = useState([]);
   const [roles, setRoles] = useState([]);
@@ -342,16 +342,128 @@ export default function Dashboard() {
                 <h3 style={{ fontSize: '1.25rem', color: 'hsl(var(--text-primary))', fontWeight: '750' }}>Konfigurasi Otak AI (DeepSeek)</h3>
               </div>
               <p style={{ fontSize: '0.88rem', color: 'hsl(var(--text-secondary))' }}>
-                Pilih model kecerdasan buatan (AI) DeepSeek yang akan digunakan saat merespons obrolan di server Anda.
+                Atur pengaktifan dan pilih model kecerdasan buatan (AI) DeepSeek yang digunakan untuk merespons obrolan di server Anda.
               </p>
+
+              {/* Toggle Switch AI Enable */}
+              <div style={{ 
+                borderBottom: '1px solid hsl(var(--border-glass))', 
+                paddingBottom: '18px', 
+                marginBottom: '4px',
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: '12px' 
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <h4 style={{ color: 'hsl(var(--text-primary))', fontSize: '1rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      Aktifkan Fitur Asisten AI
+                      {settings.ai_enabled && (
+                        <span style={{ 
+                          fontSize: '0.7rem', 
+                          backgroundColor: 'hsla(var(--success-emerald), 0.15)', 
+                          color: 'hsl(var(--success-emerald))', 
+                          padding: '2px 8px', 
+                          borderRadius: '10px',
+                          fontWeight: 'bold'
+                        }}>
+                          Aktif
+                        </span>
+                      )}
+                    </h4>
+                    <p style={{ fontSize: '0.78rem', color: 'hsl(var(--text-muted))', marginTop: '2px' }}>
+                      Semua anggota server dapat memanggil asisten AI Pandu (via tag atau command).
+                    </p>
+                  </div>
+
+                  {/* Toggle Switch */}
+                  <label style={{
+                    position: 'relative',
+                    display: 'inline-block',
+                    width: '48px',
+                    height: '24px',
+                    cursor: (user?.aiWhitelisted || user?.superAdmin) ? 'pointer' : 'not-allowed',
+                    opacity: (user?.aiWhitelisted || user?.superAdmin) ? 1 : 0.5
+                  }}>
+                    <input 
+                      type="checkbox" 
+                      disabled={!(user?.aiWhitelisted || user?.superAdmin)}
+                      checked={!!settings.ai_enabled} 
+                      onChange={(e) => setSettings(prev => ({ ...prev, ai_enabled: e.target.checked }))}
+                      style={{ opacity: 0, width: 0, height: 0 }} 
+                    />
+                    <span style={{
+                      position: 'absolute',
+                      cursor: (user?.aiWhitelisted || user?.superAdmin) ? 'pointer' : 'not-allowed',
+                      top: 0, left: 0, right: 0, bottom: 0,
+                      backgroundColor: settings.ai_enabled ? 'hsl(var(--success-emerald))' : 'hsla(var(--border-glass), 0.35)',
+                      transition: '0.3s',
+                      borderRadius: '34px',
+                      border: '1px solid hsl(var(--border-glass))'
+                    }}>
+                      <span style={{
+                        position: 'absolute',
+                        height: '16px',
+                        width: '16px',
+                        left: settings.ai_enabled ? '26px' : '4px',
+                        bottom: '3px',
+                        backgroundColor: 'white',
+                        transition: '0.3s',
+                        borderRadius: '50%',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                      }} />
+                    </span>
+                  </label>
+                </div>
+
+                {/* Whitelist Authorization Badge / Warning Box */}
+                {(user?.aiWhitelisted || user?.superAdmin) ? (
+                  <div style={{ 
+                    fontSize: '0.78rem', 
+                    color: 'hsl(var(--success-emerald))', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '6px',
+                    fontWeight: '600'
+                  }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                    Anda memiliki izin khusus AI untuk mengaktifkan fitur ini.
+                  </div>
+                ) : (
+                  <div style={{ 
+                    fontSize: '0.8rem', 
+                    color: 'hsl(var(--danger-crimson))', 
+                    backgroundColor: 'hsla(var(--danger-crimson), 0.08)', 
+                    padding: '12px 16px', 
+                    borderRadius: '10px',
+                    border: '1px solid hsla(var(--danger-crimson), 0.25)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '6px',
+                    lineHeight: '1.4'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 'bold' }}>
+                      <span>🔒 Izin Khusus Diperlukan</span>
+                    </div>
+                    <span>
+                      Anda tidak memiliki izin khusus (AI Whitelist) dari Super Admin untuk mengaktifkan fitur AI di server ini.
+                    </span>
+                    <span style={{ fontSize: '0.74rem', color: 'hsl(var(--text-muted))', marginTop: '2px' }}>
+                      Silakan hubungi Super Admin dan berikan Discord ID Anda: <strong style={{ color: 'hsl(var(--text-primary))', fontFamily: 'monospace', backgroundColor: 'hsla(var(--border-glass), 0.2)', padding: '2px 6px', borderRadius: '4px' }}>{user?.id}</strong>
+                    </span>
+                  </div>
+                )}
+              </div>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <select
+                  disabled={!settings.ai_enabled}
                   value={settings.ai_model || 'deepseek-chat'}
                   onChange={(e) => setSettings(prev => ({ ...prev, ai_model: e.target.value }))}
                   className="input-glass"
                   style={{ 
-                    cursor: 'pointer',
+                    cursor: settings.ai_enabled ? 'pointer' : 'not-allowed',
+                    opacity: settings.ai_enabled ? 1 : 0.5,
                     backgroundColor: 'hsl(var(--panel-glass))',
                     color: 'hsl(var(--text-primary))'
                   }}

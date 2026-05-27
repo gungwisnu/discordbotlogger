@@ -510,6 +510,19 @@ function Sidebar() {
             Keluar
           </button>
         </div>
+
+        {/* Small premium credit footer inside Sidebar */}
+        <div style={{ 
+          textAlign: 'center', 
+          fontSize: '0.7rem', 
+          color: 'hsl(var(--text-muted))', 
+          opacity: 0.8, 
+          marginTop: '6px', 
+          fontWeight: '500',
+          fontFamily: 'var(--font-display)'
+        }}>
+          Pandu for discord bot - @gngwisnuuu
+        </div>
       </div>
     </div>
   );
