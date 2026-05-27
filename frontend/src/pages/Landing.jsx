@@ -67,56 +67,52 @@ export default function Landing() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           
           {/* Landing Theme Toggler */}
-          <div style={{ display: 'flex', gap: '2px', backgroundColor: 'hsla(var(--border-glass), 0.15)', padding: '2px', borderRadius: '10px', border: '1px solid hsl(var(--border-glass))' }}>
-            <button 
-              onClick={() => setTheme('system')}
-              style={{
-                background: theme === 'system' ? 'hsl(var(--panel-glass))' : 'transparent',
-                border: 'none',
-                padding: '6px 12px',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '0.78rem',
-                fontWeight: '600',
-                color: theme === 'system' ? 'hsl(var(--primary-glow))' : 'hsl(var(--text-secondary))',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              Sistem
-            </button>
-            <button 
-              onClick={() => setTheme('light')}
-              style={{
-                background: theme === 'light' ? 'hsl(var(--panel-glass))' : 'transparent',
-                border: 'none',
-                padding: '6px 12px',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '0.78rem',
-                fontWeight: '600',
-                color: theme === 'light' ? 'hsl(var(--primary-glow))' : 'hsl(var(--text-secondary))',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              Terang
-            </button>
-            <button 
-              onClick={() => setTheme('dark')}
-              style={{
-                background: theme === 'dark' ? 'hsl(var(--panel-glass))' : 'transparent',
-                border: 'none',
-                padding: '6px 12px',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '0.78rem',
-                fontWeight: '600',
-                color: theme === 'dark' ? 'hsl(var(--primary-glow))' : 'hsl(var(--text-secondary))',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              Gelap
-            </button>
-          </div>
+          <button 
+            onClick={() => {
+              if (theme === 'system') setTheme('light');
+              else if (theme === 'light') setTheme('dark');
+              else setTheme('system');
+            }}
+            style={{
+              background: 'hsla(var(--border-glass), 0.1)',
+              border: '1px solid hsl(var(--border-glass))',
+              cursor: 'pointer',
+              color: 'hsl(var(--text-primary))',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '8px',
+              borderRadius: '12px',
+              transition: 'all 0.2s ease',
+              lineHeight: 1
+            }}
+            className="sidebar-link-hover"
+            title={`Tema saat ini: ${theme === 'system' ? 'Sistem' : theme === 'light' ? 'Terang' : 'Gelap'}`}
+          >
+            {theme === 'system' ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.4s ease' }}>
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                <line x1="8" y1="21" x2="16" y2="21"/>
+                <line x1="12" y1="17" x2="12" y2="21"/>
+              </svg>
+            ) : theme === 'light' ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.4s ease' }}>
+                <circle cx="12" cy="12" r="5" fill="currentColor"/>
+                <line x1="12" y1="1" x2="12" y2="3"/>
+                <line x1="12" y1="21" x2="12" y2="23"/>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                <line x1="1" y1="12" x2="3" y2="12"/>
+                <line x1="21" y1="12" x2="23" y2="12"/>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+              </svg>
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.4s ease' }}>
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+              </svg>
+            )}
+          </button>
 
           {/* User Auth Profile Dropdown or Login Button */}
           {user ? (
