@@ -268,31 +268,6 @@ export default function Dashboard() {
           <h2 style={{ fontSize: '2rem', fontFamily: 'var(--font-display)', color: 'hsl(var(--text-primary))', fontWeight: '800' }}>Konfigurasi Server</h2>
           <p style={{ color: 'hsl(var(--text-secondary))', marginTop: '4px' }}>Sesuaikan saluran log dan kategori peristiwa untuk bot Anda.</p>
         </div>
-
-        {/* Guild Switching Dropdown */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <label style={{ fontSize: '0.9rem', color: 'hsl(var(--text-muted))', fontWeight: '600' }}>Pilih Server:</label>
-          <select 
-            value={selectedGuild.id}
-            onChange={(e) => {
-              const selected = guilds.find(g => g.id === e.target.value);
-              if (selected) setSelectedGuild(selected);
-            }}
-            className="input-glass"
-            style={{ 
-              width: '220px', 
-              cursor: 'pointer',
-              backgroundColor: 'hsl(var(--panel-glass))',
-              color: 'hsl(var(--text-primary))'
-            }}
-          >
-            {guilds.map(g => (
-              <option key={g.id} value={g.id} style={{ backgroundColor: 'hsl(var(--bg-space))', color: 'hsl(var(--text-primary))' }}>
-                {g.name}
-              </option>
-            ))}
-          </select>
-        </div>
       </div>
 
       {settings ? (

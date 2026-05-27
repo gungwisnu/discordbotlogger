@@ -14,10 +14,41 @@ export function useApp() {
 }
 
 // Custom Navigation Link that highlights when active in our premium dashboard
-function SidebarLink({ to, children, icon }) {
+function SidebarLink({ to, children, icon, onClick }) {
   const location = useLocation();
   const isActive = location.pathname === to;
   
+  if (onClick) {
+    return (
+      <button 
+        onClick={onClick} 
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          padding: '12px 16px',
+          borderRadius: '12px',
+          width: '100%',
+          border: '1px solid transparent',
+          background: 'transparent',
+          color: 'hsl(var(--text-secondary))',
+          fontFamily: 'var(--font-display)',
+          fontWeight: '500',
+          fontSize: '0.92rem',
+          textAlign: 'left',
+          cursor: 'pointer',
+          transition: 'all 0.25s ease'
+        }}
+        className="sidebar-link-hover"
+      >
+        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.8 }}>
+          {icon}
+        </span>
+        {children}
+      </button>
+    );
+  }
+
   return (
     <Link 
       to={to} 
@@ -83,9 +114,165 @@ function ThemeSelector() {
   );
 }
 
+// Global server selector pop up modal
+function ServerModal({ isOpen, onClose }) {
+  const { guilds, setGuilds, setSelectedGuild } = useApp();
+  const [clientId, setClientId] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetch('/api/auth/client-id')
+        .then(res => res.json())
+        .then(data => setClientId(data.clientId))
+        .catch(err => console.error('Failed to load client ID:', err));
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  const refreshGuilds = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/user');
+      if (res.ok) {
+        const data = await res.json();
+        setGuilds(data.guilds || []);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSelectGuild = (g) => {
+    if (g.botInGuild) {
+      setSelectedGuild(g);
+      onClose();
+    } else {
+      const inviteUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&permissions=8&scope=bot%20applications.commands&guild_id=${g.id}&disable_guild_select=true`;
+      window.open(inviteUrl, '_blank', 'width=500,height=800');
+    }
+  };
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0, left: 0, right: 0, bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      backdropFilter: 'blur(8px)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 10000,
+      padding: '20px'
+    }} onClick={onClose}>
+      <div className="glass-panel" style={{
+        maxWidth: '850px',
+        width: '100%',
+        padding: '30px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '24px',
+        maxHeight: '85vh',
+        overflowY: 'auto'
+      }} onClick={e => e.stopPropagation()}>
+        
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid hsl(var(--border-glass))', paddingBottom: '16px' }}>
+          <div>
+            <h2 className="font-display" style={{ fontSize: '1.4rem', fontWeight: '800', color: 'hsl(var(--text-primary))' }}>
+              Ganti Server Discord
+            </h2>
+            <p style={{ fontSize: '0.82rem', color: 'hsl(var(--text-secondary))', marginTop: '2px' }}>
+              Pilih server aktif baru atau undang bot ke server Anda.
+            </p>
+          </div>
+          
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button className="btn-secondary" onClick={refreshGuilds} disabled={loading} style={{ padding: '8px 16px', fontSize: '0.8rem', borderRadius: '8px' }}>
+              {loading ? 'Menyegarkan...' : 'Segarkan Status'}
+            </button>
+            <button className="btn-secondary" onClick={onClose} style={{ padding: '8px 16px', fontSize: '0.8rem', borderRadius: '8px' }}>
+              Tutup
+            </button>
+          </div>
+        </div>
+
+        {/* Server Grid */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+          gap: '16px',
+          maxHeight: '380px',
+          overflowY: 'auto',
+          paddingRight: '4px'
+        }}>
+          {guilds.map(g => {
+            const iconUrl = g.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png` : null;
+            
+            return (
+              <div 
+                key={g.id}
+                onClick={() => handleSelectGuild(g)}
+                className="glass-panel"
+                style={{
+                  padding: '20px 16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '12px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  borderColor: g.botInGuild ? 'hsla(var(--success-emerald), 0.35)' : 'hsl(var(--border-glass))',
+                  backgroundColor: g.botInGuild ? 'hsla(var(--success-emerald), 0.02)' : 'hsla(var(--border-glass), 0.05)',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                {iconUrl ? (
+                  <img src={iconUrl} alt={g.name} style={{ width: '48px', height: '48px', borderRadius: '12px', objectFit: 'cover' }} />
+                ) : (
+                  <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'hsl(var(--primary-glow))', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                    {g.name.charAt(0)}
+                  </div>
+                )}
+                <div>
+                  <h4 style={{ fontSize: '0.85rem', fontWeight: '700', color: 'hsl(var(--text-primary))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '140px', margin: '0 auto' }}>
+                    {g.name}
+                  </h4>
+                  <span style={{
+                    display: 'inline-block',
+                    fontSize: '0.68rem',
+                    fontWeight: '700',
+                    padding: '1px 8px',
+                    borderRadius: '10px',
+                    marginTop: '4px',
+                    backgroundColor: g.botInGuild ? 'hsla(var(--success-emerald), 0.15)' : 'hsla(var(--warning-amber), 0.15)',
+                    color: g.botInGuild ? 'hsl(var(--success-emerald))' : 'hsl(var(--warning-amber))',
+                  }}>
+                    {g.botInGuild ? 'Aktif' : 'Belum Ada'}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
 function Sidebar() {
-  const { user, selectedGuild, setSelectedGuild, logout } = useApp();
+  const { user, selectedGuild, setServerModalOpen, logout } = useApp();
   if (!user || !selectedGuild) return null;
+
+  // Selected guild icon
+  const guildIconUrl = selectedGuild.icon ? `https://cdn.discordapp.com/icons/${selectedGuild.id}/${selectedGuild.icon}.png` : null;
+
+  // Logged-in user avatar
+  const userAvatarUrl = user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : null;
 
   return (
     <div className="glass-panel" style={{
@@ -100,23 +287,37 @@ function Sidebar() {
       zIndex: 10
     }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-        {/* Server Indicator Panel */}
+        {/* Server Indicator Panel (Top Left) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingBottom: '18px', borderBottom: '1px solid hsl(var(--border-glass))' }}>
-          <div style={{
-            width: '44px',
-            height: '44px',
-            borderRadius: '12px',
-            backgroundColor: 'hsl(var(--primary-glow))',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '1.3rem',
-            fontWeight: 'bold',
-            color: 'white',
-            boxShadow: '0 4px 10px rgba(0,0,0,0.15)'
-          }}>
-            {selectedGuild.name.charAt(0)}
-          </div>
+          {guildIconUrl ? (
+            <img 
+              src={guildIconUrl} 
+              alt={selectedGuild.name}
+              style={{
+                width: '44px',
+                height: '44px',
+                borderRadius: '12px',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
+                objectFit: 'cover'
+              }}
+            />
+          ) : (
+            <div style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '12px',
+              backgroundColor: 'hsl(var(--primary-glow))',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.3rem',
+              fontWeight: 'bold',
+              color: 'white',
+              boxShadow: '0 4px 10px rgba(0,0,0,0.15)'
+            }}>
+              {selectedGuild.name.charAt(0)}
+            </div>
+          )}
           <div>
             <h4 style={{ fontSize: '0.95rem', fontWeight: '750', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '170px', color: 'hsl(var(--text-primary))' }}>
               {selectedGuild.name}
@@ -145,45 +346,53 @@ function Sidebar() {
             Analisis & Peringkat
           </SidebarLink>
 
-          {/* Links for navigating without logout */}
-          <div style={{ borderTop: '1px solid hsl(var(--border-glass))', marginTop: '12px', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <SidebarLink to="/select-server" icon={
+          {/* Switch Server Link (Opens Pop Up Modal) */}
+          <div style={{ borderTop: '1px solid hsl(var(--border-glass))', marginTop: '12px', paddingTop: '12px' }}>
+            <SidebarLink to="#" icon={
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 7H9a4 4 0 0 0-4 4v3"/><path d="m16 3 4 4-4 4"/><path d="M4 17h11a4 4 0 0 0 4-4v-3"/><path d="m8 21-4-4 4-4"/></svg>
-            }>
+            } onClick={() => setServerModalOpen(true)}>
               Ganti Server
-            </SidebarLink>
-            
-            <SidebarLink to="/" icon={
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            }>
-              Tampilan Utama
             </SidebarLink>
           </div>
         </div>
       </div>
 
-      {/* Footer Area with Theme Selector & User Session */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', borderTop: '1px solid hsl(var(--border-glass))', paddingTop: '18px' }}>
+      {/* Footer Area with Theme Selector & User Session (Tampilan Utama moved here) */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', borderTop: '1px solid hsl(var(--border-glass))', paddingTop: '16px' }}>
         
         {/* Theme Selector */}
         <ThemeSelector />
 
-        {/* User profile details */}
+        {/* User profile details with Discord Avatar (Bottom Left) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'hsla(var(--border-glass), 0.1)', padding: '10px 12px', borderRadius: '12px', border: '1px solid hsl(var(--border-glass))' }}>
-          <div style={{
-            width: '38px',
-            height: '38px',
-            borderRadius: '50%',
-            backgroundColor: 'hsl(var(--primary-glow))',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '1.15rem',
-            color: 'white',
-            fontWeight: 'bold'
-          }}>
-            {user.username.charAt(0).toUpperCase()}
-          </div>
+          {userAvatarUrl ? (
+            <img 
+              src={userAvatarUrl} 
+              alt={user.username}
+              style={{
+                width: '38px',
+                height: '38px',
+                borderRadius: '50%',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+                objectFit: 'cover'
+              }}
+            />
+          ) : (
+            <div style={{
+              width: '38px',
+              height: '38px',
+              borderRadius: '50%',
+              backgroundColor: 'hsl(var(--primary-glow))',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.15rem',
+              color: 'white',
+              fontWeight: 'bold'
+            }}>
+              {user.username.charAt(0).toUpperCase()}
+            </div>
+          )}
           <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
             <span style={{ fontSize: '0.88rem', fontWeight: '600', color: 'hsl(var(--text-primary))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {user.username}
@@ -194,9 +403,19 @@ function Sidebar() {
           </div>
         </div>
         
-        <button className="btn-secondary" onClick={logout} style={{ padding: '10px 16px', fontSize: '0.85rem', width: '100%', justifyContent: 'center', borderRadius: '10px' }}>
-          Keluar
-        </button>
+        {/* Navigation & Logout Buttons at the very bottom */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <Link to="/" style={{ textDecoration: 'none', width: '100%' }}>
+            <button className="btn-secondary" style={{ padding: '10px 16px', fontSize: '0.85rem', width: '100%', justifyContent: 'center', borderRadius: '10px', gap: '6px' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              Tampilan Utama
+            </button>
+          </Link>
+
+          <button className="btn-secondary" onClick={logout} style={{ padding: '10px 16px', fontSize: '0.85rem', width: '100%', justifyContent: 'center', borderRadius: '10px', borderColor: 'hsla(var(--danger-crimson), 0.2)', color: 'hsl(var(--danger-crimson))' }}>
+            Keluar
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -218,6 +437,7 @@ export default function App() {
   const [guilds, setGuilds] = useState([]);
   const [selectedGuild, setSelectedGuildState] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isServerModalOpen, setServerModalOpen] = useState(false);
 
   // Custom setter that also caches the selected guild ID in local storage
   const setSelectedGuild = (guild) => {
@@ -328,7 +548,7 @@ export default function App() {
   }
 
   return (
-    <AppContext.Provider value={{ user, setUser, guilds, setGuilds, selectedGuild, setSelectedGuild, logout, theme, setTheme }}>
+    <AppContext.Provider value={{ user, setUser, guilds, setGuilds, selectedGuild, setSelectedGuild, logout, theme, setTheme, isServerModalOpen, setServerModalOpen }}>
       <BrowserRouter>
         <Routes>
           {/* Landing Page is ALWAYS accessible */}
@@ -348,6 +568,9 @@ export default function App() {
           
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+
+        {/* Global Pop Up server switching Modal */}
+        <ServerModal isOpen={isServerModalOpen} onClose={() => setServerModalOpen(false)} />
       </BrowserRouter>
     </AppContext.Provider>
   );

@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../App';
 import { Link } from 'react-router-dom';
 
 export default function Landing() {
-  const { user, theme, setTheme } = useApp();
+  const { user, logout, selectedGuild, theme, setTheme } = useApp();
+  const [showDropdown, setShowDropdown] = useState(false);
 
   return (
     <div style={{
@@ -62,56 +63,207 @@ export default function Landing() {
           </span>
         </div>
 
-        {/* Small Landing Theme Toggler */}
-        <div style={{ display: 'flex', gap: '2px', backgroundColor: 'hsla(var(--border-glass), 0.15)', padding: '2px', borderRadius: '10px', border: '1px solid hsl(var(--border-glass))' }}>
-          <button 
-            onClick={() => setTheme('system')}
-            style={{
-              background: theme === 'system' ? 'hsl(var(--panel-glass))' : 'transparent',
-              border: 'none',
-              padding: '6px 12px',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '0.78rem',
-              fontWeight: '600',
-              color: theme === 'system' ? 'hsl(var(--primary-glow))' : 'hsl(var(--text-secondary))',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            Sistem
-          </button>
-          <button 
-            onClick={() => setTheme('light')}
-            style={{
-              background: theme === 'light' ? 'hsl(var(--panel-glass))' : 'transparent',
-              border: 'none',
-              padding: '6px 12px',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '0.78rem',
-              fontWeight: '600',
-              color: theme === 'light' ? 'hsl(var(--primary-glow))' : 'hsl(var(--text-secondary))',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            Terang
-          </button>
-          <button 
-            onClick={() => setTheme('dark')}
-            style={{
-              background: theme === 'dark' ? 'hsl(var(--panel-glass))' : 'transparent',
-              border: 'none',
-              padding: '6px 12px',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '0.78rem',
-              fontWeight: '600',
-              color: theme === 'dark' ? 'hsl(var(--primary-glow))' : 'hsl(var(--text-secondary))',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            Gelap
-          </button>
+        {/* Right Header Navigation & Login Widget */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          
+          {/* Landing Theme Toggler */}
+          <div style={{ display: 'flex', gap: '2px', backgroundColor: 'hsla(var(--border-glass), 0.15)', padding: '2px', borderRadius: '10px', border: '1px solid hsl(var(--border-glass))' }}>
+            <button 
+              onClick={() => setTheme('system')}
+              style={{
+                background: theme === 'system' ? 'hsl(var(--panel-glass))' : 'transparent',
+                border: 'none',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '0.78rem',
+                fontWeight: '600',
+                color: theme === 'system' ? 'hsl(var(--primary-glow))' : 'hsl(var(--text-secondary))',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              Sistem
+            </button>
+            <button 
+              onClick={() => setTheme('light')}
+              style={{
+                background: theme === 'light' ? 'hsl(var(--panel-glass))' : 'transparent',
+                border: 'none',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '0.78rem',
+                fontWeight: '600',
+                color: theme === 'light' ? 'hsl(var(--primary-glow))' : 'hsl(var(--text-secondary))',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              Terang
+            </button>
+            <button 
+              onClick={() => setTheme('dark')}
+              style={{
+                background: theme === 'dark' ? 'hsl(var(--panel-glass))' : 'transparent',
+                border: 'none',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '0.78rem',
+                fontWeight: '600',
+                color: theme === 'dark' ? 'hsl(var(--primary-glow))' : 'hsl(var(--text-secondary))',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              Gelap
+            </button>
+          </div>
+
+          {/* User Auth Profile Dropdown or Login Button */}
+          {user ? (
+            <div style={{ position: 'relative' }}>
+              <div 
+                onClick={() => setShowDropdown(!showDropdown)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  cursor: 'pointer',
+                  padding: '6px 14px',
+                  borderRadius: '12px',
+                  border: '1px solid hsl(var(--border-glass))',
+                  backgroundColor: 'hsla(var(--border-glass), 0.1)',
+                  transition: 'all 0.2s ease',
+                  userSelect: 'none'
+                }}
+                className="sidebar-link-hover"
+              >
+                {user.avatar ? (
+                  <img 
+                    src={`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`} 
+                    alt={user.username}
+                    style={{ width: '26px', height: '26px', borderRadius: '50%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <div style={{ 
+                    width: '26px', 
+                    height: '26px', 
+                    borderRadius: '50%', 
+                    backgroundColor: 'hsl(var(--primary-glow))', 
+                    color: 'white', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    fontSize: '0.8rem', 
+                    fontWeight: 'bold' 
+                  }}>
+                    {user.username.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <span style={{ fontSize: '0.88rem', fontWeight: '600', color: 'hsl(var(--text-primary))' }}>
+                  {user.username}
+                </span>
+                <svg 
+                  width="12" 
+                  height="12" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2.5" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  style={{ 
+                    color: 'hsl(var(--text-muted))', 
+                    transform: showDropdown ? 'rotate(180deg)' : 'none', 
+                    transition: 'transform 0.2s ease' 
+                  }}
+                >
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </div>
+
+              {showDropdown && (
+                <div 
+                  className="glass-panel"
+                  style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 8px)',
+                    right: 0,
+                    width: '180px',
+                    padding: '8px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px',
+                    zIndex: 1000,
+                    boxShadow: '0 8px 30px rgba(0,0,0,0.15)',
+                    borderRadius: '12px'
+                  }}
+                >
+                  <Link 
+                    to={selectedGuild ? "/dashboard" : "/select-server"} 
+                    onClick={() => setShowDropdown(false)}
+                    style={{
+                      textDecoration: 'none',
+                      padding: '10px 14px',
+                      borderRadius: '8px',
+                      color: 'hsl(var(--text-primary))',
+                      fontSize: '0.88rem',
+                      fontWeight: '600',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      transition: 'all 0.2s ease'
+                    }}
+                    className="sidebar-link-hover"
+                  >
+                    Dashboard
+                  </Link>
+                  <button 
+                    onClick={() => {
+                      logout();
+                      setShowDropdown(false);
+                    }}
+                    style={{
+                      border: 'none',
+                      background: 'transparent',
+                      padding: '10px 14px',
+                      borderRadius: '8px',
+                      color: 'hsl(var(--danger-crimson))',
+                      fontSize: '0.88rem',
+                      fontWeight: '600',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      width: '100%',
+                      transition: 'all 0.2s ease'
+                    }}
+                    className="sidebar-link-hover"
+                  >
+                    Log Out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <a 
+              href="/api/auth/login" 
+              style={{
+                textDecoration: 'none',
+                fontSize: '0.88rem',
+                fontWeight: '700',
+                color: 'hsl(var(--primary-glow))',
+                padding: '8px 18px',
+                borderRadius: '10px',
+                border: '1px solid hsla(var(--primary-glow), 0.35)',
+                backgroundColor: 'hsla(var(--primary-glow), 0.04)',
+                transition: 'all 0.22s ease'
+              }}
+              className="sidebar-link-hover"
+            >
+              Login with Discord
+            </a>
+          )}
         </div>
       </header>
 
@@ -307,7 +459,7 @@ export default function Landing() {
                 boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
               }}>
                 <div style={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>
-                  🗑️ Pesan Dihapus
+                  Pesan Dihapus
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.8rem' }}>
                   <div><strong>Pengirim:</strong> <span style={{ color: '#5865f2', backgroundColor: 'rgba(88, 101, 242, 0.15)', padding: '0 4px', borderRadius: '3px' }}>@dipa</span></div>
@@ -340,7 +492,7 @@ export default function Landing() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.88rem', color: 'hsl(var(--text-secondary))' }}>
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <span style={{ color: 'hsl(var(--danger-crimson))' }}>✓</span>
-                  <span><strong>Aktivitas Moderasi</strong>: Mencatat hukuman ban, unban, kick, dan pemberian/penghapusan timeout lengkap dengan nama moderator dan alasannya.</span>
+                  <span><strong>Aktivitas Moderasi</strong>: Mencatat hukuman ban, unban, kick, and pemberian/penghapusan timeout lengkap dengan nama moderator dan alasannya.</span>
                 </div>
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <span style={{ color: 'hsl(var(--danger-crimson))' }}>✓</span>
@@ -399,7 +551,7 @@ export default function Landing() {
               <span style={{ fontSize: '0.72rem', color: 'hsl(var(--text-muted))', fontWeight: '700', textTransform: 'uppercase', display: 'block', marginBottom: '16px' }}>Simulasi Visual Statistik</span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', fontWeight: '600' }}>
+                  <div style={{ display: 'flex', justifyContext: 'space-between', fontSize: '0.82rem', fontWeight: '600' }}>
                     <span style={{ color: 'hsl(var(--text-primary))' }}>Valorant</span>
                     <span style={{ color: 'hsl(var(--accent-cyan))', fontFamily: 'monospace' }}>148.5 jam</span>
                   </div>
@@ -408,7 +560,7 @@ export default function Landing() {
                   </div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', fontWeight: '600' }}>
+                  <div style={{ display: 'flex', justifyContext: 'space-between', fontSize: '0.82rem', fontWeight: '600' }}>
                     <span style={{ color: 'hsl(var(--text-primary))' }}>Minecraft</span>
                     <span style={{ color: 'hsl(var(--accent-cyan))', fontFamily: 'monospace' }}>94.2 jam</span>
                   </div>
