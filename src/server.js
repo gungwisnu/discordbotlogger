@@ -988,9 +988,19 @@ app.post('/api/guilds/:guildId/reaction-roles/:id/post', checkAuth, async (req, 
       // Split buttons into rows of 5 (Discord maximum is 5 buttons per ActionRow)
       let currentRow = new ActionRowBuilder();
       mappedOptions.forEach((opt, idx) => {
+        let resolvedLabel = opt.label;
+        if (!resolvedLabel) {
+          const firstRoleId = opt.role_ids?.[0] || opt.role_id;
+          if (firstRoleId) {
+            const role = guild.roles.cache.get(firstRoleId);
+            if (role) resolvedLabel = role.name;
+          }
+        }
+        if (!resolvedLabel) resolvedLabel = `Role ${opt.originalIndex + 1}`;
+
         const btn = new ButtonBuilder()
           .setCustomId(`rr_btn_${config.id}_${opt.originalIndex}`)
-          .setLabel(opt.label || `Role ${opt.originalIndex + 1}`)
+          .setLabel(resolvedLabel)
           .setStyle(ButtonStyle.Secondary);
 
         if (opt.emoji) {
@@ -1010,11 +1020,21 @@ app.post('/api/guilds/:guildId/reaction-roles/:id/post', checkAuth, async (req, 
     } else if (config.selection_type === 'dropdowns') {
       const selectMenu = new StringSelectMenuBuilder()
         .setCustomId(`rr_select_${config.id}`)
-        .setPlaceholder(config.plain_content || config.embed_description || 'Pilih opsi...');
+        .setPlaceholder(config.dropdown_placeholder || 'Pilih opsi...');
 
       const selectOptions = mappedOptions.map((opt) => {
+        let resolvedLabel = opt.label;
+        if (!resolvedLabel) {
+          const firstRoleId = opt.role_ids?.[0] || opt.role_id;
+          if (firstRoleId) {
+            const role = guild.roles.cache.get(firstRoleId);
+            if (role) resolvedLabel = role.name;
+          }
+        }
+        if (!resolvedLabel) resolvedLabel = `Opsi ${opt.originalIndex + 1}`;
+
         const selectOpt = {
-          label: opt.label || `Opsi ${opt.originalIndex + 1}`,
+          label: resolvedLabel,
           value: `${opt.originalIndex}`,
         };
         if (opt.description) {
@@ -1031,8 +1051,23 @@ app.post('/api/guilds/:guildId/reaction-roles/:id/post', checkAuth, async (req, 
       messagePayload.components = components;
     }
 
-    // Send the message
-    const sentMessage = await channel.send(messagePayload);
+    // Send or Edit the message
+    let sentMessage = null;
+    if (config.message_id) {
+      try {
+        const existingMessage = await channel.messages.fetch(config.message_id);
+        if (existingMessage) {
+          await existingMessage.edit(messagePayload);
+          sentMessage = existingMessage;
+        }
+      } catch (err) {
+        console.log('Pesan sebelumnya tidak ditemukan atau sudah terhapus, mengirim pesan baru...');
+      }
+    }
+
+    if (!sentMessage) {
+      sentMessage = await channel.send(messagePayload);
+    }
 
     // 3. Add reactions if selection type is reactions
     if (config.selection_type === 'reactions') {

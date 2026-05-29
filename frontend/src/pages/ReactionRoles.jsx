@@ -446,7 +446,7 @@ function EmojiPicker({ selectedEmoji, onSelect, customEmojis }) {
 
   // Helper to draw emoji representation
   const renderEmojiIcon = (val) => {
-    if (!val) return '⚫';
+    if (!val) return <span style={{ fontSize: '0.65rem', color: 'hsl(var(--text-muted))', fontWeight: '600' }}>None</span>;
     // Check if Custom Emoji (e.g. numeric ID or <a:name:id> or custom object representation)
     const matchedCustom = customEmojis.find(e => e.id === val || e.name === val || val.includes(e.id));
     if (matchedCustom) {
@@ -703,6 +703,7 @@ export default function ReactionRoles() {
       embed_description: 'Pilih peran di bawah ini untuk mendapatkan role.',
       embed_color: '#6366f1',
       selection_type: 'dropdowns',
+      dropdown_placeholder: 'Pilih opsi...',
       
       // Advanced Options properties matching screenshot 2
       type: 'Normal',
@@ -712,7 +713,7 @@ export default function ReactionRoles() {
       shuffle_roles: false,
 
       options: [
-        { emoji: '⚫', role_ids: [], label: 'Hitam', description: 'Ganti warna nama profil menjadi Hitam' }
+        { emoji: '', role_ids: [], label: '', description: '' }
       ]
     });
     setOptionsExpanded(true);
@@ -811,7 +812,7 @@ export default function ReactionRoles() {
   const handleAddOption = () => {
     setCurrentConfig(prev => ({
       ...prev,
-      options: [...prev.options, { emoji: '⚫', role_ids: [], label: 'Role Baru', description: 'Deskripsi Opsi' }]
+      options: [...prev.options, { emoji: '', role_ids: [], label: '', description: '' }]
     }));
   };
 
@@ -832,7 +833,7 @@ export default function ReactionRoles() {
 
   // Helper to draw emoji representation in visual previews
   const renderEmojiRepresentation = (val) => {
-    if (!val) return '⚫';
+    if (!val) return null;
     const matched = customEmojis.find(e => e.id === val || e.name === val || val.includes(e.id));
     if (matched) {
       return <img src={matched.url} alt={matched.name} style={{ width: '18px', height: '18px', objectFit: 'contain', display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />;
@@ -1100,6 +1101,22 @@ export default function ReactionRoles() {
                   </label>
                 </div>
               </div>
+
+              {/* Dropdown Placeholder input (Only for Dropdowns) */}
+              {currentConfig.selection_type === 'dropdowns' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: '0.88rem', color: 'hsl(var(--text-primary))', fontWeight: '600' }}>
+                    Dropdown Placeholder (Tulisan Bawah)
+                  </label>
+                  <input 
+                    type="text" 
+                    value={currentConfig.dropdown_placeholder || ''} 
+                    onChange={(e) => setCurrentConfig(prev => ({ ...prev, dropdown_placeholder: e.target.value }))}
+                    className="input-glass"
+                    placeholder="Misalnya: Warnai hidupmu dengan memilih warna di bawah..."
+                  />
+                </div>
+              )}
 
               {/* Plain Message Text Area */}
               {currentConfig.message_type === 'plain' ? (
@@ -1525,8 +1542,7 @@ export default function ReactionRoles() {
                             }}
                           >
                             <span>
-                              {currentConfig.plain_content ? currentConfig.plain_content.slice(0, 45) : currentConfig.embed_description ? currentConfig.embed_description.slice(0, 45) : 'Pilih opsi...'}
-                              {((currentConfig.plain_content && currentConfig.plain_content.length > 45) || (currentConfig.embed_description && currentConfig.embed_description.length > 45)) ? '...' : ''}
+                              {currentConfig.dropdown_placeholder || 'Pilih opsi...'}
                             </span>
                             <svg width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="m1 1 4 4 4-4"/></svg>
                           </div>
@@ -1561,7 +1577,7 @@ export default function ReactionRoles() {
                                   className="simulated-dropdown-option"
                                 >
                                   <span style={{ fontSize: '1.05rem', display: 'flex', alignItems: 'center' }}>
-                                    {renderEmojiRepresentation(opt.emoji || '⚫')}
+                                    {renderEmojiRepresentation(opt.emoji)}
                                   </span>
                                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                     <span style={{ color: '#dbdee1', fontSize: '0.82rem', fontWeight: '500' }}>
