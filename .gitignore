@@ -13,7 +13,8 @@ frontend/node_modules/
 .env.production.local
 
 # Databases & local persistent storage
-
+data/
+db.json
 # System Files & Logs
 .DS_Store
 Thumbs.db
