@@ -1,0 +1,39 @@
+{
+  "guild_settings": {
+    "1486233074869076068": {
+      "guild_id": "1486233074869076068",
+      "log_channel_id": "1486242866752917586",
+      "categories_enabled": "{\"moderation\":true,\"voice\":true,\"member\":true,\"server\":true,\"activity\":true}",
+      "embed_color": "#6366f1",
+      "ignored_channels": "[]"
+    }
+  },
+  "voice_sessions": [
+    {
+      "id": 1779649229272,
+      "guild_id": "1486233074869076068",
+      "user_id": "333105200942546946",
+      "channel_id": "1486233076160925881",
+      "join_time": 1779649228289,
+      "leave_time": null,
+      "duration": 0
+    }
+  ],
+  "user_history": {
+    "1486233074869076068": {
+      "333105200942546946": {
+        "guild_id": "1486233074869076068",
+        "user_id": "333105200942546946",
+        "msg_count": 4,
+        "voice_time": 0,
+        "gaming_time": "{}",
+        "achievements": "[\"first_word\"]"
+      }
+    }
+  },
+  "mod_logs": [],
+  "audit_cache": {
+    "1508183972167811216": 1779649482785,
+    "1508184110613528619": 1779649515790
+  }
+}
