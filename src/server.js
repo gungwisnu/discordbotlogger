@@ -1127,6 +1127,96 @@ app.get('/api/guilds/:guildId/logs', checkAuth, (req, res) => {
   res.json(logs);
 });
 
+// GET all members' stats for a guild (Admin only)
+app.get('/api/guilds/:guildId/members-stats', checkAuth, async (req, res) => {
+  const { guildId } = req.params;
+  const isDemo = req.session.user.demo;
+
+  if (isDemo && guildId === '99999999999999') {
+    return res.json([
+      {
+        user_id: '123456789012345',
+        username: 'GamerKalong (Demo)',
+        avatarUrl: null,
+        msg_count: 2850,
+        voice_time: 3600 * 42.5,
+        gaming_time: { 'Valorant': 3600 * 30.5, 'Minecraft': 3600 * 12.0 },
+        achievements: ['first_word', 'chatterbox_basic', 'gamer_initiate']
+      },
+      {
+        user_id: '222222222222222',
+        username: 'ValkyrieVC (Demo)',
+        avatarUrl: null,
+        msg_count: 820,
+        voice_time: 3600 * 38.2,
+        gaming_time: { 'Valorant': 3600 * 38.2 },
+        achievements: ['first_word']
+      }
+    ]);
+  }
+
+  try {
+    const list = db.getAllUserStats(guildId);
+    const detailedList = [];
+
+    for (const member of list) {
+      let username = `User ID: ${member.user_id}`;
+      let avatarUrl = null;
+
+      if (client.readyAt) {
+        try {
+          const user = await client.users.fetch(member.user_id);
+          if (user) {
+            username = user.username;
+            avatarUrl = user.displayAvatarURL({ dynamic: true });
+          }
+        } catch (e) {
+          // Fallback if user is not found or API fails
+        }
+      }
+
+      detailedList.push({
+        user_id: member.user_id,
+        username,
+        avatarUrl,
+        msg_count: member.msg_count,
+        voice_time: member.voice_time,
+        gaming_time: member.gaming_time,
+        achievements: member.achievements
+      });
+    }
+
+    res.json(detailedList);
+  } catch (error) {
+    console.error('Error fetching members-stats:', error);
+    res.status(500).json({ error: 'Gagal mengambil data statistik anggota.', details: error.message });
+  }
+});
+
+// POST update stats for a specific user in a guild (Admin only)
+app.post('/api/guilds/:guildId/members-stats/:userId', checkAuth, (req, res) => {
+  const { guildId, userId } = req.params;
+  const { msg_count, voice_time, gaming_time } = req.body;
+  const isDemo = req.session.user.demo;
+
+  if (isDemo && guildId === '99999999999999') {
+    return res.json({ success: true });
+  }
+
+  try {
+    const updated = db.updateUserStats(guildId, userId, {
+      msg_count: msg_count !== undefined ? parseInt(msg_count) : undefined,
+      voice_time: voice_time !== undefined ? parseInt(voice_time) : undefined,
+      gaming_time
+    });
+
+    res.json({ success: true, stats: updated });
+  } catch (error) {
+    console.error('Error updating member stats:', error);
+    res.status(500).json({ error: 'Gagal memperbarui data statistik anggota.', details: error.message });
+  }
+});
+
 // Get Server active achievements leaderboards
 app.get('/api/guilds/:guildId/leaderboard', checkAuth, async (req, res) => {
   const { guildId } = req.params;

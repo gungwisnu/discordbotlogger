@@ -801,6 +801,32 @@ const DatabaseFunctions = {
   isUserAIWhitelisted(userId) {
     if (!data.ai_whitelist) data.ai_whitelist = [];
     return data.ai_whitelist.includes(userId);
+  },
+
+  getAllUserStats(guildId) {
+    const guildHist = data.user_history[guildId] || {};
+    return Object.values(guildHist).map(row => ({
+      ...row,
+      gaming_time: JSON.parse(row.gaming_time || '{}'),
+      achievements: JSON.parse(row.achievements || '[]')
+    }));
+  },
+
+  updateUserStats(guildId, userId, stats) {
+    this.initUserHistory(guildId, userId);
+    const row = data.user_history[guildId][userId];
+    
+    if (stats.msg_count !== undefined) row.msg_count = parseInt(stats.msg_count) || 0;
+    if (stats.voice_time !== undefined) row.voice_time = parseInt(stats.voice_time) || 0;
+    if (stats.gaming_time !== undefined) {
+      row.gaming_time = JSON.stringify(stats.gaming_time);
+    }
+    if (stats.achievements !== undefined) {
+      row.achievements = JSON.stringify(stats.achievements);
+    }
+
+    triggerSave();
+    return this.getUserStats(guildId, userId);
   }
 };
 
