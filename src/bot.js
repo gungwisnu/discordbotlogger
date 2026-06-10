@@ -127,10 +127,10 @@ const commands = [
           { name: 'Log Moderasi', value: 'moderation' },
           { name: 'Log Voice Join/Leave', value: 'voice_join_leave' },
           { name: 'Log Voice Mute/Deafen', value: 'voice_mute_deafen' },
-          { name: 'Log Profil Anggota', value: 'member' },
           { name: 'Log Konfigurasi Server', value: 'server' },
           { name: 'Log Aktivitas Game', value: 'gaming_activity' },
-          { name: 'Log Spotify', value: 'spotify_activity' }
+          { name: 'Log Spotify', value: 'spotify_activity' },
+          { name: 'Log Status Pengguna', value: 'user_status' }
         ]
       }
     ]
@@ -285,7 +285,9 @@ const commands = [
           { name: 'Log Profil Anggota', value: 'member' },
           { name: 'Log Konfigurasi Server', value: 'server' },
           { name: 'Log Aktivitas Game Spesifik', value: 'gaming_activity' },
-          { name: 'Log Spotify Spesifik', value: 'spotify_activity' }
+          { name: 'Log Spotify Spesifik', value: 'spotify_activity' },
+          { name: 'Kategori Status Pengguna', value: 'status' },
+          { name: 'Log Status Pengguna Spesifik', value: 'user_status' }
         ]
       },
       {
@@ -316,7 +318,9 @@ const commands = [
           { name: 'Log Profil Anggota', value: 'member' },
           { name: 'Log Konfigurasi Server', value: 'server' },
           { name: 'Log Aktivitas Game Spesifik', value: 'gaming_activity' },
-          { name: 'Log Spotify Spesifik', value: 'spotify_activity' }
+          { name: 'Log Spotify Spesifik', value: 'spotify_activity' },
+          { name: 'Kategori Status Pengguna', value: 'status' },
+          { name: 'Log Status Pengguna Spesifik', value: 'user_status' }
         ]
       }
     ]
@@ -823,6 +827,7 @@ client.on('interactionCreate', async interaction => {
     else if (categoryInput === 'gaming') categories.push('gaming_activity');
     else if (categoryInput === 'spotify') categories.push('spotify_activity');
     else if (categoryInput === 'mod') categories.push('moderation');
+    else if (categoryInput === 'status') categories.push('user_status');
     else categories.push(categoryInput);
 
     const settings = db.getGuildSettings(guildId);
@@ -844,6 +849,7 @@ client.on('interactionCreate', async interaction => {
     else if (categoryInput === 'gaming') categories.push('gaming_activity');
     else if (categoryInput === 'spotify') categories.push('spotify_activity');
     else if (categoryInput === 'mod') categories.push('moderation');
+    else if (categoryInput === 'status') categories.push('user_status');
     else categories.push(categoryInput);
 
     const settings = db.getGuildSettings(guildId);

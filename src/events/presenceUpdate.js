@@ -13,6 +13,36 @@ module.exports = {
     const userId = newPresence.member.user.id;
     const key = `${guildId}-${userId}`;
 
+    // Case 0: User Status Change Log (online, idle, dnd, offline)
+    const oldStatus = oldPresence?.status || 'offline';
+    const newStatus = newPresence?.status || 'offline';
+
+    if (oldStatus !== newStatus) {
+      const statusMap = {
+        online: { emoji: '🟢', label: 'Online', color: '#10b981' },
+        idle: { emoji: '🟡', label: 'Idle', color: '#f59e0b' },
+        dnd: { emoji: '🔴', label: 'Do Not Disturb (DND)', color: '#ef4444' },
+        offline: { emoji: '⚫', label: 'Offline / Invisible', color: '#6b7280' }
+      };
+
+      const oldInfo = statusMap[oldStatus] || { emoji: '❓', label: oldStatus, color: '#6b7280' };
+      const newInfo = statusMap[newStatus] || { emoji: '❓', label: newStatus, color: '#6b7280' };
+
+      const statusEmbed = new EmbedBuilder()
+        .setAuthor({ name: newPresence.member.user.tag, iconURL: newPresence.member.user.displayAvatarURL({ dynamic: true }) })
+        .setTitle('👤 Perubahan Status Pengguna')
+        .setDescription(`${newPresence.member} telah mengubah status mereka.`)
+        .addFields(
+          { name: 'Status Lama', value: `${oldInfo.emoji} **${oldInfo.label}**`, inline: true },
+          { name: 'Status Baru', value: `${newInfo.emoji} **${newInfo.label}**`, inline: true }
+        )
+        .setColor(newInfo.color)
+        .setTimestamp()
+        .setFooter({ text: `${newPresence.member.user.username}: ${userId}` });
+
+      sendLog(guildId, 'user_status', statusEmbed);
+    }
+
     const oldActivity = oldPresence?.activities?.find(a => a.type === 0); // Type 0 is Playing
     const newActivity = newPresence?.activities?.find(a => a.type === 0); // Type 0 is Playing
 

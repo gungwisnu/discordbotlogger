@@ -79,7 +79,8 @@ const DatabaseFunctions = {
           member: true,
           server: true,
           gaming_activity: true,
-          spotify_activity: true
+          spotify_activity: true,
+          user_status: false
         }),
         embed_color: '#6366f1',
         ignored_channels: '[]',
@@ -136,7 +137,8 @@ const DatabaseFunctions = {
         member: true,
         server: true,
         gaming_activity: true,
-        spotify_activity: true
+        spotify_activity: true,
+        user_status: false
       };
 
       for (const [k, v] of Object.entries(defaults)) {

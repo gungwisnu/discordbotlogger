@@ -130,6 +130,24 @@ const categoryDetails = {
       ],
       footer: 'dipa: 333105200942546946'
     }
+  },
+  user_status: {
+    title: 'Log Status Pengguna',
+    subtitle: 'Perubahan status online, idle, dnd, dan offline.',
+    desc: 'Melacak perubahan status kehadiran (presence) anggota server seperti online, idle, do not disturb, dan offline.',
+    color: '#3b82f6',
+    events: [
+      { emoji: '•', title: 'Perubahan Status', text: 'Mencatat peralihan status online, idle, dnd, dan offline/invisible.' }
+    ],
+    mockEmbed: {
+      color: '#10b981',
+      description: '### **Perubahan Status Pengguna**\n@dipa telah mengubah status mereka.',
+      fields: [
+        { name: 'Status Lama', value: '⚫ **Offline / Invisible**', inline: true },
+        { name: 'Status Baru', value: '🟢 **Online**', inline: true }
+      ],
+      footer: 'dipa: 333105200942546946'
+    }
   }
 };
 
@@ -148,7 +166,8 @@ export default function Dashboard() {
     member: false,
     server: false,
     gaming_activity: false,
-    spotify_activity: false
+    spotify_activity: false,
+    user_status: false
   });
 
   // Fetch settings & channels list when selected guild changes

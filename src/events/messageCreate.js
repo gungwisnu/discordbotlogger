@@ -302,11 +302,12 @@ module.exports = {
 
       if (commandName === 'log') {
         const action = args[0]?.toLowerCase();
-        const category = args[1]?.toLowerCase();
-        const validCats = ['moderation', 'voice_join_leave', 'voice_mute_deafen', 'member', 'server', 'gaming_activity', 'spotify_activity'];
+        let category = args[1]?.toLowerCase();
+        if (category === 'status') category = 'user_status';
+        const validCats = ['moderation', 'voice_join_leave', 'voice_mute_deafen', 'member', 'server', 'gaming_activity', 'spotify_activity', 'user_status'];
         
         if (!['enable', 'disable'].includes(action) || !validCats.includes(category)) {
-          return message.reply(`❌ Format salah. Harap gunakan format:\n\`pan!log <enable|disable> <${validCats.join('|')}>\``);
+          return message.reply(`❌ Format salah. Harap gunakan format:\n\`pan!log <enable|disable> <${validCats.join('|')}>\` (Alias kategori status: \`status\`)`);
         }
 
         const cats = JSON.parse(settings.categories_enabled || '{}');
@@ -453,13 +454,14 @@ module.exports = {
           else if (categoryInput === 'gaming') categories.push('gaming_activity');
           else if (categoryInput === 'spotify') categories.push('spotify_activity');
           else if (categoryInput === 'mod') categories.push('moderation');
+          else if (categoryInput === 'status') categories.push('user_status');
           else categories.push(categoryInput);
 
-          const validCats = ['moderation', 'voice_join_leave', 'voice_mute_deafen', 'member', 'server', 'gaming_activity', 'spotify_activity'];
+          const validCats = ['moderation', 'voice_join_leave', 'voice_mute_deafen', 'member', 'server', 'gaming_activity', 'spotify_activity', 'user_status'];
           const filtered = categories.filter(c => validCats.includes(c));
           
           if (filtered.length === 0) {
-            return message.reply(`❌ Kategori tidak valid. Pilihan kategori:\n\`moderation\`, \`voice_join_leave\`, \`voice_mute_deafen\`, \`member\`, \`server\`, \`gaming_activity\`, \`spotify_activity\` (Alias: \`mod\`, \`voice\`, \`gaming\`, \`spotify\`)`);
+            return message.reply(`❌ Kategori tidak valid. Pilihan kategori:\n\`moderation\`, \`voice_join_leave\`, \`voice_mute_deafen\`, \`member\`, \`server\`, \`gaming_activity\`, \`spotify_activity\`, \`user_status\` (Alias: \`mod\`, \`voice\`, \`gaming\`, \`spotify\`, \`status\`)`);
           }
 
           const logChannels = JSON.parse(settings.log_channels || '{}');
@@ -481,13 +483,14 @@ module.exports = {
         else if (categoryInput === 'gaming') categories.push('gaming_activity');
         else if (categoryInput === 'spotify') categories.push('spotify_activity');
         else if (categoryInput === 'mod') categories.push('moderation');
+        else if (categoryInput === 'status') categories.push('user_status');
         else categories.push(categoryInput);
 
-        const validCats = ['moderation', 'voice_join_leave', 'voice_mute_deafen', 'member', 'server', 'gaming_activity', 'spotify_activity'];
+        const validCats = ['moderation', 'voice_join_leave', 'voice_mute_deafen', 'member', 'server', 'gaming_activity', 'spotify_activity', 'user_status'];
         const filtered = categories.filter(c => validCats.includes(c));
 
         if (filtered.length === 0) {
-          return message.reply(`❌ Kategori tidak valid. Pilihan kategori:\n\`moderation\`, \`voice_join_leave\`, \`voice_mute_deafen\`, \`member\`, \`server\`, \`gaming_activity\`, \`spotify_activity\` (Alias: \`mod\`, \`voice\`, \`gaming\`, \`spotify\`)`);
+          return message.reply(`❌ Kategori tidak valid. Pilihan kategori:\n\`moderation\`, \`voice_join_leave\`, \`voice_mute_deafen\`, \`member\`, \`server\`, \`gaming_activity\`, \`spotify_activity\`, \`user_status\` (Alias: \`mod\`, \`voice\`, \`gaming\`, \`spotify\`, \`status\`)`);
         }
 
         const logChannels = JSON.parse(settings.log_channels || '{}');

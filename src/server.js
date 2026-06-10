@@ -117,7 +117,8 @@ function getSettingsDiff(oldSettings, newSettings) {
       member: 'Log Profil Anggota',
       server: 'Log Konfigurasi Server',
       gaming_activity: 'Log Aktivitas Game',
-      spotify_activity: 'Log Spotify'
+      spotify_activity: 'Log Spotify',
+      user_status: 'Log Status Pengguna'
     };
 
     for (const [cat, label] of Object.entries(catLabels)) {
@@ -152,7 +153,8 @@ function getSettingsDiff(oldSettings, newSettings) {
       member: 'Saluran Log Profil Anggota',
       server: 'Saluran Log Konfigurasi Server',
       gaming_activity: 'Saluran Log Aktivitas Game',
-      spotify_activity: 'Saluran Log Spotify'
+      spotify_activity: 'Saluran Log Spotify',
+      user_status: 'Saluran Log Status Pengguna'
     };
 
     for (const [cat, label] of Object.entries(catLabels)) {
@@ -264,10 +266,13 @@ const DEMO_SETTINGS = {
   log_channel_id: '44444',
   categories_enabled: JSON.stringify({
     moderation: true,
-    voice: true,
+    voice_join_leave: true,
+    voice_mute_deafen: true,
     member: true,
     server: true,
-    activity: true
+    gaming_activity: true,
+    spotify_activity: true,
+    user_status: false
   }),
   embed_color: '#6366f1',
   ignored_channels: '["555"]',
