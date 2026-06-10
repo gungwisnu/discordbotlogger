@@ -11,6 +11,7 @@ frontend/node_modules/
 .env.development.local
 .env.test.local
 .env.production.local
+.env.ptero
 
 # Databases & local persistent storage
 data/
