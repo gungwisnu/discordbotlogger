@@ -6,6 +6,62 @@ module.exports = {
   async execute(message, client) {
     if (!message.guild || message.author.bot) return;
 
+    // --- ADVANCED MODERATION LOGGING SYSTEM ---
+    const inviteRegex = /(https?:\/\/)?(www\.)?(discord\.(gg|io|me|li)|discord(app)?\.com\/invite)\/[a-zA-Z0-9\-]+/gi;
+    const isInvite = inviteRegex.test(message.content);
+
+    const mentionCount = message.mentions.users.size + message.mentions.roles.size;
+    const isMassMention = mentionCount > 5;
+
+    const badWords = ['anjing', 'bangsat', 'kontol', 'memek', 'ngentot', 'goblok', 'tolol', 'babi', 'jancok', 'pantek'];
+    const containsBadWord = badWords.some(word => message.content.toLowerCase().includes(word));
+
+    if (isInvite || isMassMention || containsBadWord) {
+      const { sendLog } = require('../bot');
+      
+      const modEmbed = new EmbedBuilder()
+        .setAuthor({ name: message.author.tag, iconURL: message.author.displayAvatarURL({ dynamic: true }) })
+        .setTimestamp()
+        .setFooter({ text: `${message.author.username}: ${message.author.id} | Saluran: #${message.channel.name}` });
+
+      let logAction = '';
+      let logReason = '';
+
+      if (isInvite) {
+        logAction = 'DISCORD INVITE';
+        logReason = 'Mengirim tautan undangan Discord.';
+        modEmbed.setColor('#ef4444') // Red
+          .setTitle('⚠️ Tautan Undangan Terdeteksi')
+          .setDescription(`Pengguna ${message.author} mengirimkan tautan undangan di saluran ${message.channel}.`)
+          .addFields({ name: 'Isi Pesan', value: message.content.substring(0, 1020) });
+      } else if (isMassMention) {
+        logAction = 'MASS MENTION';
+        logReason = `Penyebutan massal (${mentionCount} mention).`;
+        modEmbed.setColor('#f59e0b') // Amber
+          .setTitle('⚠️ Penyebutan Massal Terdeteksi')
+          .setDescription(`Pengguna ${message.author} melakukan penyebutan massal di saluran ${message.channel}.`)
+          .addFields(
+            { name: 'Jumlah Penyebutan', value: `${mentionCount} kali`, inline: true },
+            { name: 'Isi Pesan', value: message.content.substring(0, 1020) }
+          );
+      } else if (containsBadWord) {
+        logAction = 'TOXIC LANGUAGE';
+        logReason = 'Menggunakan kata-kata kasar / kotor.';
+        modEmbed.setColor('#ef4444') // Red
+          .setTitle('⚠️ Bahasa Kasar Terdeteksi')
+          .setDescription(`Pengguna ${message.author} terdeteksi menggunakan kata-kata kasar di saluran ${message.channel}.`)
+          .addFields(
+            { name: 'Isi Pesan', value: message.content.substring(0, 1020) }
+          );
+      }
+
+      // Send log
+      sendLog(message.guild.id, 'moderation', modEmbed);
+      
+      // Save database log
+      db.logModeration(message.guild.id, message.author.id, client.user.id, logAction, logReason);
+    }
+
     const prefix = 'pan!';
     const mentionRegex = new RegExp(`^<@!?${client.user.id}>`);
     const hasPrefix = message.content.startsWith(prefix);

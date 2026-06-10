@@ -114,6 +114,18 @@ module.exports = {
         logged = true;
       }
 
+      // Voice Status Text
+      if (oldState.status !== newState.status) {
+        embed.setColor('#8b5cf6')
+          .setTitle('💬 Status Voice Diperbarui')
+          .setDescription(`${member} mengubah status voice mereka di ${newState.channel || 'saluran voice'}.`)
+          .addFields(
+            { name: 'Sebelum', value: oldState.status ? `\`${oldState.status}\`` : '_Tidak ada (Kosong)_', inline: true },
+            { name: 'Sesudah', value: newState.status ? `\`${newState.status}\`` : '_Tidak ada (Kosong)_', inline: true }
+          );
+        logged = true;
+      }
+
       if (logged) {
         sendLog(guildId, 'voice_mute_deafen', embed);
       }

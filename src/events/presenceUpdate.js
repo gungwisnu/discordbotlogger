@@ -31,7 +31,7 @@ module.exports = {
       const statusEmbed = new EmbedBuilder()
         .setAuthor({ name: newPresence.member.user.tag, iconURL: newPresence.member.user.displayAvatarURL({ dynamic: true }) })
         .setTitle('👤 Perubahan Status Pengguna')
-        .setDescription(`${newPresence.member} telah mengubah status mereka.`)
+        .setDescription(`Status ${newPresence.member} telah berubah.`)
         .addFields(
           { name: 'Status Lama', value: `${oldInfo.emoji} **${oldInfo.label}**`, inline: true },
           { name: 'Status Baru', value: `${newInfo.emoji} **${newInfo.label}**`, inline: true }
