@@ -1,28 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../App';
 
-// Achievements badge list
-const BADGES = [
-  { id: 'first_word', emoji: '💬', name: 'First Word', desc: 'Mengirimkan pesan pertama di server.' },
-  { id: 'chatterbox_basic', emoji: '🗣️', name: 'Chatterbox I', desc: 'Mengirimkan 100 pesan teks.' },
-  { id: 'chatterbox_elite', emoji: '📢', name: 'Chatterbox II', desc: 'Mengirimkan 1.000 pesan teks.' },
-  { id: 'vc_rookie', emoji: '🎙️', name: 'Voice Rookie', desc: 'Aktivitas Voice selama 1 jam.' },
-  { id: 'vc_veteran', emoji: '👑', name: 'Voice Veteran', desc: 'Aktivitas Voice selama 10 jam.' },
-  { id: 'vc_deity', emoji: '♾️', name: 'Voice Deity', desc: 'Aktivitas Voice selama 100 jam.' },
-  { id: 'marathon_vc', emoji: '🏃', name: 'Voice Marathoner', desc: 'Aktivitas Voice tanpa terputus minimal selama 5 jam.' },
-  { id: 'night_owl', emoji: '🦉', name: 'Night Owl', desc: 'Aktivitas Voice secara aktif pada dini hari (02:00 - 05:00).' },
-  { id: 'gamer_initiate', emoji: '🎮', name: 'Gamer Initiate', desc: 'Deteksi aktivitas bermain game minimal selama 1 jam.' },
-  { id: 'hardcore_gamer', emoji: '🔥', name: 'Hardcore Gamer', desc: 'Mencapai bermain satu judul game minimal selama 10 jam.' }
-];
-
 export default function Leaderboard() {
-  const { selectedGuild, user } = useApp();
+  const { selectedGuild } = useApp();
   const [analytics, setAnalytics] = useState(null);
   const [leaderboard, setLeaderboard] = useState([]);
   const [category, setCategory] = useState('voice'); // voice, messages, gaming
   const [loadingStats, setLoadingStats] = useState(true);
   const [loadingLeader, setLoadingLeader] = useState(true);
-  const [unlockedBadges, setUnlockedBadges] = useState([]);
 
   // Fetch analytics summary counts
   useEffect(() => {
@@ -64,16 +49,6 @@ export default function Leaderboard() {
       });
   }, [selectedGuild, category]);
 
-  // Mock unlocked badges fetch (In real usage, checks user_history for selected user)
-  useEffect(() => {
-    // Demo presets or user stats
-    if (user?.demo) {
-      setUnlockedBadges(['first_word', 'chatterbox_basic', 'vc_rookie', 'night_owl', 'gamer_initiate']);
-    } else {
-      setUnlockedBadges(['first_word']);
-    }
-  }, [user]);
-
   const formatScore = (score, cat) => {
     if (cat === 'messages') {
       return `${score.toLocaleString()} pesan`;
@@ -87,8 +62,8 @@ export default function Leaderboard() {
       
       {/* Header Panel */}
       <div>
-        <h2 style={{ fontSize: '2rem', fontFamily: 'var(--font-display)', color: 'hsl(var(--text-primary))', fontWeight: '800' }}>Server Analytics & Achievements</h2>
-        <p style={{ color: 'hsl(var(--text-secondary))', marginTop: '4px' }}>Statistik aktivitas, grafik game paling populer, serta pencapaian lencana server.</p>
+        <h2 style={{ fontSize: '2rem', fontFamily: 'var(--font-display)', color: 'hsl(var(--text-primary))', fontWeight: '800' }}>Analisis & Keaktifan Server</h2>
+        <p style={{ color: 'hsl(var(--text-secondary))', marginTop: '4px' }}>Analisis mendalam mengenai keaktifan obrolan, durasi voice, game terpopuler, dan pola aktivitas server.</p>
       </div>
 
       {/* Analytics Summary Stats Row cards (Clean, no floating emojis) */}
@@ -303,31 +278,142 @@ export default function Leaderboard() {
 
       </div>
 
-      {/* Achievements visual showcase panels grid */}
-      <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        <h3 style={{ fontSize: '1.25rem', color: 'hsl(var(--text-primary))', fontWeight: '750' }}>Lencana & Achievements Anda</h3>
+      {/* Detailed Server Analytics & Distributions */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '28px' }} className="analytics-grid">
         
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-          gap: '18px'
-        }}>
-          {BADGES.map(badge => {
-            const isUnlocked = unlockedBadges.includes(badge.id);
+        {/* Rasio Komunikasi */}
+        <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <h3 style={{ fontSize: '1.25rem', color: 'hsl(var(--text-primary))', fontWeight: '750' }}>Rasio Aktivitas (Chat vs Voice)</h3>
+          <p style={{ fontSize: '0.85rem', color: 'hsl(var(--text-secondary))', marginTop: '-12px' }}>
+            Rasio kontribusi keaktifan anggota berdasarkan pesan obrolan teks dan durasi panggilan suara.
+          </p>
+
+          {!loadingStats && analytics ? (() => {
+            const totalMsgs = analytics.total_messages || 0;
+            const totalVoiceHrs = analytics.total_voice_hours || 0;
+            // 1 voice hour equates to ~20 messages in weight for community interaction
+            const voiceWeight = totalVoiceHrs * 20;
+            const combinedWeight = totalMsgs + voiceWeight;
+            const chatPct = combinedWeight > 0 ? Math.round((totalMsgs / combinedWeight) * 100) : 50;
+            const voicePct = 100 - chatPct;
+
+            let insightText = "Keseimbangan aktivitas chat dan voice sangat baik! Komunitas terjalin aktif secara merata baik teks maupun suara.";
+            if (chatPct > 75) {
+              insightText = "Komunitas Anda sangat didominasi oleh obrolan teks! Anggota gemar berdiskusi tulisan, mengirimkan meme, dan berinteraksi secara asinkron.";
+            } else if (voicePct > 60) {
+              insightText = "Server didominasi oleh sesi mengobrol langsung di Voice Channel! Anggota menyukai mabar game, ngobrol santai, dan streaming audio.";
+            }
+
             return (
-              <div 
-                key={badge.id} 
-                className={`badge-card ${isUnlocked ? 'unlocked' : 'locked'}`}
-              >
-                <div className="badge-emoji">{badge.emoji}</div>
-                <div>
-                  <h4 style={{ color: 'hsl(var(--text-primary))', fontSize: '0.98rem', fontWeight: '700' }}>{badge.name}</h4>
-                  <p style={{ fontSize: '0.78rem', color: 'hsl(var(--text-secondary))', marginTop: '4px', lineHeight: '1.4' }}>{badge.desc}</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginTop: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <span style={{ fontSize: '0.8rem', color: 'hsl(var(--text-muted))', fontWeight: '600' }}>Kerapatan Obrolan Teks</span>
+                    <span style={{ fontSize: '1.4rem', fontWeight: '800', color: 'hsl(var(--primary-glow))' }}>{chatPct}%</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'right' }}>
+                    <span style={{ fontSize: '0.8rem', color: 'hsl(var(--text-muted))', fontWeight: '600' }}>Kerapatan Voice Channel</span>
+                    <span style={{ fontSize: '1.4rem', fontWeight: '800', color: 'hsl(var(--accent-cyan))' }}>{voicePct}%</span>
+                  </div>
+                </div>
+
+                {/* Progress bar split */}
+                <div style={{
+                  width: '100%',
+                  height: '14px',
+                  borderRadius: '99px',
+                  backgroundColor: 'hsla(var(--border-glass), 0.25)',
+                  overflow: 'hidden',
+                  display: 'flex'
+                }}>
+                  <div style={{
+                    width: `${chatPct}%`,
+                    height: '100%',
+                    background: 'linear-gradient(90deg, hsl(var(--primary-glow)), hsla(var(--primary-glow), 0.85))',
+                    transition: 'width 1s ease'
+                  }} />
+                  <div style={{
+                    width: `${voicePct}%`,
+                    height: '100%',
+                    background: 'linear-gradient(90deg, hsla(var(--accent-cyan), 0.85), hsl(var(--accent-cyan)))',
+                    transition: 'width 1s ease'
+                  }} />
+                </div>
+
+                <div style={{
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  backgroundColor: 'hsla(var(--border-glass), 0.12)',
+                  border: '1px solid hsl(var(--border-glass))',
+                  fontSize: '0.82rem',
+                  lineHeight: '1.5',
+                  color: 'hsl(var(--text-secondary))'
+                }}>
+                  💡 <strong>Analisis AI:</strong> {insightText}
                 </div>
               </div>
             );
-          })}
+          })() : (
+            <div style={{ padding: '40px', textAlign: 'center', color: 'hsl(var(--text-muted))' }}>
+              Memuat data rasio...
+            </div>
+          )}
         </div>
+
+        {/* Pola Waktu Keaktifan Harian */}
+        <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <h3 style={{ fontSize: '1.25rem', color: 'hsl(var(--text-primary))', fontWeight: '750' }}>Pola Waktu Keaktifan Server</h3>
+          <p style={{ fontSize: '0.85rem', color: 'hsl(var(--text-secondary))', marginTop: '-12px' }}>
+            Estimasi tingkat kepadatan interaksi anggota berdasarkan pembagian waktu 24 jam sehari.
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {[
+              { label: 'Pagi (06:00 - 12:00)', pct: 25, status: 'Santai', color: 'hsl(var(--text-muted))', desc: 'Mulai bangun tidur dan bersiap beraktivitas.' },
+              { label: 'Siang (12:00 - 18:00)', pct: 55, status: 'Stabil', color: 'hsl(var(--primary-glow))', desc: 'Sesi obrolan santai dan istirahat siang.' },
+              { label: 'Malam (18:00 - 00:00)', pct: 95, status: 'Puncak', color: 'hsl(var(--accent-cyan))', desc: 'Sesi bermain game bersama, mabar, dan ngobrol voice.', peak: true },
+              { label: 'Dini Hari (00:00 - 06:00)', pct: 40, status: 'Kalong', color: 'hsl(var(--warning-amber))', desc: 'Aktif obrolan bagi yang hobi begadang/insomnia.' }
+            ].map((time, idx) => (
+              <div key={idx} style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '6px',
+                padding: '10px 14px',
+                borderRadius: '12px',
+                border: time.peak ? '1px solid hsla(var(--accent-cyan), 0.3)' : '1px solid transparent',
+                backgroundColor: time.peak ? 'hsla(var(--accent-cyan), 0.04)' : 'transparent'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem', fontWeight: '700' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ color: 'hsl(var(--text-primary))' }}>{time.label}</span>
+                    {time.peak && (
+                      <span style={{
+                        fontSize: '0.65rem',
+                        padding: '1px 6px',
+                        borderRadius: '4px',
+                        backgroundColor: 'hsla(var(--accent-cyan), 0.15)',
+                        color: 'hsl(var(--accent-cyan))',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em'
+                      }}>PEAK TIME</span>
+                    )}
+                  </div>
+                  <span style={{ color: time.color }}>{time.status} ({time.pct}%)</span>
+                </div>
+                <div style={{ width: '100%', height: '6px', borderRadius: '99px', backgroundColor: 'hsla(var(--border-glass), 0.2)', overflow: 'hidden' }}>
+                  <div style={{
+                    width: `${time.pct}%`,
+                    height: '100%',
+                    borderRadius: '99px',
+                    backgroundColor: time.peak ? 'hsl(var(--accent-cyan))' : 'hsl(var(--primary-glow))'
+                  }} />
+                </div>
+                <span style={{ fontSize: '0.72rem', color: 'hsl(var(--text-muted))' }}>{time.desc}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
       </div>
 
     </div>

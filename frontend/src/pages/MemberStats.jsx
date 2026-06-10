@@ -1,6 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../App';
 
+const ACHIEVEMENTS_LIST = [
+  { id: 'first_word', emoji: '💬', name: 'First Word', desc: 'Mengirimkan pesan pertama di server.' },
+  { id: 'chatterbox_basic', emoji: '🗣️', name: 'Chatterbox I', desc: 'Mengirimkan 100 pesan teks.' },
+  { id: 'chatterbox_elite', emoji: '📢', name: 'Chatterbox II', desc: 'Mengirimkan 1.000 pesan teks.' },
+  { id: 'chatterbox_legend', emoji: '🏆', name: 'Chatterbox Legend', desc: 'Mengirimkan 10.000 pesan teks di server.' },
+  { id: 'vc_rookie', emoji: '🎙️', name: 'Voice Rookie', desc: 'Akumulasi aktivitas Voice selama 1 jam.' },
+  { id: 'vc_veteran', emoji: '👑', name: 'Voice Veteran', desc: 'Akumulasi aktivitas Voice selama 10 jam.' },
+  { id: 'vc_master', emoji: '👑', name: 'Voice Master', desc: 'Akumulasi aktivitas Voice selama 50 jam.' },
+  { id: 'vc_deity', emoji: '♾️', name: 'Voice Deity', desc: 'Mengumpulkan 100 jam sesi Voice.' },
+  { id: 'marathon_vc', emoji: '🏃', name: 'Voice Marathoner', desc: 'Satu sesi Voice tanpa terputus minimal selama 5 jam.' },
+  { id: 'night_owl', emoji: '🦉', name: 'Night Owl', desc: 'Aktivitas Voice secara aktif pada dini hari (02:00 - 05:00).' },
+  { id: 'early_bird', emoji: '🌅', name: 'Early Bird', desc: 'Aktif bergabung ke saluran Voice pada pagi hari (05:00 - 08:00).' },
+  { id: 'weekend_warrior', emoji: '⚔️', name: 'Weekend Warrior', desc: 'Aktif menggunakan saluran Voice pada akhir pekan (Sabtu/Minggu).' },
+  { id: 'gamer_initiate', emoji: '🎮', name: 'Gamer Initiate', desc: 'Deteksi aktivitas bermain game minimal selama 1 jam.' },
+  { id: 'hardcore_gamer', emoji: '🔥', name: 'Hardcore Gamer', desc: 'Mencapai bermain satu judul game minimal selama 10 jam.' },
+  { id: 'gamer_expert', emoji: '🌟', name: 'Gamer Expert', desc: 'Mengumpulkan total durasi bermain seluruh game selama 50 jam.' }
+];
+
 export default function MemberStats() {
   const { selectedGuild } = useApp();
   const [members, setMembers] = useState([]);
@@ -11,6 +29,7 @@ export default function MemberStats() {
   
   // Edit Form State
   const [editMsgCount, setEditMsgCount] = useState(0);
+  const [editAchievements, setEditAchievements] = useState([]);
   const [editVoiceHrs, setEditVoiceHrs] = useState(0);
   const [editVoiceMins, setEditVoiceMins] = useState(0);
   const [editVoiceSecs, setEditVoiceSecs] = useState(0);
@@ -47,6 +66,7 @@ export default function MemberStats() {
   const handleOpenEdit = (m) => {
     setEditingMember(m);
     setEditMsgCount(m.msg_count || 0);
+    setEditAchievements(m.achievements || []);
 
     // Convert voice duration (seconds) to hms
     const totalVoice = m.voice_time || 0;
@@ -118,7 +138,8 @@ export default function MemberStats() {
         body: JSON.stringify({
           msg_count: editMsgCount,
           voice_time: voiceSeconds,
-          gaming_time: gamingObj
+          gaming_time: gamingObj,
+          achievements: editAchievements
         })
       });
 
@@ -527,6 +548,69 @@ export default function MemberStats() {
                   >
                     Tambah Game
                   </button>
+                </div>
+              </div>
+
+              {/* Achievements Checkbox Grid */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', borderTop: '1px solid hsla(var(--border-glass), 0.5)', paddingTop: '16px' }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'hsl(var(--text-primary))' }}>
+                  Lencana & Pencapaian Anggota
+                </label>
+                <p style={{ fontSize: '0.75rem', color: 'hsl(var(--text-secondary))', marginTop: '-6px' }}>
+                  Centang lencana untuk menambahkannya ke pengguna, atau hapus centang untuk menghapusnya.
+                </p>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+                  gap: '10px',
+                  maxHeight: '180px',
+                  overflowY: 'auto',
+                  padding: '10px',
+                  backgroundColor: 'hsla(var(--border-glass), 0.05)',
+                  border: '1px solid hsla(var(--border-glass), 0.4)',
+                  borderRadius: '10px'
+                }}>
+                  {ACHIEVEMENTS_LIST.map(badge => {
+                    const isChecked = editAchievements.includes(badge.id);
+                    return (
+                      <label key={badge.id} style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        padding: '8px 12px',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        backgroundColor: isChecked ? 'hsla(var(--primary-glow), 0.08)' : 'transparent',
+                        border: isChecked ? '1px solid hsla(var(--primary-glow), 0.25)' : '1px solid transparent',
+                        transition: 'all 0.2s ease',
+                        userSelect: 'none'
+                      }}>
+                        <input 
+                          type="checkbox" 
+                          checked={isChecked}
+                          onChange={() => {
+                            if (isChecked) {
+                              setEditAchievements(prev => prev.filter(id => id !== badge.id));
+                            } else {
+                              setEditAchievements(prev => [...prev, badge.id]);
+                            }
+                          }}
+                          disabled={saving}
+                          style={{
+                            cursor: 'pointer',
+                            accentColor: 'hsl(var(--primary-glow))'
+                          }}
+                        />
+                        <span style={{ fontSize: '1.25rem', lineHeight: 1 }}>{badge.emoji}</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                          <span style={{ fontSize: '0.78rem', fontWeight: '700', color: 'hsl(var(--text-primary))', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{badge.name}</span>
+                          <span style={{ fontSize: '0.65rem', color: 'hsl(var(--text-muted))', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={badge.desc}>
+                            {badge.desc}
+                          </span>
+                        </div>
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
 

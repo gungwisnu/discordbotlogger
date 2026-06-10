@@ -1196,7 +1196,7 @@ app.get('/api/guilds/:guildId/members-stats', checkAuth, async (req, res) => {
 // POST update stats for a specific user in a guild (Admin only)
 app.post('/api/guilds/:guildId/members-stats/:userId', checkAuth, (req, res) => {
   const { guildId, userId } = req.params;
-  const { msg_count, voice_time, gaming_time } = req.body;
+  const { msg_count, voice_time, gaming_time, achievements } = req.body;
   const isDemo = req.session.user.demo;
 
   if (isDemo && guildId === '99999999999999') {
@@ -1207,7 +1207,8 @@ app.post('/api/guilds/:guildId/members-stats/:userId', checkAuth, (req, res) => 
     const updated = db.updateUserStats(guildId, userId, {
       msg_count: msg_count !== undefined ? parseInt(msg_count) : undefined,
       voice_time: voice_time !== undefined ? parseInt(voice_time) : undefined,
-      gaming_time
+      gaming_time,
+      achievements: Array.isArray(achievements) ? achievements : undefined
     });
 
     res.json({ success: true, stats: updated });
