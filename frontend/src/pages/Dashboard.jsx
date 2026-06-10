@@ -169,6 +169,27 @@ export default function Dashboard() {
     spotify_activity: false,
     user_status: false
   });
+  const [currentTime, setCurrentTime] = useState('');
+
+  // Clock runner with local timezone offset conversion
+  useEffect(() => {
+    const updateTime = () => {
+      const offset = settings?.timezone_offset !== undefined ? settings.timezone_offset : 8;
+      const utcTime = Date.now();
+      const localTimeMs = utcTime + (offset * 3600 * 1000);
+      const localDate = new Date(localTimeMs);
+      
+      const hrs = String(localDate.getUTCHours()).padStart(2, '0');
+      const mins = String(localDate.getUTCMinutes()).padStart(2, '0');
+      const secs = String(localDate.getUTCSeconds()).padStart(2, '0');
+      setCurrentTime(`${hrs}:${mins}:${secs}`);
+    };
+
+    updateTime();
+    const timer = setInterval(updateTime, 1000);
+
+    return () => clearInterval(timer);
+  }, [settings?.timezone_offset]);
 
   // Fetch settings & channels list when selected guild changes
   useEffect(() => {
@@ -268,8 +289,30 @@ export default function Dashboard() {
           <p style={{ color: 'hsl(var(--text-secondary))', marginTop: '4px' }}>Sesuaikan saluran log dan kategori peristiwa untuk bot Anda.</p>
         </div>
 
-        {/* Top-Right Ganti Server Button & Selected Guild Icon */}
+        {/* Top-Right Clock, Ganti Server Button & Selected Guild Icon */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          
+          {/* Real-time Clock Widget */}
+          <div className="glass-panel" style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px', 
+            padding: '10px 18px', 
+            borderRadius: '10px',
+            fontSize: '0.88rem',
+            fontWeight: '600',
+            backgroundColor: 'hsla(var(--border-glass), 0.15)',
+            border: '1px solid hsl(var(--border-glass))',
+            color: 'hsl(var(--accent-cyan))',
+            fontFamily: 'monospace'
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'hsl(var(--accent-cyan))' }}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>{currentTime || '00:00:00'}</span>
+            <span style={{ fontSize: '0.68rem', opacity: 0.8, backgroundColor: 'hsla(var(--accent-cyan), 0.15)', padding: '2px 6px', borderRadius: '4px', marginLeft: '2px' }}>
+              GMT{ (settings?.timezone_offset !== undefined ? settings.timezone_offset : 8) >= 0 ? `+${settings?.timezone_offset !== undefined ? settings.timezone_offset : 8}` : settings?.timezone_offset }
+            </span>
+          </div>
+
           <button 
             className="btn-secondary" 
             onClick={() => setServerModalOpen(true)}
@@ -349,6 +392,34 @@ export default function Dashboard() {
                 {channels.map(ch => (
                   <option key={ch.id} value={ch.id} style={{ backgroundColor: 'hsl(var(--bg-space))', color: 'hsl(var(--text-primary))' }}>
                     #{ch.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Timezone / GMT Config Card */}
+            <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'hsl(var(--primary-glow))' }}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <h3 style={{ fontSize: '1.25rem', color: 'hsl(var(--text-primary))', fontWeight: '750' }}>Zona Waktu Server</h3>
+              </div>
+              <p style={{ fontSize: '0.88rem', color: 'hsl(var(--text-secondary))' }}>
+                Atur zona waktu (GMT offset) untuk mendeteksi jam pencapaian waktu-waktu khusus (seperti pencapaian Night Owl atau Early Bird).
+              </p>
+
+              <select
+                value={settings.timezone_offset !== undefined ? settings.timezone_offset : 8}
+                onChange={(e) => setSettings(prev => ({ ...prev, timezone_offset: parseInt(e.target.value) }))}
+                className="input-glass"
+                style={{ 
+                  cursor: 'pointer',
+                  backgroundColor: 'hsl(var(--panel-glass))',
+                  color: 'hsl(var(--text-primary))'
+                }}
+              >
+                {Array.from({ length: 27 }, (_, i) => i - 12).map(offset => (
+                  <option key={offset} value={offset} style={{ backgroundColor: 'hsl(var(--bg-space))', color: 'hsl(var(--text-primary))' }}>
+                    GMT {offset >= 0 ? `+${offset}` : offset} {offset === 7 ? '(WIB)' : offset === 8 ? '(WITA / Default)' : offset === 9 ? '(WIT)' : ''}
                   </option>
                 ))}
               </select>

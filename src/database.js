@@ -171,7 +171,8 @@ const DatabaseFunctions = {
         autorole_role_id: null,
         achievement_channel_id: null,
         log_channels: '{}',
-        ai_enabled: false
+        ai_enabled: false,
+        timezone_offset: 8
       };
     }
 
@@ -264,6 +265,10 @@ const DatabaseFunctions = {
         row.ai_enabled = false;
         changed = true;
       }
+      if (row.timezone_offset === undefined) {
+        row.timezone_offset = 8;
+        changed = true;
+      }
 
       if (changed) {
         row.categories_enabled = JSON.stringify(cats);
@@ -276,7 +281,7 @@ const DatabaseFunctions = {
     return row;
   },
 
-  setGuildSettings(guildId, { log_channel_id, categories_enabled, embed_color, ignored_channels, ai_model, welcome_enabled, welcome_channel_id, welcome_message, autorole_enabled, autorole_role_id, achievement_channel_id, log_channels, ai_enabled }) {
+  setGuildSettings(guildId, { log_channel_id, categories_enabled, embed_color, ignored_channels, ai_model, welcome_enabled, welcome_channel_id, welcome_message, autorole_enabled, autorole_role_id, achievement_channel_id, log_channels, ai_enabled, timezone_offset }) {
     const current = this.getGuildSettings(guildId);
     
     const channel = log_channel_id !== undefined ? log_channel_id : current.log_channel_id;
@@ -292,6 +297,7 @@ const DatabaseFunctions = {
     const achievementChannel = achievement_channel_id !== undefined ? achievement_channel_id : current.achievement_channel_id !== undefined ? current.achievement_channel_id : null;
     const logChans = log_channels !== undefined ? (typeof log_channels === 'string' ? log_channels : JSON.stringify(log_channels)) : current.log_channels !== undefined ? current.log_channels : '{}';
     const aiEnabled = ai_enabled !== undefined ? ai_enabled : current.ai_enabled !== undefined ? current.ai_enabled : false;
+    const timezoneOffset = timezone_offset !== undefined ? parseInt(timezone_offset) : (current.timezone_offset !== undefined ? parseInt(current.timezone_offset) : 8);
 
     data.guild_settings[guildId] = {
       guild_id: guildId,
@@ -307,7 +313,8 @@ const DatabaseFunctions = {
       autorole_role_id: autoroleRoleId,
       achievement_channel_id: achievementChannel,
       log_channels: logChans,
-      ai_enabled: aiEnabled
+      ai_enabled: aiEnabled,
+      timezone_offset: timezoneOffset
     };
 
     triggerSave();
@@ -481,23 +488,30 @@ const DatabaseFunctions = {
       updated = true;
     }
 
-    // Check night owl (Voice between 2 AM and 5 AM)
-    const hr = new Date().getHours();
+    // Calculate local time for this guild's timezone offset
+    const settings = this.getGuildSettings(guildId);
+    const offset = settings.timezone_offset !== undefined ? parseFloat(settings.timezone_offset) : 8;
+    const utcTime = Date.now();
+    const localTimeMs = utcTime + (offset * 3600 * 1000);
+    const localDate = new Date(localTimeMs);
+    const hr = localDate.getUTCHours();
+    const day = localDate.getUTCDay();
+
+    // Check night owl (Voice between 2 AM and 5 AM local time)
     if ((hr >= 2 && hr <= 5) && !list.has('night_owl')) {
       list.add('night_owl');
       newlyUnlocked.push('night_owl');
       updated = true;
     }
 
-    // Check early bird (Voice between 5 AM and 8 AM)
+    // Check early bird (Voice between 5 AM and 8 AM local time)
     if ((hr >= 5 && hr <= 8) && !list.has('early_bird')) {
       list.add('early_bird');
       newlyUnlocked.push('early_bird');
       updated = true;
     }
 
-    // Check weekend warrior (Saturday or Sunday)
-    const day = new Date().getDay();
+    // Check weekend warrior (Saturday or Sunday local time)
     if ((day === 0 || day === 6) && !list.has('weekend_warrior')) {
       list.add('weekend_warrior');
       newlyUnlocked.push('weekend_warrior');

@@ -284,7 +284,8 @@ const DEMO_SETTINGS = {
   autorole_role_id: '111222',
   achievement_channel_id: '333',
   log_channels: '{}',
-  ai_enabled: false
+  ai_enabled: false,
+  timezone_offset: 8
 };
 
 let DEMO_REACTION_ROLES = [
@@ -650,7 +651,7 @@ app.get('/api/guilds/:guildId/settings-history', checkAuth, (req, res) => {
 // Update Guild Settings
 app.post('/api/guilds/:guildId/settings', checkAuth, (req, res) => {
   const { guildId } = req.params;
-  const { log_channel_id, categories_enabled, embed_color, ignored_channels, ai_model, welcome_enabled, welcome_channel_id, welcome_message, autorole_enabled, autorole_role_id, achievement_channel_id, log_channels, ai_enabled } = req.body;
+  const { log_channel_id, categories_enabled, embed_color, ignored_channels, ai_model, welcome_enabled, welcome_channel_id, welcome_message, autorole_enabled, autorole_role_id, achievement_channel_id, log_channels, ai_enabled, timezone_offset } = req.body;
   const isDemo = req.session.user.demo;
   const username = req.session.user ? req.session.user.username : 'Web Dashboard';
 
@@ -693,14 +694,16 @@ app.post('/api/guilds/:guildId/settings', checkAuth, (req, res) => {
       autorole_role_id: autorole_role_id !== undefined ? autorole_role_id : DEMO_SETTINGS.autorole_role_id,
       achievement_channel_id: achievement_channel_id !== undefined ? achievement_channel_id : DEMO_SETTINGS.achievement_channel_id,
       log_channels: typeof log_channels === 'string' ? log_channels : JSON.stringify(log_channels || {}),
-      ai_enabled: ai_enabled !== undefined ? ai_enabled : DEMO_SETTINGS.ai_enabled
+      ai_enabled: ai_enabled !== undefined ? ai_enabled : DEMO_SETTINGS.ai_enabled,
+      timezone_offset: timezone_offset !== undefined ? parseInt(timezone_offset) : DEMO_SETTINGS.timezone_offset
     });
     return res.json({ success: true, settings: {
       ...DEMO_SETTINGS,
       categories_enabled: JSON.parse(DEMO_SETTINGS.categories_enabled || '{}'),
       ignored_channels: JSON.parse(DEMO_SETTINGS.ignored_channels || '[]'),
       log_channels: JSON.parse(DEMO_SETTINGS.log_channels || '{}'),
-      ai_enabled: DEMO_SETTINGS.ai_enabled
+      ai_enabled: DEMO_SETTINGS.ai_enabled,
+      timezone_offset: DEMO_SETTINGS.timezone_offset
     }});
   }
 
@@ -749,7 +752,8 @@ app.post('/api/guilds/:guildId/settings', checkAuth, (req, res) => {
     autorole_role_id,
     achievement_channel_id,
     log_channels,
-    ai_enabled
+    ai_enabled,
+    timezone_offset
   });
 
   res.json({
