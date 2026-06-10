@@ -127,6 +127,7 @@ const commands = [
           { name: 'Log Moderasi', value: 'moderation' },
           { name: 'Log Voice Join/Leave', value: 'voice_join_leave' },
           { name: 'Log Voice Mute/Deafen', value: 'voice_mute_deafen' },
+          { name: 'Log Profil Anggota', value: 'member' },
           { name: 'Log Konfigurasi Server', value: 'server' },
           { name: 'Log Aktivitas Game', value: 'gaming_activity' },
           { name: 'Log Spotify', value: 'spotify_activity' },
@@ -324,6 +325,10 @@ const commands = [
         ]
       }
     ]
+  },
+  {
+    name: 'gitpull',
+    description: 'Melakukan git pull untuk memperbarui bot langsung dari repositori GitHub (Admin).'
   }
 ];
 
@@ -369,6 +374,30 @@ client.once('ready', async () => {
     }
   }
 
+  // Set dynamic status
+  const updateStatus = () => {
+    const uptime = process.uptime();
+    const hours = Math.floor(uptime / 3600);
+    const minutes = Math.floor((uptime % 3600) / 60);
+    const seconds = Math.floor(uptime % 60);
+
+    let uptimeStr = '';
+    if (hours > 0) {
+      uptimeStr += `${hours} jam `;
+    }
+    if (minutes > 0) {
+      uptimeStr += `${minutes} menit `;
+    }
+    if (seconds > 0 || (hours === 0 && minutes === 0)) {
+      uptimeStr += `${seconds} detik`;
+    }
+    uptimeStr = uptimeStr.trim();
+
+    client.user.setActivity(`Telah menghayal selama ${uptimeStr} | pan!help for more info`, { type: 0 }); // 0 = ActivityType.Playing
+  };
+
+  updateStatus();
+  setInterval(updateStatus, 30000); // Update every 30 seconds
 });
 
 // Setup dynamic event listeners
@@ -541,11 +570,11 @@ client.on('interactionCreate', async interaction => {
         .setTitle('⚙️ Daftar Command Admin Pandu')
         .setDescription('Berikut adalah daftar command konfigurasi server untuk Administrator:')
         .addFields(
-          { name: '🎯 Saluran & Log Utama', value: '`/setlog <#channel>` - Mengatur saluran tujuan log utama\n`/log <enable|disable> <kategori>` - Mengaktifkan/menonaktifkan kategori log\n`/ignore <#channel>` - Mengabaikan saluran dari pencatatan log/statistik\n`/unignore <#channel>` - Menghapus saluran dari daftar abaikan\n`/setcolor <hex_code>` - Mengubah warna embed log (contoh: `#ff0000`)' },
-          { name: '🤖 Pengaturan AI & Status', value: '`/setmodel <faster|thinker>` - Mengubah model AI DeepSeek\n`/status` - Memeriksa konfigurasi server saat ini' },
+          { name: '🎯 Saluran & Log Utama', value: '`/setlog <#channel>` - Mengatur saluran tujuan log utama\n`/log <enable|disable> <kategori>` - Mengaktifkan/menonaktifkan kategori log\n*(Kategori: `moderation`, `voice_join_leave`, `voice_mute_deafen`, `member`, `server`, `gaming_activity`, `spotify_activity`, `user_status`)*\n`/ignore <#channel>` - Mengabaikan saluran dari pencatatan log/statistik\n`/unignore <#channel>` - Menghapus saluran dari daftar abaikan\n`/setcolor <hex_code>` - Mengubah warna embed log (contoh: `#ff0000`)' },
+          { name: '🤖 Pengaturan AI, Update & Status', value: '`/setmodel <faster|thinker>` - Mengubah model AI DeepSeek\n`/status` - Memeriksa konfigurasi server saat ini\n`/gitpull` - Melakukan git pull dan merestart bot secara otomatis' },
           { name: '📥 Welcome & Pencapaian', value: '`/welcome <enable|disable>` - Mengaktifkan/menonaktifkan welcome\n`/setwelcome <#channel>` - Mengatur saluran welcome\n`/welcomemsg [pesan]` - Mengatur pesan welcome\n`/setachievement <enable|disable> [channel]` - Mengatur saluran notifikasi pencapaian' },
           { name: '🛡️ Pengaturan Auto-Role', value: '`/autorole <enable|disable>` - Mengaktifkan/menonaktifkan pemberian peran otomatis\n`/setrole <@role>` - Mengatur peran otomatis bagi anggota baru' },
-          { name: '🎯 Granular Log Channels', value: '`/logchannel <kategori> <#channel>` - Mengatur log saluran terpisah per kategori (contoh: `voice #log-vc`)\n`/logchannel-reset <kategori>` - Mengembalikan kategori log ke saluran utama' }
+          { name: '🎯 Granular Log Channels', value: '`/logchannel <kategori> <#channel>` - Mengatur log saluran terpisah per kategori\n*(Kategori: `voice`, `gaming`, `spotify`, `mod`, `moderation`, \`voice_join_leave\`, \`voice_mute_deafen\`, `member`, `server`, `gaming_activity`, `spotify_activity`, `status`, `user_status`)*\n`/logchannel-reset <kategori>` - Mengembalikan kategori log ke saluran utama' }
          )
         .setFooter({ text: 'Sistem Logger & Analitik Server', iconURL: client.user.displayAvatarURL() })
         .setTimestamp();
@@ -858,6 +887,30 @@ client.on('interactionCreate', async interaction => {
     db.setGuildSettings(guildId, { log_channels: JSON.stringify(logChannels) });
 
     return interaction.reply({ content: `✅ Berhasil mereset saluran log untuk kategori **${categories.join(', ')}** ke saluran log utama.` });
+  }
+
+  if (commandName === 'gitpull') {
+    if (!member.permissions.has(PermissionsBitField.Flags.ManageGuild) && !member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+      return interaction.reply({ content: '❌ Anda tidak memiliki izin (Manage Server / Administrator) yang diperlukan untuk menggunakan perintah pengaturan ini.', ephemeral: true });
+    }
+
+    await interaction.deferReply();
+    const { exec } = require('child_process');
+    exec('git pull', (error, stdout, stderr) => {
+      if (error) {
+        return interaction.editReply({ content: `❌ **Gagal melakukan git pull:**\n\`\`\`${error.message}\`\`\`` });
+      }
+      
+      let output = '';
+      if (stdout) output += `**Stdout:**\n\`\`\`\n${stdout}\n\`\`\n`;
+      if (stderr) output += `**Stderr:**\n\`\`\`\n${stderr}\n\`\`\n`;
+
+      interaction.editReply({ content: `✅ **Git pull selesai:**\n${output}\n🔄 *Memulai ulang bot dalam 3 detik untuk menerapkan perubahan...*` });
+
+      setTimeout(() => {
+        process.exit(0);
+      }, 3000);
+    });
   }
 });
 

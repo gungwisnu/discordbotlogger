@@ -96,7 +96,8 @@ module.exports = {
         'autorole',
         'setrole',
         'setachievement',
-        'logchannel'
+        'logchannel',
+        'gitpull'
       ]);
 
       const isExplicitAI = (firstArg === 'ask');
@@ -264,11 +265,11 @@ module.exports = {
             .setTitle('⚙️ Daftar Command Admin Pandu')
             .setDescription('Berikut adalah daftar command konfigurasi server untuk Administrator:')
             .addFields(
-              { name: '🎯 Saluran & Log Utama', value: '`pan!setlog <#channel>` - Mengatur saluran tujuan log utama\n`pan!log <enable|disable> <kategori>` - Mengaktifkan/menonaktifkan kategori log\n`pan!ignore <#channel>` - Mengabaikan saluran dari pencatatan log/statistik\n`pan!unignore <#channel>` - Menghapus saluran dari daftar abaikan\n`pan!setcolor <hex_code>` - Mengubah warna embed log (contoh: `#ff0000`)' },
-              { name: '🤖 Pengaturan AI & Status', value: '`pan!setmodel <faster|thinker>` - Mengubah model AI DeepSeek\n`pan!status` - Memeriksa konfigurasi server saat ini' },
+              { name: '🎯 Saluran & Log Utama', value: '`pan!setlog <#channel>` - Mengatur saluran tujuan log utama\n`pan!log <enable|disable> <kategori>` - Mengaktifkan/menonaktifkan kategori log\n*(Kategori: `moderation`, `voice_join_leave`, `voice_mute_deafen`, `member`, `server`, `gaming_activity`, `spotify_activity`, `user_status`)*\n`pan!ignore <#channel>` - Mengabaikan saluran dari pencatatan log/statistik\n`pan!unignore <#channel>` - Menghapus saluran dari daftar abaikan\n`pan!setcolor <hex_code>` - Mengubah warna embed log (contoh: `#ff0000`)' },
+              { name: '🤖 Pengaturan AI, Update & Status', value: '`pan!setmodel <faster|thinker>` - Mengubah model AI DeepSeek\n`pan!status` - Memeriksa konfigurasi server saat ini\n`pan!gitpull` - Melakukan git pull dan merestart bot secara otomatis' },
               { name: '📥 Welcome & Pencapaian', value: '`pan!welcome <enable|disable>` - Mengaktifkan/menonaktifkan welcome\n`pan!setwelcome <#channel>` - Mengatur saluran welcome\n`pan!welcomemsg <isi_pesan...>` - Mengatur pesan welcome\n`pan!setachievement <#channel|disable>` - Mengatur saluran notifikasi pencapaian' },
               { name: '🛡️ Pengaturan Auto-Role', value: '`pan!autorole <enable|disable>` - Mengaktifkan/menonaktifkan pemberian peran otomatis\n`pan!setrole <@role|role_id>` - Mengatur peran otomatis bagi anggota baru' },
-              { name: '🎯 Granular Log Channels', value: '`pan!logchannel <kategori> <#channel>` - Mengatur log saluran terpisah per kategori (contoh: `pan!logchannel voice #log-vc`)\n`pan!logchannel reset <kategori>` - Mengembalikan kategori log ke saluran utama' }
+              { name: '🎯 Granular Log Channels', value: '`pan!logchannel <kategori> <#channel>` - Mengatur log saluran terpisah per kategori\n*(Kategori: `voice`, `gaming`, `spotify`, `mod`, `moderation`, \`voice_join_leave\`, \`voice_mute_deafen\`, `member`, `server`, `gaming_activity`, `spotify_activity`, `status`, `user_status`)*\n`pan!logchannel reset <kategori>` - Mengembalikan kategori log ke saluran utama' }
             )
             .setFooter({ text: 'Sistem Logger & Analitik Server' })
             .setTimestamp();
@@ -294,7 +295,7 @@ module.exports = {
       const isAdminCommand = [
         'setlog', 'log', 'ignore', 'unignore', 'setcolor', 'status', 'setmodel',
         'welcome', 'setwelcome', 'welcomemsg', 'autorole', 'setrole',
-        'setachievement', 'logchannel'
+        'setachievement', 'logchannel', 'gitpull'
       ].includes(commandName);
       if (isAdminCommand) {
         if (!message.member.permissions.has(PermissionsBitField.Flags.ManageGuild) && !message.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
@@ -554,6 +555,27 @@ module.exports = {
         db.setGuildSettings(guildId, { log_channels: JSON.stringify(logChannels) });
 
         return message.reply(`✅ Berhasil mengatur saluran log untuk kategori **${filtered.join(', ')}** ke ${channel}.`);
+      }
+
+      if (commandName === 'gitpull') {
+        const { exec } = require('child_process');
+        message.channel.send('⏳ *Menjalankan git pull...*');
+        
+        exec('git pull', (error, stdout, stderr) => {
+          if (error) {
+            return message.reply(`❌ **Gagal melakukan git pull:**\n\`\`\`${error.message}\`\`\``);
+          }
+          
+          let output = '';
+          if (stdout) output += `**Stdout:**\n\`\`\`\n${stdout}\n\`\`\`\n`;
+          if (stderr) output += `**Stderr:**\n\`\`\`\n${stderr}\n\`\`\`\n`;
+
+          message.reply(`✅ **Git pull selesai:**\n${output}\n🔄 *Memulai ulang bot dalam 3 detik untuk menerapkan perubahan...*`);
+
+          setTimeout(() => {
+            process.exit(0);
+          }, 3000);
+        });
       }
     }
     
