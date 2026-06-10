@@ -23,47 +23,126 @@ let data = {
   ai_whitelist: []
 };
 
-// Load data on startup
-if (fs.existsSync(dbPath)) {
-  try {
-    const raw = fs.readFileSync(dbPath, 'utf8');
-    data = JSON.parse(raw);
-    
-    // Ensure all critical root tables exist
-    if (!data.guild_settings) data.guild_settings = {};
-    if (!data.voice_sessions) data.voice_sessions = [];
-    if (!data.user_history) data.user_history = {};
-    if (!data.mod_logs) data.mod_logs = [];
-    if (!data.audit_cache) data.audit_cache = {};
-    if (!data.settings_history) data.settings_history = [];
-    if (!data.sessions) data.sessions = {};
-    if (!data.reaction_roles) data.reaction_roles = [];
-    if (!data.ai_whitelist) data.ai_whitelist = [];
+// Hybrid Database Setup (MySQL with Local JSON Fallback)
+let pool = null;
+let useMySQL = false;
 
-    console.log('Database JSON loaded successfully from', dbPath);
-  } catch (err) {
-    console.error('Gagal membaca database JSON, menggunakan database baru:', err.message);
+const dbHost = process.env.DB_HOST;
+const dbUser = process.env.DB_USER;
+const dbPassword = process.env.DB_PASSWORD;
+const dbName = process.env.DB_NAME;
+const dbPort = process.env.DB_PORT || '3306';
+
+// Synchronous initial load of local database (acts as a default / fallback)
+function loadLocalJSON() {
+  if (fs.existsSync(dbPath)) {
+    try {
+      const raw = fs.readFileSync(dbPath, 'utf8');
+      data = JSON.parse(raw);
+      console.log('Database JSON loaded successfully from local file', dbPath);
+    } catch (err) {
+      console.error('Gagal membaca database JSON lokal, menggunakan database baru:', err.message);
+    }
+  } else {
+    fs.writeFileSync(dbPath, JSON.stringify(data, null, 2), 'utf8');
+    console.log('Database JSON baru dibuat di', dbPath);
   }
-} else {
-  // Save initial empty schema
-  fs.writeFileSync(dbPath, JSON.stringify(data, null, 2), 'utf8');
-  console.log('Database JSON baru dibuat di', dbPath);
 }
 
-// Debounced Disk Saving to minimize Disk I/O overhead
+// Run initial local load immediately
+loadLocalJSON();
+ensureDataStructure();
+
+function ensureDataStructure() {
+  if (!data.guild_settings) data.guild_settings = {};
+  if (!data.voice_sessions) data.voice_sessions = [];
+  if (!data.user_history) data.user_history = {};
+  if (!data.mod_logs) data.mod_logs = [];
+  if (!data.audit_cache) data.audit_cache = {};
+  if (!data.settings_history) data.settings_history = [];
+  if (!data.sessions) data.sessions = {};
+  if (!data.reaction_roles) data.reaction_roles = [];
+  if (!data.ai_whitelist) data.ai_whitelist = [];
+}
+
+async function initDatabase() {
+  if (dbHost && dbUser && dbPassword && dbName) {
+    try {
+      console.log(`Menghubungkan ke database MySQL di ${dbHost}:${dbPort}...`);
+      const mysql = require('mysql2/promise');
+      
+      pool = mysql.createPool({
+        host: dbHost,
+        port: parseInt(dbPort),
+        user: dbUser,
+        password: dbPassword,
+        database: dbName,
+        waitForConnections: true,
+        connectionLimit: 10,
+        queueLimit: 0
+      });
+
+      // Test connection
+      const conn = await pool.getConnection();
+      console.log('Koneksi database MySQL berhasil established!');
+      conn.release();
+
+      // Create table if not exists
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS bot_store (
+          \`key\` VARCHAR(50) PRIMARY KEY,
+          \`value\` LONGTEXT NOT NULL
+        )
+      `);
+
+      // Load data
+      const [rows] = await pool.query('SELECT value FROM bot_store WHERE `key` = ?', ['database']);
+      if (rows.length > 0) {
+        data = JSON.parse(rows[0].value);
+        console.log('Data database berhasil dimuat dari tabel MySQL bot_store.');
+      } else {
+        // Insert initial empty schema
+        await pool.query('INSERT INTO bot_store (`key`, `value`) VALUES (?, ?)', ['database', JSON.stringify(data)]);
+        console.log('Skema database awal dimasukkan ke tabel MySQL bot_store.');
+      }
+      
+      useMySQL = true;
+    } catch (error) {
+      console.error('Gagal menghubungkan ke MySQL, menggunakan fallback database JSON lokal:', error.message);
+    }
+  } else {
+    console.log('Variabel DB_* tidak lengkap di .env. Menggunakan database JSON lokal.');
+  }
+  ensureDataStructure();
+}
+
+// Debounced Database Saving (MySQL or Local Disk)
 let saveTimeout = null;
 function triggerSave() {
   if (saveTimeout) clearTimeout(saveTimeout);
   
-  saveTimeout = setTimeout(() => {
-    fs.writeFile(dbPath, JSON.stringify(data, null, 2), 'utf8', (err) => {
-      if (err) console.error('Gagal menulis data ke disk:', err.message);
-    });
+  saveTimeout = setTimeout(async () => {
+    const jsonStr = JSON.stringify(data);
+    if (useMySQL && pool) {
+      try {
+        await pool.query('UPDATE bot_store SET value = ? WHERE `key` = ?', [jsonStr, 'database']);
+      } catch (err) {
+        console.error('Gagal menulis data ke MySQL:', err.message);
+      }
+    } else {
+      fs.writeFile(dbPath, JSON.stringify(data, null, 2), 'utf8', (err) => {
+        if (err) console.error('Gagal menulis data ke disk lokal:', err.message);
+      });
+    }
   }, 500); // Wait 500ms of quiet before writing
 }
 
 // Exported Database Functions
 const DatabaseFunctions = {
+  async initDatabase() {
+    await initDatabase();
+  },
+
   // Guild Settings API
   getGuildSettings(guildId) {
     const row = data.guild_settings[guildId];
