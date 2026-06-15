@@ -546,28 +546,59 @@ app.get('/api/admin/bot-stats', checkSuperAdmin, (req, res) => {
 // GET Bot status for Super Admin dashboard
 app.get('/api/admin/bot-status', checkSuperAdmin, (req, res) => {
   const settings = db.getGlobalSettings();
-  res.json({ status: settings.bot_status || 'menghayal' });
+  res.json({
+    bot_status: settings.bot_status || 'menghayal',
+    bot_status_details: settings.bot_status_details || '',
+    bot_status_state: settings.bot_status_state || '',
+    bot_status_type: settings.bot_status_type !== undefined ? parseInt(settings.bot_status_type) : 0,
+    bot_status_url: settings.bot_status_url || '',
+    bot_status_show_uptime: settings.bot_status_show_uptime !== undefined ? (settings.bot_status_show_uptime === true || settings.bot_status_show_uptime === 'true') : true
+  });
 });
 
 // POST Bot status (Update presence)
 app.post('/api/admin/bot-status', checkSuperAdmin, (req, res) => {
-  const { status } = req.body;
-  if (status === undefined) {
-    return res.status(400).json({ error: 'Status tidak boleh kosong.' });
+  const { bot_status, bot_status_details, bot_status_state, bot_status_type, bot_status_url, bot_status_show_uptime } = req.body;
+  if (bot_status === undefined) {
+    return res.status(400).json({ error: 'Nama status (bot_status) tidak boleh kosong.' });
   }
 
   const isDemo = req.session.user?.demo;
   if (isDemo) {
-    return res.json({ success: true, status });
+    return res.json({
+      success: true,
+      bot_status,
+      bot_status_details,
+      bot_status_state,
+      bot_status_type,
+      bot_status_url,
+      bot_status_show_uptime
+    });
   }
 
-  db.setGlobalSettings({ bot_status: status });
+  const settingsToSave = {
+    bot_status,
+    bot_status_details: bot_status_details || '',
+    bot_status_state: bot_status_state || '',
+    bot_status_type: bot_status_type !== undefined ? parseInt(bot_status_type) : 0,
+    bot_status_url: bot_status_url || '',
+    bot_status_show_uptime: bot_status_show_uptime !== undefined ? (bot_status_show_uptime === true || bot_status_show_uptime === 'true') : true
+  };
+
+  db.setGlobalSettings(settingsToSave);
   
   // Update bot presence dynamically
   const { updateBotPresence } = require('./bot');
-  updateBotPresence(status);
+  updateBotPresence(
+    settingsToSave.bot_status,
+    settingsToSave.bot_status_details,
+    settingsToSave.bot_status_state,
+    settingsToSave.bot_status_type,
+    settingsToSave.bot_status_url,
+    settingsToSave.bot_status_show_uptime
+  );
 
-  res.json({ success: true, status });
+  res.json({ success: true, ...settingsToSave });
 });
 
 // GET AI Whitelist for Super Admin dashboard

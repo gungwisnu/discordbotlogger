@@ -378,7 +378,14 @@ client.once('ready', async () => {
 
   // Set status
   const globalSettings = db.getGlobalSettings();
-  updateBotPresence(globalSettings.bot_status);
+  updateBotPresence(
+    globalSettings.bot_status,
+    globalSettings.bot_status_details,
+    globalSettings.bot_status_state,
+    globalSettings.bot_status_type,
+    globalSettings.bot_status_url,
+    globalSettings.bot_status_show_uptime
+  );
 });
 
 // Setup dynamic event listeners
@@ -1227,17 +1234,35 @@ function startBot() {
   return client;
 }
 
-function updateBotPresence(statusName) {
+function updateBotPresence(statusName, details, state, type, url, showUptime) {
   if (client.readyAt) {
+    let actName = statusName || 'menghayal';
+    let actDetails = details;
+    let actState = state;
+    let actType = type !== undefined ? parseInt(type) : 0;
+    let actUrl = url;
+    let actShowUptime = showUptime !== undefined ? (showUptime === true || showUptime === 'true') : true;
+
+    const activity = {
+      name: actName,
+      type: actType
+    };
+
+    if (actType === 1 && actUrl) {
+      activity.url = actUrl;
+    }
+    if (actDetails) {
+      activity.details = actDetails;
+    }
+    if (actState) {
+      activity.state = actState;
+    }
+    if (actShowUptime) {
+      activity.timestamps = { start: botStartupTime };
+    }
+
     client.user.setPresence({
-      activities: [{
-        name: statusName || 'menghayal',
-        type: 0, // Playing
-        state: 'pan!help for more info',
-        timestamps: {
-          start: botStartupTime
-        }
-      }]
+      activities: [activity]
     });
   }
 }

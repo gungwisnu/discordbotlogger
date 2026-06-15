@@ -22,7 +22,12 @@ let data = {
   reaction_roles: [],
   ai_whitelist: [],
   global_settings: {
-    bot_status: 'menghayal'
+    bot_status: 'menghayal',
+    bot_status_details: '',
+    bot_status_state: 'pan!help for more info',
+    bot_status_type: 0,
+    bot_status_url: '',
+    bot_status_show_uptime: true
   }
 };
 
@@ -66,7 +71,23 @@ function ensureDataStructure() {
   if (!data.sessions) data.sessions = {};
   if (!data.reaction_roles) data.reaction_roles = [];
   if (!data.ai_whitelist) data.ai_whitelist = [];
-  if (!data.global_settings) data.global_settings = { bot_status: 'menghayal' };
+  if (!data.global_settings) {
+    data.global_settings = {
+      bot_status: 'menghayal',
+      bot_status_details: '',
+      bot_status_state: 'pan!help for more info',
+      bot_status_type: 0,
+      bot_status_url: '',
+      bot_status_show_uptime: true
+    };
+  } else {
+    if (data.global_settings.bot_status === undefined) data.global_settings.bot_status = 'menghayal';
+    if (data.global_settings.bot_status_details === undefined) data.global_settings.bot_status_details = '';
+    if (data.global_settings.bot_status_state === undefined) data.global_settings.bot_status_state = 'pan!help for more info';
+    if (data.global_settings.bot_status_type === undefined) data.global_settings.bot_status_type = 0;
+    if (data.global_settings.bot_status_url === undefined) data.global_settings.bot_status_url = '';
+    if (data.global_settings.bot_status_show_uptime === undefined) data.global_settings.bot_status_show_uptime = true;
+  }
 }
 
 async function initDatabase() {
