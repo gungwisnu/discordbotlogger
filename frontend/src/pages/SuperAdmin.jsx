@@ -14,6 +14,12 @@ export default function SuperAdmin() {
   const [actionError, setActionError] = useState(null);
   const [actionSuccess, setActionSuccess] = useState(null);
 
+  // Bot status config state hooks
+  const [botStatus, setBotStatus] = useState('');
+  const [statusLoading, setStatusLoading] = useState(false);
+  const [statusError, setStatusError] = useState(null);
+  const [statusSuccess, setStatusSuccess] = useState(null);
+
   const fetchBotStats = () => {
     setLoading(true);
     fetch('/api/admin/bot-stats')
@@ -53,10 +59,49 @@ export default function SuperAdmin() {
       });
   };
 
+  const fetchBotStatus = () => {
+    fetch('/api/admin/bot-status')
+      .then(res => {
+        if (!res.ok) throw new Error('Gagal memuat status bot.');
+        return res.json();
+      })
+      .then(data => {
+        setBotStatus(data.status);
+      })
+      .catch(err => console.error(err));
+  };
+
   useEffect(() => {
     fetchBotStats();
     fetchWhitelist();
+    fetchBotStatus();
   }, []);
+
+  const handleUpdateStatus = (e) => {
+    e.preventDefault();
+    setStatusError(null);
+    setStatusSuccess(null);
+    setStatusLoading(true);
+
+    fetch('/api/admin/bot-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: botStatus })
+    })
+      .then(async res => {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Gagal memperbarui status bot.');
+        return data;
+      })
+      .then(() => {
+        setStatusSuccess('✓ Status bot berhasil diperbarui secara real-time!');
+        setStatusLoading(false);
+      })
+      .catch(err => {
+        setStatusError(err.message);
+        setStatusLoading(false);
+      });
+  };
 
   const handleAddWhitelist = (e) => {
     e.preventDefault();
@@ -178,7 +223,7 @@ export default function SuperAdmin() {
         
         <button 
           className="btn-secondary" 
-          onClick={() => { fetchBotStats(); fetchWhitelist(); }}
+          onClick={() => { fetchBotStats(); fetchWhitelist(); fetchBotStatus(); }}
           style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '10px', fontSize: '0.88rem' }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -236,6 +281,67 @@ export default function SuperAdmin() {
               </h2>
             </div>
 
+          </div>
+
+          {/* Bot Status Configuration Panel */}
+          <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'hsl(var(--primary-glow))' }}>
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+              <h3 style={{ fontSize: '1.25rem', color: 'hsl(var(--text-primary))', fontWeight: '750', margin: 0 }}>
+                Kustomisasi Status Aktivitas Bot
+              </h3>
+            </div>
+            <p style={{ fontSize: '0.85rem', color: 'hsl(var(--text-secondary))', marginTop: '-12px' }}>
+              Ubah status aktivitas (Presence Playing) bot secara real-time di Discord. Status ini akan ditampilkan sebagai aktivitas bermain (*Playing [status]*).
+            </p>
+
+            <form onSubmit={handleUpdateStatus} style={{ 
+              display: 'flex', 
+              gap: '12px', 
+              alignItems: 'flex-start', 
+              flexWrap: 'wrap', 
+              backgroundColor: 'hsla(var(--border-glass), 0.04)', 
+              padding: '16px', 
+              borderRadius: '12px',
+              border: '1px solid hsl(var(--border-glass))'
+            }}>
+              <div style={{ flex: 1, minWidth: '250px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <input 
+                  type="text"
+                  placeholder="Masukkan status aktivitas baru (contoh: menghayal)"
+                  value={botStatus}
+                  onChange={(e) => setBotStatus(e.target.value)}
+                  className="input-glass"
+                  style={{
+                    padding: '10px 14px',
+                    fontSize: '0.88rem',
+                    backgroundColor: 'hsl(var(--panel-glass))',
+                    color: 'hsl(var(--text-primary))'
+                  }}
+                  disabled={statusLoading}
+                />
+                {statusError && (
+                  <span style={{ fontSize: '0.75rem', color: 'hsl(var(--danger-crimson))', fontWeight: '600' }}>
+                    {statusError}
+                  </span>
+                )}
+                {statusSuccess && (
+                  <span style={{ fontSize: '0.75rem', color: 'hsl(var(--success-emerald))', fontWeight: '600' }}>
+                    {statusSuccess}
+                  </span>
+                )}
+              </div>
+              <button 
+                type="submit"
+                className="btn-primary"
+                style={{ padding: '10px 24px', borderRadius: '10px', fontSize: '0.88rem', flexShrink: 0 }}
+                disabled={statusLoading || !botStatus}
+              >
+                {statusLoading ? 'Menyimpan...' : 'Perbarui Status'}
+              </button>
+            </form>
           </div>
 
           {/* Aggregated Stats Row */}

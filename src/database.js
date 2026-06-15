@@ -20,7 +20,10 @@ let data = {
   settings_history: [],
   sessions: {},
   reaction_roles: [],
-  ai_whitelist: []
+  ai_whitelist: [],
+  global_settings: {
+    bot_status: 'menghayal'
+  }
 };
 
 // Hybrid Database Setup (MySQL with Local JSON Fallback)
@@ -63,6 +66,7 @@ function ensureDataStructure() {
   if (!data.sessions) data.sessions = {};
   if (!data.reaction_roles) data.reaction_roles = [];
   if (!data.ai_whitelist) data.ai_whitelist = [];
+  if (!data.global_settings) data.global_settings = { bot_status: 'menghayal' };
 }
 
 async function initDatabase() {
@@ -841,6 +845,27 @@ const DatabaseFunctions = {
 
     triggerSave();
     return this.getUserStats(guildId, userId);
+  },
+
+  getGlobalSettings() {
+    if (!data.global_settings) {
+      data.global_settings = {
+        bot_status: 'menghayal'
+      };
+      triggerSave();
+    }
+    return data.global_settings;
+  },
+
+  setGlobalSettings(settings) {
+    if (!data.global_settings) {
+      data.global_settings = {
+        bot_status: 'menghayal'
+      };
+    }
+    Object.assign(data.global_settings, settings);
+    triggerSave();
+    return data.global_settings;
   }
 };
 

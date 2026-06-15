@@ -4,6 +4,8 @@ const path = require('path');
 const db = require('./database');
 require('dotenv').config();
 
+let botStartupTime = Date.now();
+
 // Create a new client instance
 const client = new Client({
   intents: [
@@ -375,16 +377,8 @@ client.once('ready', async () => {
   }
 
   // Set status
-  client.user.setPresence({
-    activities: [{
-      name: 'menghayal',
-      type: 0, // 0 = ActivityType.Playing
-      state: 'pan!help for more info',
-      timestamps: {
-        start: Date.now()
-      }
-    }]
-  });
+  const globalSettings = db.getGlobalSettings();
+  updateBotPresence(globalSettings.bot_status);
 });
 
 // Setup dynamic event listeners
@@ -1233,10 +1227,26 @@ function startBot() {
   return client;
 }
 
+function updateBotPresence(statusName) {
+  if (client.readyAt) {
+    client.user.setPresence({
+      activities: [{
+        name: statusName || 'menghayal',
+        type: 0, // Playing
+        state: 'pan!help for more info',
+        timestamps: {
+          start: botStartupTime
+        }
+      }]
+    });
+  }
+}
+
 module.exports = {
   client,
   startBot,
   sendLog,
   sendAchievementNotification,
-  ACHIEVEMENTS_METADATA
+  ACHIEVEMENTS_METADATA,
+  updateBotPresence
 };

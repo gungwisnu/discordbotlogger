@@ -543,6 +543,33 @@ app.get('/api/admin/bot-stats', checkSuperAdmin, (req, res) => {
   });
 });
 
+// GET Bot status for Super Admin dashboard
+app.get('/api/admin/bot-status', checkSuperAdmin, (req, res) => {
+  const settings = db.getGlobalSettings();
+  res.json({ status: settings.bot_status || 'menghayal' });
+});
+
+// POST Bot status (Update presence)
+app.post('/api/admin/bot-status', checkSuperAdmin, (req, res) => {
+  const { status } = req.body;
+  if (status === undefined) {
+    return res.status(400).json({ error: 'Status tidak boleh kosong.' });
+  }
+
+  const isDemo = req.session.user?.demo;
+  if (isDemo) {
+    return res.json({ success: true, status });
+  }
+
+  db.setGlobalSettings({ bot_status: status });
+  
+  // Update bot presence dynamically
+  const { updateBotPresence } = require('./bot');
+  updateBotPresence(status);
+
+  res.json({ success: true, status });
+});
+
 // GET AI Whitelist for Super Admin dashboard
 app.get('/api/admin/ai-whitelist', checkSuperAdmin, async (req, res) => {
   const list = db.getAIWhitelist();
