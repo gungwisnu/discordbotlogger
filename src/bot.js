@@ -374,30 +374,17 @@ client.once('ready', async () => {
     }
   }
 
-  // Set dynamic status
-  const updateStatus = () => {
-    const uptime = process.uptime();
-    const hours = Math.floor(uptime / 3600);
-    const minutes = Math.floor((uptime % 3600) / 60);
-    const seconds = Math.floor(uptime % 60);
-
-    let uptimeStr = '';
-    if (hours > 0) {
-      uptimeStr += `${hours} jam `;
-    }
-    if (minutes > 0) {
-      uptimeStr += `${minutes} menit `;
-    }
-    if (seconds > 0 || (hours === 0 && minutes === 0)) {
-      uptimeStr += `${seconds} detik`;
-    }
-    uptimeStr = uptimeStr.trim();
-
-    client.user.setActivity(`Telah menghayal selama ${uptimeStr} | pan!help for more info`, { type: 0 }); // 0 = ActivityType.Playing
-  };
-
-  updateStatus();
-  setInterval(updateStatus, 30000); // Update every 30 seconds
+  // Set status
+  client.user.setPresence({
+    activities: [{
+      name: 'Menghayal',
+      type: 0, // 0 = ActivityType.Playing
+      state: 'pan!help for more info',
+      timestamps: {
+        start: Date.now()
+      }
+    }]
+  });
 });
 
 // Setup dynamic event listeners
@@ -586,6 +573,7 @@ client.on('interactionCreate', async interaction => {
         .setDescription('Berikut adalah daftar command yang tersedia untuk server ini:')
         .addFields(
           { name: '📊 Statistik & Informasi', value: '`/stats [user]` - Menampilkan statistik pengguna\n`/leaderboard <voice|messages|gaming>` - Menampilkan peringkat server\n`/achievements [user]` - Menampilkan lencana pencapaian' },
+          { name: '🎙️ Saluran Voice (Streak Helper)', value: '`pan!join` - Bot bergabung ke saluran voice Anda\n`pan!leave` - Bot keluar dari saluran voice' },
           { name: '🧠 Obrolan AI', value: 'Tandai (tag) bot atau ketik `pan!ask <pertanyaan>` untuk bertanya kepada AI.' }
         )
         .setFooter({ text: 'Gunakan opsi /help admin:true jika Anda adalah Administrator untuk konfigurasi bot.', iconURL: client.user.displayAvatarURL() })

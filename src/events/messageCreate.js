@@ -97,7 +97,9 @@ module.exports = {
         'setrole',
         'setachievement',
         'logchannel',
-        'gitpull'
+        'gitpull',
+        'join',
+        'leave'
       ]);
 
       const isExplicitAI = (firstArg === 'ask');
@@ -281,11 +283,55 @@ module.exports = {
             .setDescription('Berikut adalah daftar command yang tersedia untuk server ini:')
             .addFields(
               { name: '📊 Statistik & Informasi', value: '`pan!stats [@user]` - Menampilkan statistik pengguna\n`pan!leaderboard [voice|messages|gaming]` - Menampilkan peringkat server\n`pan!achievements [@user]` - Menampilkan lencana pencapaian' },
+              { name: '🎙️ Saluran Voice (Streak Helper)', value: '`pan!join` - Bot bergabung ke saluran voice Anda\n`pan!leave` - Bot keluar dari saluran voice' },
               { name: '🧠 Obrolan AI', value: 'Tandai (tag) bot atau gunakan `pan!ask <pertanyaan>` untuk bertanya kepada AI.' }
             )
             .setFooter({ text: 'Gunakan "pan!help admin" jika Anda adalah Administrator untuk konfigurasi bot.' })
             .setTimestamp();
           return message.reply({ embeds: [embed] });
+        }
+      }
+
+      if (commandName === 'join') {
+        const member = message.member;
+        const voiceChannel = member?.voice?.channel;
+        if (!voiceChannel) {
+          return message.reply('❌ Anda harus bergabung ke saluran voice terlebih dahulu agar saya bisa ikut!');
+        }
+        
+        const permissions = voiceChannel.permissionsFor(client.user);
+        if (!permissions || !permissions.has(PermissionsBitField.Flags.Connect) || !permissions.has(PermissionsBitField.Flags.Speak)) {
+          return message.reply('❌ Saya tidak memiliki izin untuk terhubung atau berbicara di saluran voice tersebut!');
+        }
+
+        try {
+          const { joinVoiceChannel } = require('@discordjs/voice');
+          joinVoiceChannel({
+            channelId: voiceChannel.id,
+            guildId: message.guild.id,
+            adapterCreator: message.guild.voiceAdapterCreator,
+            selfDeaf: false,
+            selfMute: false
+          });
+          return message.reply(`✅ Berhasil bergabung ke saluran voice **${voiceChannel.name}**!`);
+        } catch (error) {
+          console.error('Gagal bergabung ke voice channel:', error);
+          return message.reply('❌ Terjadi kesalahan saat mencoba bergabung ke saluran voice.');
+        }
+      }
+
+      if (commandName === 'leave') {
+        try {
+          const { getVoiceConnection } = require('@discordjs/voice');
+          const connection = getVoiceConnection(message.guild.id);
+          if (!connection) {
+            return message.reply('❌ Saya tidak sedang berada di saluran voice apa pun di server ini!');
+          }
+          connection.destroy();
+          return message.reply('✅ Berhasil keluar dari saluran voice.');
+        } catch (error) {
+          console.error('Gagal keluar dari voice channel:', error);
+          return message.reply('❌ Terjadi kesalahan saat mencoba keluar dari saluran voice.');
         }
       }
 

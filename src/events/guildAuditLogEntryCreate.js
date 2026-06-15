@@ -303,6 +303,50 @@ module.exports = {
         .setFooter({ text: `${executorName}: ${executorId} | Emoji: :${emojiName}: (${targetId}) | Audit Log: ${id}` });
       isLogged = true;
       logCategory = 'server';
+    } else if (action === 192) {
+      const targetChannel = await guild.channels.fetch(targetId).catch(() => null);
+      const chanMention = targetChannel ? `<#${targetId}>` : `Channel ID: \`${targetId}\``;
+      const chanNameActual = targetChannel ? targetChannel.name : 'Unknown';
+
+      const statusChange = changes.find(c => c.key === 'status');
+      const oldStatus = statusChange ? statusChange.old : (changes[0]?.old || null);
+      const newStatus = statusChange ? statusChange.new : (changes[0]?.new || null);
+
+      embed.setColor('#3b82f6')
+        .setTitle('🎙️ Status Voice Channel Diperbarui')
+        .setDescription(`Status saluran voice ${chanMention} telah diubah.`)
+        .setFooter({ text: `${executorName}: ${executorId} | #${chanNameActual}: ${targetId} | Audit Log: ${id}` });
+
+      if (oldStatus) {
+        embed.addFields(
+          { name: 'Diubah Oleh', value: executorText },
+          { name: 'Status Lama', value: `\`${oldStatus}\``, inline: true },
+          { name: 'Status Baru', value: `\`${newStatus || '(Kosong)'}\``, inline: true }
+        );
+      } else {
+        embed.addFields(
+          { name: 'Diubah Oleh', value: executorText },
+          { name: 'Diubah Menjadi', value: `\`${newStatus || '(Kosong)'}\`` }
+        );
+      }
+
+      isLogged = true;
+      logCategory = 'moderation';
+    } else if (action === 193) {
+      const targetChannel = await guild.channels.fetch(targetId).catch(() => null);
+      const chanMention = targetChannel ? `<#${targetId}>` : `Channel ID: \`${targetId}\``;
+      const chanNameActual = targetChannel ? targetChannel.name : 'Unknown';
+
+      embed.setColor('#ef4444')
+        .setTitle('🎙️ Status Voice Channel Dihapus')
+        .setDescription(`Status saluran voice ${chanMention} telah dihapus.`)
+        .addFields(
+          { name: 'Dihapus Oleh', value: executorText }
+        )
+        .setFooter({ text: `${executorName}: ${executorId} | #${chanNameActual}: ${targetId} | Audit Log: ${id}` });
+
+      isLogged = true;
+      logCategory = 'moderation';
     }
 
     if (isLogged) {

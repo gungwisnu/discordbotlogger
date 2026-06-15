@@ -10,12 +10,14 @@
     "install:all": "npm install && npm --prefix frontend install"
   },
   "dependencies": {
+    "@discordjs/voice": "^0.19.2",
     "axios": "^1.6.8",
     "cors": "^2.8.5",
     "discord.js": "^14.14.1",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "express-session": "^1.18.0",
+    "libsodium-wrappers": "^0.8.4",
     "mysql2": "^3.9.7"
   },
   "devDependencies": {
