@@ -4,7 +4,7 @@ const db = require('../database');
 
 module.exports = {
   async execute(auditLogEntry, guild) {
-    const { action, executorId, targetId, reason, id, changes } = auditLogEntry;
+    const { action, executorId, targetId, reason, id, changes, extra } = auditLogEntry;
     
     // Prevent duplicate logging using audit log entry ID cache
     if (db.isAuditEventCached(id)) return;
@@ -309,8 +309,8 @@ module.exports = {
       const chanNameActual = targetChannel ? targetChannel.name : 'Unknown';
 
       const statusChange = changes.find(c => c.key === 'status');
-      const oldStatus = statusChange ? statusChange.old : (changes[0]?.old || null);
-      const newStatus = statusChange ? statusChange.new : (changes[0]?.new || null);
+      const oldStatus = statusChange ? statusChange.old : null;
+      const newStatus = extra?.status || (statusChange ? statusChange.new : (changes[0]?.new || null));
 
       embed.setColor('#3b82f6')
         .setTitle('🎙️ Status Voice Channel Diperbarui')
