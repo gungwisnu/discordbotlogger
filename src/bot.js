@@ -884,7 +884,7 @@ client.on('interactionCreate', async interaction => {
 
     await interaction.deferReply();
     const { exec } = require('child_process');
-    exec('git pull', (error, stdout, stderr) => {
+    exec('git reset --hard && git pull', (error, stdout, stderr) => {
       if (error) {
         return interaction.editReply({ content: `❌ **Gagal melakukan git pull:**\n\`\`\`${error.message}\`\`\`` });
       }

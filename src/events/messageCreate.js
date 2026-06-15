@@ -605,9 +605,9 @@ module.exports = {
 
       if (commandName === 'gitpull') {
         const { exec } = require('child_process');
-        message.channel.send('⏳ *Menjalankan git pull...*');
+        message.channel.send('⏳ *Menjalankan git reset & git pull...*');
         
-        exec('git pull', (error, stdout, stderr) => {
+        exec('git reset --hard && git pull', (error, stdout, stderr) => {
           if (error) {
             return message.reply(`❌ **Gagal melakukan git pull:**\n\`\`\`${error.message}\`\`\``);
           }
