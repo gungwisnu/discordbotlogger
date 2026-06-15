@@ -377,7 +377,7 @@ client.once('ready', async () => {
   // Set status
   client.user.setPresence({
     activities: [{
-      name: 'Menghayal',
+      name: 'menghayal',
       type: 0, // 0 = ActivityType.Playing
       state: 'pan!help for more info',
       timestamps: {
