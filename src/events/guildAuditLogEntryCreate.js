@@ -308,27 +308,13 @@ module.exports = {
       const chanMention = targetChannel ? `<#${targetId}>` : `Channel ID: \`${targetId}\``;
       const chanNameActual = targetChannel ? targetChannel.name : 'Unknown';
 
-      const statusChange = changes.find(c => c.key === 'status');
-      const oldStatus = statusChange ? statusChange.old : null;
-      const newStatus = extra?.status || (statusChange ? statusChange.new : (changes[0]?.new || null));
-
       embed.setColor('#3b82f6')
         .setTitle('🎙️ Status Voice Channel Diperbarui')
         .setDescription(`Status saluran voice ${chanMention} telah diubah.`)
+        .addFields(
+          { name: 'Diubah Oleh', value: executorText }
+        )
         .setFooter({ text: `${executorName}: ${executorId} | #${chanNameActual}: ${targetId} | Audit Log: ${id}` });
-
-      if (oldStatus) {
-        embed.addFields(
-          { name: 'Diubah Oleh', value: executorText },
-          { name: 'Status Lama', value: `\`${oldStatus}\``, inline: true },
-          { name: 'Status Baru', value: `\`${newStatus || '(Kosong)'}\``, inline: true }
-        );
-      } else {
-        embed.addFields(
-          { name: 'Diubah Oleh', value: executorText },
-          { name: 'Diubah Menjadi', value: `\`${newStatus || '(Kosong)'}\`` }
-        );
-      }
 
       isLogged = true;
       logCategory = 'moderation';
