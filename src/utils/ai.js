@@ -35,7 +35,7 @@ Aturan Penting Gaya Bicara & Perilaku:
     model: model,
     messages: [
       { role: 'system', content: systemPrompt },
-      { role: 'user', content: promptText || 'Halo Pandu! Perkenalkan dirimu dengan ramah.' }
+      { role: 'user', content: promptText || 'Woi Pandu, kenalin diri khe bo, gaya kasual toxic anak tongkrongan Bali.' }
     ],
     max_tokens: isReasoner ? 2000 : 1000
   };
