@@ -305,14 +305,43 @@ module.exports = {
         }
 
         try {
-          const { joinVoiceChannel } = require('@discordjs/voice');
-          joinVoiceChannel({
+          const { joinVoiceChannel, getVoiceConnection, VoiceConnectionStatus, VoiceConnectionDisconnectReason, entersState } = require('@discordjs/voice');
+          
+          const existingConnection = getVoiceConnection(message.guild.id);
+          const isNewConnection = !existingConnection;
+
+          const connection = joinVoiceChannel({
             channelId: voiceChannel.id,
             guildId: message.guild.id,
             adapterCreator: message.guild.voiceAdapterCreator,
             selfDeaf: false,
             selfMute: false
           });
+
+          if (isNewConnection) {
+            connection.on(VoiceConnectionStatus.Disconnected, async (oldState, newState) => {
+              if (newState.reason === VoiceConnectionDisconnectReason.WebSocketClose && newState.closeCode === 4014) {
+                try {
+                  await Promise.race([
+                    entersState(connection, VoiceConnectionStatus.Signalling, 5000),
+                    entersState(connection, VoiceConnectionStatus.Connecting, 5000)
+                  ]);
+                  // Connection is reconnecting or has been moved to a new channel - do nothing
+                } catch (error) {
+                  // Real disconnect (e.g. kicked by an admin) - clean up connection
+                  connection.destroy();
+                }
+              } else if (connection.rejoinAttempts < 5) {
+                // Standard network drop or disconnect, attempt to rejoin
+                await new Promise((resolve) => setTimeout(resolve, (connection.rejoinAttempts + 1) * 5000));
+                connection.rejoin();
+              } else {
+                // Max rejoin attempts exceeded
+                connection.destroy();
+              }
+            });
+          }
+
           return message.reply(`✅ Berhasil bergabung ke saluran voice **${voiceChannel.name}**!`);
         } catch (error) {
           console.error('Gagal bergabung ke voice channel:', error);
