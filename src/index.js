@@ -1,3 +1,12 @@
+// Handle unhandled rejections and uncaught exceptions to prevent the process from crashing on temporary/network errors
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[Unhandled Rejection] Reason:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('[Uncaught Exception] Error:', error);
+});
+
 const db = require('./database');
 const { startBot } = require('./bot');
 const { startServer } = require('./server');

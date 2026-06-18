@@ -21,6 +21,19 @@ const client = new Client({
   partials: [Partials.Message, Partials.Channel, Partials.Reaction]
 });
 
+// Error handling for Discord client to prevent uncaught exceptions from crashing the bot
+client.on('error', error => {
+  console.error('[Discord Client Error]', error);
+});
+
+client.on('warn', info => {
+  console.warn('[Discord Client Warning]', info);
+});
+
+client.on('shardError', error => {
+  console.error('[Discord Shard Error]', error);
+});
+
 client.commands = new Collection();
 
 // Command handler definition
@@ -354,7 +367,7 @@ const ACHIEVEMENTS_METADATA = {
 };
 
 // Ready event handling & slash command registration
-client.once('ready', async () => {
+client.once('clientReady', async () => {
   console.log(`Bot Discord online sebagai ${client.user.tag}!`);
 
   const token = process.env.DISCORD_TOKEN;
