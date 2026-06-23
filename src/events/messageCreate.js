@@ -318,6 +318,9 @@ module.exports = {
             selfMute: false
           });
 
+          // Save voice channel ID to database
+          db.setBotVoiceChannel(message.guild.id, voiceChannel.id);
+
           if (isNewConnection) {
             connection.on(VoiceConnectionStatus.Disconnected, async (oldState, newState) => {
               if (newState.reason === VoiceConnectionDisconnectReason.WebSocketClose && newState.closeCode === 4014) {
@@ -329,6 +332,7 @@ module.exports = {
                   // Connection is reconnecting or has been moved to a new channel - do nothing
                 } catch (error) {
                   // Real disconnect (e.g. kicked by an admin) - clean up connection
+                  db.setBotVoiceChannel(message.guild.id, null);
                   connection.destroy();
                 }
               } else if (connection.rejoinAttempts < 5) {
@@ -337,6 +341,7 @@ module.exports = {
                 connection.rejoin();
               } else {
                 // Max rejoin attempts exceeded
+                db.setBotVoiceChannel(message.guild.id, null);
                 connection.destroy();
               }
             });
@@ -356,6 +361,8 @@ module.exports = {
           if (!connection) {
             return message.reply('❌ Saya tidak sedang berada di saluran voice apa pun di server ini!');
           }
+          // Clear voice channel from database
+          db.setBotVoiceChannel(message.guild.id, null);
           connection.destroy();
           return message.reply('✅ Berhasil keluar dari saluran voice.');
         } catch (error) {

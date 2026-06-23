@@ -399,6 +399,54 @@ client.once('clientReady', async () => {
     globalSettings.bot_status_url,
     globalSettings.bot_status_show_uptime
   );
+
+  // Auto-rejoin voice channels on ready
+  client.guilds.cache.forEach(async (guild) => {
+    const channelId = db.getBotVoiceChannel(guild.id);
+    if (channelId) {
+      const voiceChannel = guild.channels.cache.get(channelId);
+      if (voiceChannel) {
+        try {
+          const { joinVoiceChannel, VoiceConnectionStatus, VoiceConnectionDisconnectReason, entersState } = require('@discordjs/voice');
+          
+          const connection = joinVoiceChannel({
+            channelId: voiceChannel.id,
+            guildId: guild.id,
+            adapterCreator: guild.voiceAdapterCreator,
+            selfDeaf: false,
+            selfMute: false
+          });
+
+          connection.on(VoiceConnectionStatus.Disconnected, async (oldState, newState) => {
+            if (newState.reason === VoiceConnectionDisconnectReason.WebSocketClose && newState.closeCode === 4014) {
+              try {
+                await Promise.race([
+                  entersState(connection, VoiceConnectionStatus.Signalling, 5000),
+                  entersState(connection, VoiceConnectionStatus.Connecting, 5000)
+                ]);
+              } catch (error) {
+                db.setBotVoiceChannel(guild.id, null);
+                connection.destroy();
+              }
+            } else if (connection.rejoinAttempts < 5) {
+              await new Promise((resolve) => setTimeout(resolve, (connection.rejoinAttempts + 1) * 5000));
+              connection.rejoin();
+            } else {
+              db.setBotVoiceChannel(guild.id, null);
+              connection.destroy();
+            }
+          });
+
+          console.log(`[Voice Auto-Rejoin] Berhasil masuk kembali ke saluran voice "${voiceChannel.name}" di server "${guild.name}"`);
+        } catch (error) {
+          console.error(`[Voice Auto-Rejoin] Gagal masuk kembali ke saluran voice di server ${guild.name}:`, error);
+        }
+      } else {
+        // Channel no longer exists, clear it
+        db.setBotVoiceChannel(guild.id, null);
+      }
+    }
+  });
 });
 
 // Setup dynamic event listeners

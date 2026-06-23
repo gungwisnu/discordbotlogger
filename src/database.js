@@ -21,6 +21,7 @@ let data = {
   sessions: {},
   reaction_roles: [],
   ai_whitelist: [],
+  bot_voice_channels: {},
   global_settings: {
     bot_status: 'menghayal',
     bot_status_details: '',
@@ -71,6 +72,7 @@ function ensureDataStructure() {
   if (!data.sessions) data.sessions = {};
   if (!data.reaction_roles) data.reaction_roles = [];
   if (!data.ai_whitelist) data.ai_whitelist = [];
+  if (!data.bot_voice_channels) data.bot_voice_channels = {};
   if (!data.global_settings) {
     data.global_settings = {
       bot_status: 'menghayal',
@@ -887,6 +889,22 @@ const DatabaseFunctions = {
     Object.assign(data.global_settings, settings);
     triggerSave();
     return data.global_settings;
+  },
+
+  // Bot Voice Channel Tracking API
+  getBotVoiceChannel(guildId) {
+    if (!data.bot_voice_channels) data.bot_voice_channels = {};
+    return data.bot_voice_channels[guildId] || null;
+  },
+
+  setBotVoiceChannel(guildId, channelId) {
+    if (!data.bot_voice_channels) data.bot_voice_channels = {};
+    if (channelId) {
+      data.bot_voice_channels[guildId] = channelId;
+    } else {
+      delete data.bot_voice_channels[guildId];
+    }
+    triggerSave();
   }
 };
 

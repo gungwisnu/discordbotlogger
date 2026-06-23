@@ -5,6 +5,7 @@ process.on('unhandledRejection', (reason, promise) => {
 
 process.on('uncaughtException', (error) => {
   console.error('[Uncaught Exception] Error:', error);
+  process.exit(1);
 });
 
 const db = require('./database');
