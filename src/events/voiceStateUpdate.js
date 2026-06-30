@@ -42,15 +42,16 @@ module.exports = {
         durationStr = t(lang, 'voice_duration_val', hrs, mins, secs);
       }
 
-      let leaveDesc = t(lang, 'voice_leave_desc', `${member}`, `${oldState.channel}`);
-      if (settings.show_session_duration !== false) {
-        const durTitle = t(lang, 'voice_duration_title');
-        leaveDesc += `\n${durTitle}: ${durationStr}`;
-      }
+      const leaveDesc = t(lang, 'voice_leave_desc', `${member}`, `${oldState.channel}`);
 
       embed.setColor('#ef4444') // Red
         .setTitle(t(lang, 'voice_leave_title'))
         .setDescription(leaveDesc);
+
+      if (settings.show_session_duration !== false) {
+        const durTitle = t(lang, 'voice_duration_title');
+        embed.setFooter({ text: `${durTitle}: ${durationStr}` });
+      }
 
       sendLog(guildId, 'voice_join_leave', embed);
 
