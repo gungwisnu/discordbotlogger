@@ -42,13 +42,15 @@ module.exports = {
         durationStr = t(lang, 'voice_duration_val', hrs, mins, secs);
       }
 
+      let leaveDesc = t(lang, 'voice_leave_desc', `${member}`, `${oldState.channel}`);
+      if (settings.show_session_duration !== false) {
+        const durTitle = t(lang, 'voice_duration_title');
+        leaveDesc += ` (${durTitle}: ${durationStr})`;
+      }
+
       embed.setColor('#ef4444') // Red
         .setTitle(t(lang, 'voice_leave_title'))
-        .setDescription(t(lang, 'voice_leave_desc', `${member}`, `${oldState.channel}`));
-
-      if (settings.show_session_duration !== false) {
-        embed.addFields({ name: t(lang, 'voice_duration_title'), value: `\`${durationStr}\`` });
-      }
+        .setDescription(leaveDesc);
 
       sendLog(guildId, 'voice_join_leave', embed);
 
@@ -66,11 +68,7 @@ module.exports = {
 
       embed.setColor('#3b82f6') // Blue
         .setTitle(t(lang, 'voice_move_title'))
-        .setDescription(t(lang, 'voice_move_desc', `${member}`))
-        .addFields(
-          { name: t(lang, 'voice_before'), value: `${oldState.channel}`, inline: true },
-          { name: t(lang, 'voice_after'), value: `${newState.channel}`, inline: true }
-        );
+        .setDescription(t(lang, 'voice_move_desc', `${member}`, `${oldState.channel}`, `${newState.channel}`));
       sendLog(guildId, 'voice_join_leave', embed);
 
       if (result.newlyUnlocked && result.newlyUnlocked.length > 0) {
@@ -85,58 +83,62 @@ module.exports = {
 
       // Self Mute
       if (oldState.selfMute !== newState.selfMute) {
-        embed.setColor(newState.selfMute ? '#f59e0b' : '#0ea5e9') // Sky Blue when unmuted/activated
-          .setTitle(newState.selfMute ? t(lang, 'voice_mic_mute_title') : t(lang, 'voice_mic_unmute_title'))
-          .setDescription(newState.selfMute 
-            ? t(lang, 'voice_mic_mute_desc', `${member}`, `${newState.channel}`) 
-            : t(lang, 'voice_mic_unmute_desc', `${member}`, `${newState.channel}`)
-          );
+        const emoji = '🎙️';
+        const descText = newState.selfMute 
+          ? t(lang, 'voice_mic_mute_desc', `${member}`, `${newState.channel}`) 
+          : t(lang, 'voice_mic_unmute_desc', `${member}`, `${newState.channel}`);
+        
+        embed.setColor(newState.selfMute ? '#f59e0b' : '#0ea5e9')
+          .setDescription(`-# ${emoji} ${descText}`);
         logged = true;
       }
       
       // Self Deaf
       if (oldState.selfDeaf !== newState.selfDeaf) {
-        embed.setColor(newState.selfDeaf ? '#f59e0b' : '#0ea5e9') // Sky Blue when undeafened/activated
-          .setTitle(newState.selfDeaf ? t(lang, 'voice_deaf_mute_title') : t(lang, 'voice_deaf_unmute_title'))
-          .setDescription(newState.selfDeaf 
-            ? t(lang, 'voice_deaf_mute_desc', `${member}`, `${newState.channel}`) 
-            : t(lang, 'voice_deaf_unmute_desc', `${member}`, `${newState.channel}`)
-          );
+        const emoji = '🎧';
+        const descText = newState.selfDeaf 
+          ? t(lang, 'voice_deaf_mute_desc', `${member}`, `${newState.channel}`) 
+          : t(lang, 'voice_deaf_unmute_desc', `${member}`, `${newState.channel}`);
+        
+        embed.setColor(newState.selfDeaf ? '#f59e0b' : '#0ea5e9')
+          .setDescription(`-# ${emoji} ${descText}`);
         logged = true;
       }
 
       // Camera status (Video)
       if (oldState.selfVideo !== newState.selfVideo) {
+        const emoji = '📷';
+        const descText = newState.selfVideo 
+          ? t(lang, 'voice_cam_on_desc', `${member}`, `${newState.channel}`) 
+          : t(lang, 'voice_cam_off_desc', `${member}`, `${newState.channel}`);
+        
         embed.setColor(newState.selfVideo ? '#0ea5e9' : '#f59e0b')
-          .setTitle(newState.selfVideo ? t(lang, 'voice_cam_on_title') : t(lang, 'voice_cam_off_title'))
-          .setDescription(newState.selfVideo 
-            ? t(lang, 'voice_cam_on_desc', `${member}`, `${newState.channel}`) 
-            : t(lang, 'voice_cam_off_desc', `${member}`, `${newState.channel}`)
-          );
+          .setDescription(`-# ${emoji} ${descText}`);
         logged = true;
       }
 
       // Screen Share (Go Live)
       if (oldState.streaming !== newState.streaming) {
+        const emoji = '🖥️';
+        const descText = newState.streaming 
+          ? t(lang, 'voice_stream_on_desc', `${member}`, `${newState.channel}`) 
+          : t(lang, 'voice_stream_off_desc', `${member}`, `${newState.channel}`);
+        
         embed.setColor(newState.streaming ? '#0ea5e9' : '#f59e0b')
-          .setTitle(newState.streaming ? t(lang, 'voice_stream_on_title') : t(lang, 'voice_stream_off_title'))
-          .setDescription(newState.streaming 
-            ? t(lang, 'voice_stream_on_desc', `${member}`, `${newState.channel}`) 
-            : t(lang, 'voice_stream_off_desc', `${member}`, `${newState.channel}`)
-          );
+          .setDescription(`-# ${emoji} ${descText}`);
         logged = true;
       }
 
       // Voice Status Text
       if (oldState.status !== newState.status) {
-        const noneVal = lang === 'id' ? '_Tidak ada (Kosong)_' : '_None (Empty)_';
+        const oldVal = oldState.status ? `\`${oldState.status}\`` : (lang === 'id' ? 'kosong' : 'empty');
+        const newVal = newState.status ? `\`${newState.status}\`` : (lang === 'id' ? 'kosong' : 'empty');
+        const descText = lang === 'id' 
+          ? `${member} mengubah status voice di ${newState.channel || 'saluran voice'} dari ${oldVal} ke ${newVal}.`
+          : `${member} changed voice status in ${newState.channel || 'voice channel'} from ${oldVal} to ${newVal}.`;
+        
         embed.setColor('#0ea5e9')
-          .setTitle(t(lang, 'voice_status_update_title'))
-          .setDescription(t(lang, 'voice_status_update_desc', `${member}`, `${newState.channel || 'saluran voice'}`))
-          .addFields(
-            { name: t(lang, 'voice_before'), value: oldState.status ? `\`${oldState.status}\`` : noneVal, inline: true },
-            { name: t(lang, 'voice_after'), value: newState.status ? `\`${newState.status}\`` : noneVal, inline: true }
-          );
+          .setDescription(`-# 💬 ${descText}`);
         logged = true;
       }
 
