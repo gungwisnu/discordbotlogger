@@ -45,7 +45,7 @@ module.exports = {
       let leaveDesc = t(lang, 'voice_leave_desc', `${member}`, `${oldState.channel}`);
       if (settings.show_session_duration !== false) {
         const durTitle = t(lang, 'voice_duration_title');
-        leaveDesc += ` (${durTitle}: ${durationStr})`;
+        leaveDesc += `\n${durTitle}: ${durationStr}`;
       }
 
       embed.setColor('#ef4444') // Red
