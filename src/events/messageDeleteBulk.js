@@ -1,6 +1,7 @@
 const { EmbedBuilder, AuditLogEvent } = require('discord.js');
 const { sendLog } = require('../bot');
 const db = require('../database');
+const { t } = require('../utils/lang');
 
 module.exports = {
   async execute(messages) {
@@ -14,12 +15,13 @@ module.exports = {
     const ignored = JSON.parse(settings.ignored_channels || '[]');
     if (ignored.includes(firstMsg.channel.id)) return;
 
+    const lang = settings.language || 'id';
+
     const embed = new EmbedBuilder()
       .setColor('#ef4444') // Solid Red
-      .setTitle('🗑️ Pesan Dihapus Secara Massal (Purge)')
-      .setDescription(`Sebanyak **${messages.size}** pesan telah dihapus secara massal di saluran ${firstMsg.channel}.`)
-      .setTimestamp()
-      .setFooter({ text: `#${firstMsg.channel.name}: ${firstMsg.channel.id}` });
+      .setTitle(t(lang, 'msg_bulk_title'))
+      .setDescription(t(lang, 'msg_bulk_desc', messages.size, `${firstMsg.channel}`))
+      .setTimestamp();
 
     // Attempt to fetch who purged from Audit Logs
     try {
@@ -34,8 +36,7 @@ module.exports = {
         if (!db.isAuditEventCached(purgeLog.id)) {
           db.cacheAuditEvent(purgeLog.id);
           const executor = purgeLog.executor;
-          embed.addFields({ name: 'Dihapus Oleh', value: `${executor}`, inline: true });
-          embed.setFooter({ text: `${executor.username}: ${executor.id} | #${firstMsg.channel.name}: ${firstMsg.channel.id} | Audit Log: ${purgeLog.id}` });
+          embed.addFields({ name: t(lang, 'msg_bulk_by'), value: `${executor}`, inline: true });
         }
       }
     } catch (err) {

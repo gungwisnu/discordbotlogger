@@ -1,6 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const { sendLog } = require('../bot');
 const db = require('../database');
+const { t } = require('../utils/lang');
 
 module.exports = {
   execute(oldState, newState) {
@@ -10,24 +11,20 @@ module.exports = {
 
     if (!member || member.user.bot) return;
 
-    const chan = newState.channel || oldState.channel;
-    const chanName = chan ? `#${chan.name}` : '#Unknown';
-    const chanId = newState.channelId || oldState.channelId;
+    const settings = db.getGuildSettings(guildId);
+    const lang = settings.language || 'id';
 
     const embed = new EmbedBuilder()
       .setAuthor({ name: member.user.tag, iconURL: member.user.displayAvatarURL() })
-      .setTimestamp()
-      .setFooter({ text: `${member.user.username}: ${userId}${chanId ? ` | ${chanName}: ${chanId}` : ''}` });
-
-    let logged = false;
+      .setTimestamp();
 
     // 1. JOIN Voice
     if (!oldState.channelId && newState.channelId) {
       db.startVoiceSession(guildId, userId, newState.channelId);
 
       embed.setColor('#10b981') // Green
-        .setTitle('🔊 Bergabung ke Saluran Voice')
-        .setDescription(`${member} telah bergabung ke saluran Voice ${newState.channel}.`);
+        .setTitle(t(lang, 'voice_join_title'))
+        .setDescription(t(lang, 'voice_join_desc', `${member}`, `${newState.channel}`));
       sendLog(guildId, 'voice_join_leave', embed);
     }
 
@@ -36,19 +33,23 @@ module.exports = {
       const result = db.endVoiceSession(guildId, userId);
       const durationSecs = result.duration;
       const newlyUnlocked = result.newlyUnlocked;
-      let durationStr = 'Tidak diketahui';
+      let durationStr = lang === 'id' ? 'Tidak diketahui' : 'Unknown';
 
       if (durationSecs !== null && durationSecs !== undefined) {
         const hrs = Math.floor(durationSecs / 3600);
         const mins = Math.floor((durationSecs % 3600) / 60);
         const secs = durationSecs % 60;
-        durationStr = `${hrs} jam ${mins} menit ${secs} detik`;
+        durationStr = t(lang, 'voice_duration_val', hrs, mins, secs);
       }
 
       embed.setColor('#ef4444') // Red
-        .setTitle('🔇 Meninggalkan Saluran Voice')
-        .setDescription(`${member} telah meninggalkan saluran Voice ${oldState.channel}.`)
-        .addFields({ name: 'Durasi Sesi', value: `\`${durationStr}\`` });
+        .setTitle(t(lang, 'voice_leave_title'))
+        .setDescription(t(lang, 'voice_leave_desc', `${member}`, `${oldState.channel}`));
+
+      if (settings.show_session_duration !== false) {
+        embed.addFields({ name: t(lang, 'voice_duration_title'), value: `\`${durationStr}\`` });
+      }
+
       sendLog(guildId, 'voice_join_leave', embed);
 
       if (newlyUnlocked && newlyUnlocked.length > 0) {
@@ -64,11 +65,11 @@ module.exports = {
       db.startVoiceSession(guildId, userId, newState.channelId);
 
       embed.setColor('#3b82f6') // Blue
-        .setTitle('🔄 Berpindah Saluran Voice')
-        .setDescription(`${member} telah berpindah saluran Voice.`)
+        .setTitle(t(lang, 'voice_move_title'))
+        .setDescription(t(lang, 'voice_move_desc', `${member}`))
         .addFields(
-          { name: 'Sebelum', value: `${oldState.channel}`, inline: true },
-          { name: 'Sesudah', value: `${newState.channel}`, inline: true }
+          { name: t(lang, 'voice_before'), value: `${oldState.channel}`, inline: true },
+          { name: t(lang, 'voice_after'), value: `${newState.channel}`, inline: true }
         );
       sendLog(guildId, 'voice_join_leave', embed);
 
@@ -84,44 +85,57 @@ module.exports = {
 
       // Self Mute
       if (oldState.selfMute !== newState.selfMute) {
-        embed.setColor(newState.selfMute ? '#f59e0b' : '#10b981')
-          .setTitle(newState.selfMute ? '🎙️ Mikrofon Dinonaktifkan' : '🎙️ Mikrofon Diaktifkan')
-          .setDescription(`${member} ${newState.selfMute ? 'menonaktifkan mikrofon mereka' : 'mengaktifkan mikrofon mereka'} di ${newState.channel}.`);
+        embed.setColor(newState.selfMute ? '#f59e0b' : '#0ea5e9') // Sky Blue when unmuted/activated
+          .setTitle(newState.selfMute ? t(lang, 'voice_mic_mute_title') : t(lang, 'voice_mic_unmute_title'))
+          .setDescription(newState.selfMute 
+            ? t(lang, 'voice_mic_mute_desc', `${member}`, `${newState.channel}`) 
+            : t(lang, 'voice_mic_unmute_desc', `${member}`, `${newState.channel}`)
+          );
         logged = true;
       }
       
       // Self Deaf
       if (oldState.selfDeaf !== newState.selfDeaf) {
-        embed.setColor(newState.selfDeaf ? '#f59e0b' : '#10b981')
-          .setTitle(newState.selfDeaf ? '🎧 Pendengaran Dinonaktifkan' : '🎧 Pendengaran Diaktifkan')
-          .setDescription(`${member} ${newState.selfDeaf ? 'menonaktifkan pendengaran mereka' : 'mengaktifkan pendengaran mereka'} di ${newState.channel}.`);
+        embed.setColor(newState.selfDeaf ? '#f59e0b' : '#0ea5e9') // Sky Blue when undeafened/activated
+          .setTitle(newState.selfDeaf ? t(lang, 'voice_deaf_mute_title') : t(lang, 'voice_deaf_unmute_title'))
+          .setDescription(newState.selfDeaf 
+            ? t(lang, 'voice_deaf_mute_desc', `${member}`, `${newState.channel}`) 
+            : t(lang, 'voice_deaf_unmute_desc', `${member}`, `${newState.channel}`)
+          );
         logged = true;
       }
 
       // Camera status (Video)
       if (oldState.selfVideo !== newState.selfVideo) {
-        embed.setColor(newState.selfVideo ? '#8b5cf6' : '#6b7280')
-          .setTitle(newState.selfVideo ? '📷 Kamera Voice Diaktifkan' : '📷 Kamera Voice Dinonaktifkan')
-          .setDescription(`${member} ${newState.selfVideo ? 'mengaktifkan kamera video mereka' : 'menonaktifkan kamera video mereka'} di ${newState.channel}.`);
+        embed.setColor(newState.selfVideo ? '#0ea5e9' : '#f59e0b')
+          .setTitle(newState.selfVideo ? t(lang, 'voice_cam_on_title') : t(lang, 'voice_cam_off_title'))
+          .setDescription(newState.selfVideo 
+            ? t(lang, 'voice_cam_on_desc', `${member}`, `${newState.channel}`) 
+            : t(lang, 'voice_cam_off_desc', `${member}`, `${newState.channel}`)
+          );
         logged = true;
       }
 
       // Screen Share (Go Live)
       if (oldState.streaming !== newState.streaming) {
-        embed.setColor(newState.streaming ? '#8b5cf6' : '#6b7280')
-          .setTitle(newState.streaming ? '🖥️ Berbagi Layar Dimulai' : '🖥️ Berbagi Layar Dihentikan')
-          .setDescription(`${member} ${newState.streaming ? 'memulai aktivitas berbagi layar' : 'menghentikan aktivitas berbagi layar'} di ${newState.channel}.`);
+        embed.setColor(newState.streaming ? '#0ea5e9' : '#f59e0b')
+          .setTitle(newState.streaming ? t(lang, 'voice_stream_on_title') : t(lang, 'voice_stream_off_title'))
+          .setDescription(newState.streaming 
+            ? t(lang, 'voice_stream_on_desc', `${member}`, `${newState.channel}`) 
+            : t(lang, 'voice_stream_off_desc', `${member}`, `${newState.channel}`)
+          );
         logged = true;
       }
 
       // Voice Status Text
       if (oldState.status !== newState.status) {
-        embed.setColor('#8b5cf6')
-          .setTitle('💬 Status Voice Diperbarui')
-          .setDescription(`${member} mengubah status voice mereka di ${newState.channel || 'saluran voice'}.`)
+        const noneVal = lang === 'id' ? '_Tidak ada (Kosong)_' : '_None (Empty)_';
+        embed.setColor('#0ea5e9')
+          .setTitle(t(lang, 'voice_status_update_title'))
+          .setDescription(t(lang, 'voice_status_update_desc', `${member}`, `${newState.channel || 'saluran voice'}`))
           .addFields(
-            { name: 'Sebelum', value: oldState.status ? `\`${oldState.status}\`` : '_Tidak ada (Kosong)_', inline: true },
-            { name: 'Sesudah', value: newState.status ? `\`${newState.status}\`` : '_Tidak ada (Kosong)_', inline: true }
+            { name: t(lang, 'voice_before'), value: oldState.status ? `\`${oldState.status}\`` : noneVal, inline: true },
+            { name: t(lang, 'voice_after'), value: newState.status ? `\`${newState.status}\`` : noneVal, inline: true }
           );
         logged = true;
       }

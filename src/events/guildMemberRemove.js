@@ -1,21 +1,26 @@
 const { EmbedBuilder } = require('discord.js');
 const { sendLog } = require('../bot');
+const db = require('../database');
+const { t } = require('../utils/lang');
 
 module.exports = {
   execute(member) {
-    const joinedAt = member.joinedTimestamp ? `<t:${Math.floor(member.joinedTimestamp / 1000)}:R>` : '_Tidak diketahui_';
+    const settings = db.getGuildSettings(member.guild.id);
+    const lang = settings.language || 'id';
+
+    const noneText = lang === 'id' ? '_Tidak diketahui_' : '_Unknown_';
+    const joinedAt = member.joinedTimestamp ? `<t:${Math.floor(member.joinedTimestamp / 1000)}:R>` : noneText;
     
     const embed = new EmbedBuilder()
       .setColor('#f43f5e') // Red
-      .setTitle('📤 Anggota Meninggalkan Server')
-      .setDescription(`${member} telah meninggalkan server.`)
+      .setTitle(t(lang, 'mem_rem_title'))
+      .setDescription(t(lang, 'mem_rem_desc', `${member}`))
       .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
       .addFields(
-        { name: 'Bergabung Sejak', value: joinedAt },
-        { name: 'Total Anggota Tersisa', value: `\`${member.guild.memberCount.toLocaleString()} anggota\``, inline: true }
+        { name: t(lang, 'mem_rem_joined'), value: joinedAt },
+        { name: t(lang, 'mem_rem_total'), value: `\`${t(lang, 'mem_rem_total_val', member.guild.memberCount.toLocaleString())}\``, inline: true }
       )
-      .setTimestamp()
-      .setFooter({ text: `${member.user.username}: ${member.user.id}` });
+      .setTimestamp();
 
     sendLog(member.guild.id, 'member', embed);
   }

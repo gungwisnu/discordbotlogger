@@ -1,11 +1,13 @@
 const { EmbedBuilder } = require('discord.js');
 const { sendLog } = require('../bot');
 const db = require('../database');
+const { t } = require('../utils/lang');
 
 module.exports = {
   execute(member) {
     const accountAgeDays = Math.floor((Date.now() - member.user.createdTimestamp) / (24 * 60 * 60 * 1000));
     const settings = db.getGuildSettings(member.guild.id);
+    const lang = settings.language || 'id';
     
     // Welcome message sending logic
     if (settings.welcome_enabled && settings.welcome_channel_id) {
@@ -25,15 +27,14 @@ module.exports = {
 
     const embed = new EmbedBuilder()
       .setColor('#10b981') // Green
-      .setTitle('📥 Anggota Baru Bergabung')
-      .setDescription(`${member} telah bergabung ke dalam server.`)
+      .setTitle(t(lang, 'mem_add_title'))
+      .setDescription(t(lang, 'mem_add_desc', `${member}`))
       .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
       .addFields(
-        { name: 'Umur Akun', value: `\`${accountAgeDays} hari\` (Dibuat: <t:${Math.floor(member.user.createdTimestamp / 1000)}:R>)` },
-        { name: 'Total Anggota Baru', value: `\`${member.guild.memberCount.toLocaleString()} anggota\``, inline: true }
+        { name: t(lang, 'mem_add_age'), value: `\`${t(lang, 'mem_add_age_val', accountAgeDays)}\` (<t:${Math.floor(member.user.createdTimestamp / 1000)}:R>)` },
+        { name: t(lang, 'mem_add_total'), value: `\`${t(lang, 'mem_add_total_val', member.guild.memberCount.toLocaleString())}\``, inline: true }
       )
-      .setTimestamp()
-      .setFooter({ text: `${member.user.username}: ${member.user.id}` });
+      .setTimestamp();
 
     sendLog(member.guild.id, 'member', embed);
   }

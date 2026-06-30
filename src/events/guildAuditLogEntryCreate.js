@@ -1,23 +1,25 @@
 const { EmbedBuilder, AuditLogEvent } = require('discord.js');
 const { sendLog } = require('../bot');
 const db = require('../database');
+const { t } = require('../utils/lang');
 
 module.exports = {
   async execute(auditLogEntry, guild) {
-    const { action, executorId, targetId, reason, id, changes, extra } = auditLogEntry;
+    const { action, executorId, targetId, reason, id, changes } = auditLogEntry;
     
     // Prevent duplicate logging using audit log entry ID cache
     if (db.isAuditEventCached(id)) return;
     db.cacheAuditEvent(id);
 
+    const settings = db.getGuildSettings(guild.id);
+    const lang = settings.language || 'id';
+
     const executor = await guild.client.users.fetch(executorId).catch(() => null);
-    const executorName = executor ? executor.username : 'Unknown';
     const executorText = executor ? `${executor}` : `Admin ID: \`${executorId}\``;
-    const reasonText = reason || 'Tidak ada alasan yang diberikan.';
+    const reasonText = reason || (lang === 'id' ? 'Tidak ada alasan yang diberikan.' : 'No reason provided.');
 
     const embed = new EmbedBuilder()
-      .setTimestamp()
-      .setFooter({ text: `${executorName}: ${executorId} | Audit Log: ${id}` });
+      .setTimestamp();
 
     let isLogged = false;
     let logCategory = 'server';
@@ -29,14 +31,13 @@ module.exports = {
       const name = target ? `${target}` : `User ID: \`${targetId}\``;
       
       embed.setColor('#ef4444') // Solid Red
-        .setTitle('🚫 Anggota Diblokir (Banned)')
-        .setDescription(`Pengguna **${targetName}** telah diblokir dari server.`)
+        .setTitle(t(lang, 'audit_ban_title'))
+        .setDescription(t(lang, 'audit_ban_desc', targetName))
         .addFields(
-          { name: 'Target Anggota', value: name, inline: true },
-          { name: 'Moderator', value: executorText, inline: true },
-          { name: 'Alasan', value: reasonText }
-        )
-        .setFooter({ text: `${executorName}: ${executorId} | ${targetName}: ${targetId} | Audit Log: ${id}` });
+          { name: t(lang, 'audit_field_target'), value: name, inline: true },
+          { name: t(lang, 'audit_field_mod'), value: executorText, inline: true },
+          { name: t(lang, 'audit_field_reason'), value: reasonText }
+        );
       
       db.logModeration(guild.id, targetId, executorId, 'BAN', reasonText);
       isLogged = true;
@@ -50,14 +51,13 @@ module.exports = {
       const name = target ? `${target}` : `User ID: \`${targetId}\``;
       
       embed.setColor('#10b981') // Emerald Green
-        .setTitle('🔓 Pemblokiran Anggota Dicabut')
-        .setDescription(`Pemblokiran pengguna **${targetName}** telah dicabut.`)
+        .setTitle(t(lang, 'audit_unban_title'))
+        .setDescription(t(lang, 'audit_unban_desc', targetName))
         .addFields(
-          { name: 'Target Anggota', value: name, inline: true },
-          { name: 'Moderator', value: executorText, inline: true },
-          { name: 'Alasan', value: reasonText }
-        )
-        .setFooter({ text: `${executorName}: ${executorId} | ${targetName}: ${targetId} | Audit Log: ${id}` });
+          { name: t(lang, 'audit_field_target'), value: name, inline: true },
+          { name: t(lang, 'audit_field_mod'), value: executorText, inline: true },
+          { name: t(lang, 'audit_field_reason'), value: reasonText }
+        );
       
       db.logModeration(guild.id, targetId, executorId, 'UNBAN', reasonText);
       isLogged = true;
@@ -71,14 +71,13 @@ module.exports = {
       const name = target ? `${target}` : `User ID: \`${targetId}\``;
       
       embed.setColor('#f97316') // Orange
-        .setTitle('👢 Anggota Dikeluarkan (Kicked)')
-        .setDescription(`Pengguna **${targetName}** telah dikeluarkan dari server.`)
+        .setTitle(t(lang, 'audit_kick_title'))
+        .setDescription(t(lang, 'audit_kick_desc', targetName))
         .addFields(
-          { name: 'Target Anggota', value: name, inline: true },
-          { name: 'Moderator', value: executorText, inline: true },
-          { name: 'Alasan', value: reasonText }
-        )
-        .setFooter({ text: `${executorName}: ${executorId} | ${targetName}: ${targetId} | Audit Log: ${id}` });
+          { name: t(lang, 'audit_field_target'), value: name, inline: true },
+          { name: t(lang, 'audit_field_mod'), value: executorText, inline: true },
+          { name: t(lang, 'audit_field_reason'), value: reasonText }
+        );
       
       db.logModeration(guild.id, targetId, executorId, 'KICK', reasonText);
       isLogged = true;
@@ -101,29 +100,28 @@ module.exports = {
           const durationMin = Math.round((timeoutTime.getTime() - Date.now()) / 60000);
           
           embed.setColor('#d97706') // Dark Amber
-            .setTitle('⏳ Anggota Diberikan Timeout')
-            .setDescription(`Pengguna **${targetName}** telah ditempatkan dalam mode senyap (timeout).`)
+            .setTitle(t(lang, 'audit_timeout_title'))
+            .setDescription(t(lang, 'audit_timeout_desc', targetName))
             .addFields(
-              { name: 'Target Anggota', value: name, inline: true },
-              { name: 'Moderator', value: executorText, inline: true },
-              { name: 'Durasi', value: `\`${durationMin} menit\` (Sampai: <t:${Math.floor(timeoutTime.getTime() / 1000)}:f>)` },
-              { name: 'Alasan', value: reasonText }
-            )
-            .setFooter({ text: `${executorName}: ${executorId} | ${targetName}: ${targetId} | Audit Log: ${id}` });
+              { name: t(lang, 'audit_field_target'), value: name, inline: true },
+              { name: t(lang, 'audit_field_mod'), value: executorText, inline: true },
+              { name: t(lang, 'audit_field_duration'), value: `\`${t(lang, 'audit_field_duration_val', durationMin)}\` (<t:${Math.floor(timeoutTime.getTime() / 1000)}:f>)` },
+              { name: t(lang, 'audit_field_reason'), value: reasonText }
+            );
           
           db.logModeration(guild.id, targetId, executorId, 'TIMEOUT', `Durasi: ${durationMin} menit. Alasan: ${reasonText}`);
           logCategory = 'moderation';
           isLogged = true;
         } else if (oldVal && !newVal) {
+          const untimeoutReason = lang === 'id' ? 'Timeout dibatalkan sebelum waktunya.' : 'Timeout cancelled early.';
           embed.setColor('#3b82f6') // Blue
-            .setTitle('⏰ Timeout Dicabut')
-            .setDescription(`Masa timeout untuk **${targetName}** telah dicabut.`)
+            .setTitle(t(lang, 'audit_untimeout_title'))
+            .setDescription(t(lang, 'audit_untimeout_desc', targetName))
             .addFields(
-              { name: 'Target Anggota', value: name, inline: true },
-              { name: 'Moderator', value: executorText, inline: true },
-              { name: 'Alasan', value: 'Timeout dibatalkan sebelum waktunya.' }
-            )
-            .setFooter({ text: `${executorName}: ${executorId} | ${targetName}: ${targetId} | Audit Log: ${id}` });
+              { name: t(lang, 'audit_field_target'), value: name, inline: true },
+              { name: t(lang, 'audit_field_mod'), value: executorText, inline: true },
+              { name: t(lang, 'audit_field_reason'), value: untimeoutReason }
+            );
           
           db.logModeration(guild.id, targetId, executorId, 'UNTIMEOUT', 'Timeout dibatalkan.');
           logCategory = 'moderation';
@@ -134,17 +132,13 @@ module.exports = {
     
     // 5. CHANNEL CREATE / DELETE
     else if (action === AuditLogEvent.ChannelCreate) {
-      const channelNameChange = changes.find(c => c.key === 'name');
-      const chanName = channelNameChange ? channelNameChange.new : `Channel ID: ${targetId}`;
-      
       embed.setColor('#10b981')
-        .setTitle('📁 Channel Dibuat')
-        .setDescription(`Saluran teks baru telah berhasil dibuat di server.`)
+        .setTitle(t(lang, 'audit_chan_create_title'))
+        .setDescription(t(lang, 'audit_chan_create_desc'))
         .addFields(
-          { name: 'Nama Channel', value: `<#${targetId}>`, inline: true },
-          { name: 'Dibuat Oleh', value: executorText, inline: true }
-        )
-        .setFooter({ text: `${executorName}: ${executorId} | #${chanName}: ${targetId} | Audit Log: ${id}` });
+          { name: t(lang, 'audit_field_chan'), value: `<#${targetId}>`, inline: true },
+          { name: t(lang, 'audit_field_by'), value: executorText, inline: true }
+        );
       
       isLogged = true;
       logCategory = 'server';
@@ -153,13 +147,12 @@ module.exports = {
       const chanName = channelNameChange ? channelNameChange.old : `Channel ID: ${targetId}`;
       
       embed.setColor('#ef4444')
-        .setTitle('📂 Channel Dihapus')
-        .setDescription(`Saluran **#${chanName}** telah dihapus dari server.`)
+        .setTitle(t(lang, 'audit_chan_delete_title'))
+        .setDescription(t(lang, 'audit_chan_delete_desc', chanName))
         .addFields(
-          { name: 'Nama Channel', value: `**#${chanName}**`, inline: true },
-          { name: 'Dihapus Oleh', value: executorText, inline: true }
-        )
-        .setFooter({ text: `${executorName}: ${executorId} | #${chanName}: ${targetId} | Audit Log: ${id}` });
+          { name: t(lang, 'audit_field_chan'), value: `**#${chanName}**`, inline: true },
+          { name: t(lang, 'audit_field_by'), value: executorText, inline: true }
+        );
       
       isLogged = true;
       logCategory = 'server';
@@ -169,15 +162,13 @@ module.exports = {
     else if (action === AuditLogEvent.ChannelUpdate) {
       const targetChannel = await guild.channels.fetch(targetId).catch(() => null);
       const chanMention = targetChannel ? `<#${targetId}>` : `Channel ID: \`${targetId}\``;
-      const chanNameActual = targetChannel ? targetChannel.name : 'Unknown';
       
       embed.setColor('#3b82f6')
-        .setTitle('📂 Channel Diperbarui')
-        .setDescription(`Saluran ${chanMention} telah diperbarui.`)
+        .setTitle(t(lang, 'audit_chan_update_title'))
+        .setDescription(t(lang, 'audit_chan_update_desc', chanMention))
         .addFields(
-          { name: 'Diperbarui Oleh', value: executorText }
-        )
-        .setFooter({ text: `${executorName}: ${executorId} | #${chanNameActual}: ${targetId} | Audit Log: ${id}` });
+          { name: t(lang, 'audit_field_by'), value: executorText }
+        );
 
       let updated = false;
       const oldName = changes.find(c => c.key === 'name')?.old;
@@ -187,15 +178,16 @@ module.exports = {
 
       if (oldName !== undefined && newName !== undefined && oldName !== newName) {
         embed.addFields(
-          { name: 'Nama Sebelum', value: `\`${oldName}\``, inline: true },
-          { name: 'Nama Sesudah', value: `\`${newName}\``, inline: true }
+          { name: t(lang, 'voice_before'), value: `\`${oldName}\``, inline: true },
+          { name: t(lang, 'voice_after'), value: `\`${newName}\``, inline: true }
         );
         updated = true;
       }
       if (oldTopic !== undefined && newTopic !== undefined && oldTopic !== newTopic) {
+        const noneTopicVal = lang === 'id' ? '(Kosong)' : '(Empty)';
         embed.addFields(
-          { name: 'Topik Sebelum', value: `\`${oldTopic || '(Kosong)'}\``, inline: true },
-          { name: 'Topik Sesudah', value: `\`${newTopic || '(Kosong)'}\``, inline: true }
+          { name: t(lang, 'voice_before'), value: `\`${oldTopic || noneTopicVal}\``, inline: true },
+          { name: t(lang, 'voice_after'), value: `\`${newTopic || noneTopicVal}\``, inline: true }
         );
         updated = true;
       }
@@ -209,13 +201,12 @@ module.exports = {
     // 7. ROLE CREATE / DELETE
     else if (action === AuditLogEvent.RoleCreate) {
       embed.setColor('#8b5cf6') // Purple
-        .setTitle('🛡️ Peran (Role) Dibuat')
-        .setDescription('Peran (role) server baru telah dibuat.')
+        .setTitle(t(lang, 'audit_role_create_title'))
+        .setDescription(t(lang, 'audit_role_create_desc'))
         .addFields(
-          { name: 'Peran', value: `<@&${targetId}>`, inline: true },
-          { name: 'Dibuat Oleh', value: executorText, inline: true }
-        )
-        .setFooter({ text: `${executorName}: ${executorId} | Role ID: ${targetId} | Audit Log: ${id}` });
+          { name: t(lang, 'audit_field_role'), value: `<@&${targetId}>`, inline: true },
+          { name: t(lang, 'audit_field_by'), value: executorText, inline: true }
+        );
       
       isLogged = true;
       logCategory = 'server';
@@ -224,13 +215,12 @@ module.exports = {
       const roleName = nameChange ? nameChange.old : `ID: ${targetId}`;
       
       embed.setColor('#ef4444')
-        .setTitle('🛡️ Peran (Role) Dihapus')
-        .setDescription(`Peran **@${roleName}** telah dihapus dari server.`)
+        .setTitle(t(lang, 'audit_role_delete_title'))
+        .setDescription(t(lang, 'audit_role_delete_desc', roleName))
         .addFields(
-          { name: 'Nama Peran', value: `**${roleName}**`, inline: true },
-          { name: 'Dihapus Oleh', value: executorText, inline: true }
-        )
-        .setFooter({ text: `${executorName}: ${executorId} | @${roleName}: ${targetId} | Audit Log: ${id}` });
+          { name: t(lang, 'audit_field_role'), value: `**${roleName}**`, inline: true },
+          { name: t(lang, 'audit_field_by'), value: executorText, inline: true }
+        );
       
       isLogged = true;
       logCategory = 'server';
@@ -238,16 +228,12 @@ module.exports = {
 
     // 8. ROLE UPDATE
     else if (action === AuditLogEvent.RoleUpdate) {
-      const roleActual = await guild.roles.fetch(targetId).catch(() => null);
-      const roleNameActual = roleActual ? roleActual.name : 'Unknown';
-
       embed.setColor('#3b82f6')
-        .setTitle('🛡️ Peran (Role) Diperbarui')
-        .setDescription(`Peran <@&${targetId}> telah diperbarui.`)
+        .setTitle(t(lang, 'audit_role_update_title'))
+        .setDescription(t(lang, 'audit_role_update_desc', `<@&${targetId}>`))
         .addFields(
-          { name: 'Diperbarui Oleh', value: executorText }
-        )
-        .setFooter({ text: `${executorName}: ${executorId} | @${roleNameActual}: ${targetId} | Audit Log: ${id}` });
+          { name: t(lang, 'audit_field_by'), value: executorText }
+        );
 
       let updated = false;
       const oldName = changes.find(c => c.key === 'name')?.old;
@@ -257,8 +243,8 @@ module.exports = {
 
       if (oldName !== undefined && newName !== undefined && oldName !== newName) {
         embed.addFields(
-          { name: 'Nama Sebelum', value: `\`${oldName}\``, inline: true },
-          { name: 'Nama Sesudah', value: `\`${newName}\``, inline: true }
+          { name: t(lang, 'voice_before'), value: `\`${oldName}\``, inline: true },
+          { name: t(lang, 'voice_after'), value: `\`${newName}\``, inline: true }
         );
         updated = true;
       }
@@ -266,8 +252,8 @@ module.exports = {
         const oldHex = '#' + oldColor.toString(16).padStart(6, '0');
         const newHex = '#' + newColor.toString(16).padStart(6, '0');
         embed.addFields(
-          { name: 'Warna Sebelum', value: `\`${oldHex}\``, inline: true },
-          { name: 'Warna Sesudah', value: `\`${newHex}\``, inline: true }
+          { name: t(lang, 'voice_before'), value: `\`${oldHex}\``, inline: true },
+          { name: t(lang, 'voice_after'), value: `\`${newHex}\``, inline: true }
         );
         updated = true;
       }
@@ -282,54 +268,48 @@ module.exports = {
     else if (action === AuditLogEvent.EmojiCreate) {
       const emojiName = changes.find(c => c.key === 'name')?.new;
       embed.setColor('#10b981')
-        .setTitle('😀 Emoji Dibuat')
-        .setDescription(`Emoji baru dengan alias \`:${emojiName}:\` telah ditambahkan ke server.`)
+        .setTitle(t(lang, 'audit_emoji_create_title'))
+        .setDescription(t(lang, 'audit_emoji_create_desc', emojiName))
         .addFields(
-          { name: 'Nama Emoji', value: `\`:${emojiName}:\``, inline: true },
-          { name: 'Dibuat Oleh', value: executorText, inline: true }
-        )
-        .setFooter({ text: `${executorName}: ${executorId} | Emoji: :${emojiName}: (${targetId}) | Audit Log: ${id}` });
+          { name: t(lang, 'audit_field_emoji'), value: `\`:${emojiName}:\``, inline: true },
+          { name: t(lang, 'audit_field_by'), value: executorText, inline: true }
+        );
       isLogged = true;
       logCategory = 'server';
     } else if (action === AuditLogEvent.EmojiDelete) {
       const emojiName = changes.find(c => c.key === 'name')?.old;
       embed.setColor('#ef4444')
-        .setTitle('😢 Emoji Dihapus')
-        .setDescription(`Emoji \`:${emojiName}:\` telah dihapus dari server.`)
+        .setTitle(t(lang, 'audit_emoji_delete_title'))
+        .setDescription(t(lang, 'audit_emoji_delete_desc', emojiName))
         .addFields(
-          { name: 'Nama Emoji', value: `\`:${emojiName}:\``, inline: true },
-          { name: 'Dihapus Oleh', value: executorText, inline: true }
-        )
-        .setFooter({ text: `${executorName}: ${executorId} | Emoji: :${emojiName}: (${targetId}) | Audit Log: ${id}` });
+          { name: t(lang, 'audit_field_emoji'), value: `\`:${emojiName}:\``, inline: true },
+          { name: t(lang, 'audit_field_by'), value: executorText, inline: true }
+        );
       isLogged = true;
       logCategory = 'server';
     } else if (action === 192) {
       const targetChannel = await guild.channels.fetch(targetId).catch(() => null);
       const chanMention = targetChannel ? `<#${targetId}>` : `Channel ID: \`${targetId}\``;
-      const chanNameActual = targetChannel ? targetChannel.name : 'Unknown';
 
       embed.setColor('#3b82f6')
-        .setTitle('🎙️ Status Voice Channel Diperbarui')
-        .setDescription(`Status saluran voice ${chanMention} telah diubah.`)
+        .setTitle(t(lang, 'audit_vc_status_update_title'))
+        .setDescription(t(lang, 'audit_vc_status_update_desc', chanMention))
         .addFields(
-          { name: 'Diubah Oleh', value: executorText }
-        )
-        .setFooter({ text: `${executorName}: ${executorId} | #${chanNameActual}: ${targetId} | Audit Log: ${id}` });
+          { name: t(lang, 'audit_field_by'), value: executorText }
+        );
 
       isLogged = true;
       logCategory = 'moderation';
     } else if (action === 193) {
       const targetChannel = await guild.channels.fetch(targetId).catch(() => null);
       const chanMention = targetChannel ? `<#${targetId}>` : `Channel ID: \`${targetId}\``;
-      const chanNameActual = targetChannel ? targetChannel.name : 'Unknown';
 
       embed.setColor('#ef4444')
-        .setTitle('🎙️ Status Voice Channel Dihapus')
-        .setDescription(`Status saluran voice ${chanMention} telah dihapus.`)
+        .setTitle(t(lang, 'audit_vc_status_delete_title'))
+        .setDescription(t(lang, 'audit_vc_status_delete_desc', chanMention))
         .addFields(
-          { name: 'Dihapus Oleh', value: executorText }
-        )
-        .setFooter({ text: `${executorName}: ${executorId} | #${chanNameActual}: ${targetId} | Audit Log: ${id}` });
+          { name: t(lang, 'audit_field_by'), value: executorText }
+        );
 
       isLogged = true;
       logCategory = 'moderation';

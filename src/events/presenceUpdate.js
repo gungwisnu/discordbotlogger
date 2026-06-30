@@ -1,6 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const { sendLog } = require('../bot');
 const db = require('../database');
+const { t } = require('../utils/lang');
 
 // In-memory gaming session tracker
 const activeGamingSessions = {};
@@ -13,32 +14,37 @@ module.exports = {
     const userId = newPresence.member.user.id;
     const key = `${guildId}-${userId}`;
 
+    const settings = db.getGuildSettings(guildId);
+    const lang = settings.language || 'id';
+
     // Case 0: User Status Change Log (online, idle, dnd, offline)
     const oldStatus = oldPresence?.status || 'offline';
     const newStatus = newPresence?.status || 'offline';
 
     if (oldStatus !== newStatus) {
       const statusMap = {
-        online: { emoji: '🟢', label: 'Online', color: '#10b981' },
-        idle: { emoji: '🟡', label: 'Idle', color: '#f59e0b' },
-        dnd: { emoji: '🔴', label: 'Do Not Disturb (DND)', color: '#ef4444' },
-        offline: { emoji: '⚫', label: 'Offline / Invisible', color: '#6b7280' }
+        online: { emoji: '🟢', labelId: 'Online', labelEn: 'Online', color: '#10b981' },
+        idle: { emoji: '🟡', labelId: 'Idle', labelEn: 'Idle', color: '#f59e0b' },
+        dnd: { emoji: '🔴', labelId: 'Jangan Ganggu (DND)', labelEn: 'Do Not Disturb (DND)', color: '#ef4444' },
+        offline: { emoji: '⚫', labelId: 'Offline / Invisible', labelEn: 'Offline / Invisible', color: '#6b7280' }
       };
 
-      const oldInfo = statusMap[oldStatus] || { emoji: '❓', label: oldStatus, color: '#6b7280' };
-      const newInfo = statusMap[newStatus] || { emoji: '❓', label: newStatus, color: '#6b7280' };
+      const oldInfo = statusMap[oldStatus] || { emoji: '❓', labelId: oldStatus, labelEn: oldStatus, color: '#6b7280' };
+      const newInfo = statusMap[newStatus] || { emoji: '❓', labelId: newStatus, labelEn: newStatus, color: '#6b7280' };
+
+      const oldLabel = lang === 'id' ? oldInfo.labelId : oldInfo.labelEn;
+      const newLabel = lang === 'id' ? newInfo.labelId : newInfo.labelEn;
 
       const statusEmbed = new EmbedBuilder()
         .setAuthor({ name: newPresence.member.user.tag, iconURL: newPresence.member.user.displayAvatarURL({ dynamic: true }) })
-        .setTitle('👤 Perubahan Status Pengguna')
-        .setDescription(`Status ${newPresence.member} telah berubah.`)
+        .setTitle(t(lang, 'pres_status_title'))
+        .setDescription(t(lang, 'pres_status_desc', `${newPresence.member}`))
         .addFields(
-          { name: 'Status Lama', value: `${oldInfo.emoji} **${oldInfo.label}**`, inline: true },
-          { name: 'Status Baru', value: `${newInfo.emoji} **${newInfo.label}**`, inline: true }
+          { name: t(lang, 'pres_status_old'), value: `${oldInfo.emoji} **${oldLabel}**`, inline: true },
+          { name: t(lang, 'pres_status_new'), value: `${newInfo.emoji} **${newLabel}**`, inline: true }
         )
         .setColor(newInfo.color)
-        .setTimestamp()
-        .setFooter({ text: `${newPresence.member.user.username}: ${userId}` });
+        .setTimestamp();
 
       sendLog(guildId, 'user_status', statusEmbed);
     }
@@ -48,31 +54,24 @@ module.exports = {
 
     const embed = new EmbedBuilder()
       .setAuthor({ name: newPresence.member.user.tag, iconURL: newPresence.member.user.displayAvatarURL() })
-      .setTimestamp()
-      .setFooter({ text: `${newPresence.member.user.username}: ${userId}` });
+      .setTimestamp();
 
     // Case 1: Stopped playing old game
     if (oldActivity && (!newActivity || oldActivity.name !== newActivity.name)) {
       const session = activeGamingSessions[key];
-      let durationStr = '';
+      let durationMins = 0;
       
       if (session && session.gameName === oldActivity.name) {
         const durationSecs = Math.max(0, Math.floor((Date.now() - session.startTime) / 1000));
-        const newlyUnlocked = db.addGamingTime(guildId, userId, oldActivity.name, durationSecs);
+        db.addGamingTime(guildId, userId, oldActivity.name, durationSecs);
         delete activeGamingSessions[key];
 
-        const mins = Math.floor(durationSecs / 60);
-        durationStr = ` selama \`${mins} menit\``;
-
-        if (newlyUnlocked && newlyUnlocked.length > 0) {
-          const { sendAchievementNotification } = require('../bot');
-          sendAchievementNotification(guildId, userId, newlyUnlocked);
-        }
+        durationMins = Math.floor(durationSecs / 60);
       }
 
       embed.setColor('#6b7280') // Neutral grey
-        .setTitle('🎮 Selesai Bermain Game')
-        .setDescription(`${newPresence.member} telah selesai bermain **${oldActivity.name}**${durationStr}.`);
+        .setTitle(t(lang, 'pres_game_stop_title'))
+        .setDescription(t(lang, 'pres_game_stop_desc', `${newPresence.member}`, oldActivity.name, durationMins));
       
       sendLog(guildId, 'gaming_activity', embed);
     }
@@ -83,12 +82,7 @@ module.exports = {
       if (activeGamingSessions[key]) {
         const session = activeGamingSessions[key];
         const durationSecs = Math.max(0, Math.floor((Date.now() - session.startTime) / 1000));
-        const newlyUnlocked = db.addGamingTime(guildId, userId, session.gameName, durationSecs);
-
-        if (newlyUnlocked && newlyUnlocked.length > 0) {
-          const { sendAchievementNotification } = require('../bot');
-          sendAchievementNotification(guildId, userId, newlyUnlocked);
-        }
+        db.addGamingTime(guildId, userId, session.gameName, durationSecs);
       }
 
       // Record new session
@@ -98,11 +92,11 @@ module.exports = {
       };
 
       embed.setColor('#10b981') // Green
-        .setTitle('🎮 Mulai Bermain Game')
-        .setDescription(`${newPresence.member} telah mulai bermain **${newActivity.name}**.`);
+        .setTitle(t(lang, 'pres_game_start_title'))
+        .setDescription(t(lang, 'pres_game_start_desc', `${newPresence.member}`, newActivity.name));
       
       if (newActivity.details) {
-        embed.addFields({ name: 'Detail Aktivitas', value: `\`${newActivity.details}\` ${newActivity.state ? `- ${newActivity.state}` : ''}` });
+        embed.addFields({ name: t(lang, 'pres_game_detail'), value: `\`${newActivity.details}\` ${newActivity.state ? `- ${newActivity.state}` : ''}` });
       }
       
       sendLog(guildId, 'gaming_activity', embed);
@@ -114,11 +108,11 @@ module.exports = {
 
     if (newSpotify && (!oldSpotify || oldSpotify.details !== newSpotify.details)) {
       embed.setColor('#1db954') // Spotify green
-        .setTitle('🎵 Mendengarkan Spotify')
-        .setDescription(`${newPresence.member} sedang mendengarkan musik di Spotify.`)
+        .setTitle(t(lang, 'pres_spotify_title'))
+        .setDescription(t(lang, 'pres_spotify_desc', `${newPresence.member}`))
         .addFields(
-          { name: 'Judul Lagu', value: `**${newSpotify.details}**`, inline: true },
-          { name: 'Artis', value: `*${newSpotify.state}*`, inline: true }
+          { name: t(lang, 'pres_spotify_song'), value: `**${newSpotify.details}**`, inline: true },
+          { name: t(lang, 'pres_spotify_artist'), value: `*${newSpotify.state}*`, inline: true }
         );
       
       if (newSpotify.assets && newSpotify.assets.largeImage) {

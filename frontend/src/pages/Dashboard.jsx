@@ -425,6 +425,81 @@ export default function Dashboard() {
               </select>
             </div>
 
+            {/* Tampilan & Bahasa Logger Card */}
+            <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'hsl(var(--primary-glow))' }}><path d="m5 8 6 6 6-6"/></svg>
+                <h3 style={{ fontSize: '1.25rem', color: 'hsl(var(--text-primary))', fontWeight: '750' }}>Tampilan & Bahasa Logger</h3>
+              </div>
+              <p style={{ fontSize: '0.88rem', color: 'hsl(var(--text-secondary))' }}>
+                Sesuaikan bahasa teks log dan opsi durasi sesi voice saat anggota keluar.
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ fontSize: '0.88rem', color: 'hsl(var(--text-primary))', fontWeight: '600' }}>Bahasa Logger:</label>
+                  <select
+                    value={settings.language || 'id'}
+                    onChange={(e) => setSettings(prev => ({ ...prev, language: e.target.value }))}
+                    className="input-glass"
+                    style={{ 
+                      cursor: 'pointer',
+                      backgroundColor: 'hsl(var(--panel-glass))',
+                      color: 'hsl(var(--text-primary))'
+                    }}
+                  >
+                    <option value="id" style={{ backgroundColor: 'hsl(var(--bg-space))', color: 'hsl(var(--text-primary))' }}>Bahasa Indonesia (Ringkas)</option>
+                    <option value="en" style={{ backgroundColor: 'hsl(var(--bg-space))', color: 'hsl(var(--text-primary))' }}>English (Compact)</option>
+                  </select>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px' }}>
+                  <div>
+                    <h4 style={{ color: 'hsl(var(--text-primary))', fontSize: '0.94rem', fontWeight: '700' }}>Tampilkan Durasi Sesi Voice</h4>
+                    <p style={{ fontSize: '0.78rem', color: 'hsl(var(--text-muted))', marginTop: '2px' }}>
+                      Sematkan durasi waktu berbicara anggota saat meninggalkan saluran voice.
+                    </p>
+                  </div>
+
+                  <label style={{
+                    position: 'relative',
+                    display: 'inline-block',
+                    width: '48px',
+                    height: '24px',
+                    cursor: 'pointer'
+                  }}>
+                    <input 
+                      type="checkbox" 
+                      checked={settings.show_session_duration !== false} 
+                      onChange={(e) => setSettings(prev => ({ ...prev, show_session_duration: e.target.checked }))}
+                      style={{ opacity: 0, width: 0, height: 0 }} 
+                    />
+                    <span style={{
+                      position: 'absolute',
+                      cursor: 'pointer',
+                      top: 0, left: 0, right: 0, bottom: 0,
+                      backgroundColor: settings.show_session_duration !== false ? 'hsl(var(--success-emerald))' : 'hsla(var(--border-glass), 0.35)',
+                      transition: '0.3s',
+                      borderRadius: '34px',
+                      border: '1px solid hsl(var(--border-glass))'
+                    }}>
+                      <span style={{
+                        position: 'absolute',
+                        height: '16px',
+                        width: '16px',
+                        left: settings.show_session_duration !== false ? '26px' : '4px',
+                        bottom: '3px',
+                        backgroundColor: 'white',
+                        transition: '0.3s',
+                        borderRadius: '50%',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                      }} />
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
             {/* DeepSeek AI Configuration */}
             <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>

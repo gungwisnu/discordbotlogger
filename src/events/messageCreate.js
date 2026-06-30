@@ -18,40 +18,42 @@ module.exports = {
 
     if (isInvite || isMassMention || containsBadWord) {
       const { sendLog } = require('../bot');
+      const settings = db.getGuildSettings(message.guild.id);
+      const lang = settings.language || 'id';
+      const { t } = require('../utils/lang');
       
       const modEmbed = new EmbedBuilder()
         .setAuthor({ name: message.author.tag, iconURL: message.author.displayAvatarURL({ dynamic: true }) })
-        .setTimestamp()
-        .setFooter({ text: `${message.author.username}: ${message.author.id} | Saluran: #${message.channel.name}` });
+        .setTimestamp();
 
       let logAction = '';
       let logReason = '';
 
       if (isInvite) {
         logAction = 'DISCORD INVITE';
-        logReason = 'Mengirim tautan undangan Discord.';
+        logReason = lang === 'id' ? 'Mengirim tautan undangan Discord.' : 'Sent Discord invite link.';
         modEmbed.setColor('#ef4444') // Red
-          .setTitle('⚠️ Tautan Undangan Terdeteksi')
-          .setDescription(`Pengguna ${message.author} mengirimkan tautan undangan di saluran ${message.channel}.`)
-          .addFields({ name: 'Isi Pesan', value: message.content.substring(0, 1020) });
+          .setTitle(t(lang, 'msg_mod_invite_title'))
+          .setDescription(t(lang, 'msg_mod_invite_desc', `${message.author}`, `${message.channel}`))
+          .addFields({ name: t(lang, 'msg_mod_field_content'), value: message.content.substring(0, 1020) });
       } else if (isMassMention) {
         logAction = 'MASS MENTION';
-        logReason = `Penyebutan massal (${mentionCount} mention).`;
+        logReason = lang === 'id' ? `Penyebutan massal (${mentionCount} mention).` : `Mass mention (${mentionCount} mentions).`;
         modEmbed.setColor('#f59e0b') // Amber
-          .setTitle('⚠️ Penyebutan Massal Terdeteksi')
-          .setDescription(`Pengguna ${message.author} melakukan penyebutan massal di saluran ${message.channel}.`)
+          .setTitle(t(lang, 'msg_mod_mention_title'))
+          .setDescription(t(lang, 'msg_mod_mention_desc', `${message.author}`, `${message.channel}`))
           .addFields(
-            { name: 'Jumlah Penyebutan', value: `${mentionCount} kali`, inline: true },
-            { name: 'Isi Pesan', value: message.content.substring(0, 1020) }
+            { name: t(lang, 'msg_mod_field_count'), value: `${mentionCount}`, inline: true },
+            { name: t(lang, 'msg_mod_field_content'), value: message.content.substring(0, 1020) }
           );
       } else if (containsBadWord) {
         logAction = 'TOXIC LANGUAGE';
-        logReason = 'Menggunakan kata-kata kasar / kotor.';
+        logReason = lang === 'id' ? 'Menggunakan kata-kata kasar / kotor.' : 'Used toxic language.';
         modEmbed.setColor('#ef4444') // Red
-          .setTitle('⚠️ Bahasa Kasar Terdeteksi')
-          .setDescription(`Pengguna ${message.author} terdeteksi menggunakan kata-kata kasar di saluran ${message.channel}.`)
+          .setTitle(t(lang, 'msg_mod_toxic_title'))
+          .setDescription(t(lang, 'msg_mod_toxic_desc', `${message.author}`, `${message.channel}`))
           .addFields(
-            { name: 'Isi Pesan', value: message.content.substring(0, 1020) }
+            { name: t(lang, 'msg_mod_field_content'), value: message.content.substring(0, 1020) }
           );
       }
 

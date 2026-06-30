@@ -199,7 +199,9 @@ const DatabaseFunctions = {
         achievement_channel_id: null,
         log_channels: '{}',
         ai_enabled: false,
-        timezone_offset: 8
+        timezone_offset: 8,
+        language: 'id',
+        show_session_duration: true
       };
     }
 
@@ -296,6 +298,14 @@ const DatabaseFunctions = {
         row.timezone_offset = 8;
         changed = true;
       }
+      if (row.language === undefined) {
+        row.language = 'id';
+        changed = true;
+      }
+      if (row.show_session_duration === undefined) {
+        row.show_session_duration = true;
+        changed = true;
+      }
 
       if (changed) {
         row.categories_enabled = JSON.stringify(cats);
@@ -308,7 +318,7 @@ const DatabaseFunctions = {
     return row;
   },
 
-  setGuildSettings(guildId, { log_channel_id, categories_enabled, embed_color, ignored_channels, ai_model, welcome_enabled, welcome_channel_id, welcome_message, autorole_enabled, autorole_role_id, achievement_channel_id, log_channels, ai_enabled, timezone_offset }) {
+  setGuildSettings(guildId, { log_channel_id, categories_enabled, embed_color, ignored_channels, ai_model, welcome_enabled, welcome_channel_id, welcome_message, autorole_enabled, autorole_role_id, achievement_channel_id, log_channels, ai_enabled, timezone_offset, language, show_session_duration }) {
     const current = this.getGuildSettings(guildId);
     
     const channel = log_channel_id !== undefined ? log_channel_id : current.log_channel_id;
@@ -325,6 +335,8 @@ const DatabaseFunctions = {
     const logChans = log_channels !== undefined ? (typeof log_channels === 'string' ? log_channels : JSON.stringify(log_channels)) : current.log_channels !== undefined ? current.log_channels : '{}';
     const aiEnabled = ai_enabled !== undefined ? ai_enabled : current.ai_enabled !== undefined ? current.ai_enabled : false;
     const timezoneOffset = timezone_offset !== undefined ? parseInt(timezone_offset) : (current.timezone_offset !== undefined ? parseInt(current.timezone_offset) : 8);
+    const lang = language !== undefined ? language : current.language !== undefined ? current.language : 'id';
+    const showDur = show_session_duration !== undefined ? (show_session_duration === true || show_session_duration === 'true') : current.show_session_duration !== undefined ? current.show_session_duration : true;
 
     data.guild_settings[guildId] = {
       guild_id: guildId,
@@ -341,7 +353,9 @@ const DatabaseFunctions = {
       achievement_channel_id: achievementChannel,
       log_channels: logChans,
       ai_enabled: aiEnabled,
-      timezone_offset: timezoneOffset
+      timezone_offset: timezoneOffset,
+      language: lang,
+      show_session_duration: showDur
     };
 
     triggerSave();

@@ -1,6 +1,7 @@
 const { EmbedBuilder, AuditLogEvent } = require('discord.js');
 const { sendLog } = require('../bot');
 const db = require('../database');
+const { t } = require('../utils/lang');
 
 module.exports = {
   async execute(message) {
@@ -11,24 +12,25 @@ module.exports = {
     const ignored = JSON.parse(settings.ignored_channels || '[]');
     if (ignored.includes(message.channel.id)) return;
 
-    const content = message.content ? (message.content.length > 1024 ? message.content.substring(0, 1020) + '...' : message.content) : '_Tidak ada konten teks_';
+    const lang = settings.language || 'id';
+    const noneText = lang === 'id' ? '_Tidak ada konten teks_' : '_No text content_';
+    const content = message.content ? (message.content.length > 1024 ? message.content.substring(0, 1020) + '...' : message.content) : noneText;
 
     const embed = new EmbedBuilder()
       .setColor('#f43f5e') // sleek red
-      .setTitle('🗑️ Pesan Dihapus')
-      .setDescription(`Sebuah pesan teks telah dihapus dari saluran.`)
+      .setTitle(t(lang, 'msg_del_title'))
+      .setDescription(t(lang, 'msg_del_desc'))
       .addFields(
-        { name: 'Pengirim', value: `${message.author}`, inline: true },
-        { name: 'Channel', value: `${message.channel}`, inline: true },
-        { name: 'Isi Pesan', value: content }
+        { name: t(lang, 'msg_del_sender'), value: `${message.author}`, inline: true },
+        { name: t(lang, 'msg_del_channel'), value: `${message.channel}`, inline: true },
+        { name: t(lang, 'msg_del_content'), value: content }
       )
-      .setTimestamp()
-      .setFooter({ text: `${message.author.username}: ${message.author.id} | #${message.channel.name}: ${message.channel.id}` });
+      .setTimestamp();
 
     // Check if there are attachments
     if (message.attachments && message.attachments.size > 0) {
       const names = message.attachments.map(a => `\`${a.name}\``).join(', ');
-      embed.addFields({ name: 'Lampiran / Attachments', value: names });
+      embed.addFields({ name: t(lang, 'msg_del_attachments'), value: names });
     }
 
     // Attempt to fetch who deleted the message from Audit Logs
@@ -46,7 +48,7 @@ module.exports = {
         if (target.id === message.author.id && (Date.now() - deletionLog.createdTimestamp < 5000)) {
           if (!db.isAuditEventCached(deletionLog.id)) {
             db.cacheAuditEvent(deletionLog.id);
-            embed.addFields({ name: 'Dihapus Oleh', value: `${executor}`, inline: true });
+            embed.addFields({ name: t(lang, 'msg_del_by'), value: `${executor}`, inline: true });
           }
         }
       }

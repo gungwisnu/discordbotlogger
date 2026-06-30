@@ -69,7 +69,9 @@ function getSettingsDiff(oldSettings, newSettings) {
     autorole_enabled: 'Status Auto-Role',
     autorole_role_id: 'Role Auto-Role',
     achievement_channel_id: 'Saluran Pencapaian',
-    ai_enabled: 'Status Asisten AI'
+    ai_enabled: 'Status Asisten AI',
+    language: 'Bahasa Logger',
+    show_session_duration: 'Tampilkan Durasi Sesi Voice'
   };
 
   // Compare standard fields
@@ -87,6 +89,7 @@ function getSettingsDiff(oldSettings, newSettings) {
           if (v === null || v === undefined || v === '') return 'Tidak disetel';
           if (v === true) return 'Aktif';
           if (v === false) return 'Nonaktif';
+          if (key === 'language') return v === 'id' ? 'Bahasa Indonesia' : 'English';
           return v;
         };
         diffs.push({
@@ -285,7 +288,9 @@ const DEMO_SETTINGS = {
   achievement_channel_id: '333',
   log_channels: '{}',
   ai_enabled: false,
-  timezone_offset: 8
+  timezone_offset: 8,
+  language: 'id',
+  show_session_duration: true
 };
 
 let DEMO_REACTION_ROLES = [
@@ -709,7 +714,7 @@ app.get('/api/guilds/:guildId/settings-history', checkAuth, (req, res) => {
 // Update Guild Settings
 app.post('/api/guilds/:guildId/settings', checkAuth, (req, res) => {
   const { guildId } = req.params;
-  const { log_channel_id, categories_enabled, embed_color, ignored_channels, ai_model, welcome_enabled, welcome_channel_id, welcome_message, autorole_enabled, autorole_role_id, achievement_channel_id, log_channels, ai_enabled, timezone_offset } = req.body;
+  const { log_channel_id, categories_enabled, embed_color, ignored_channels, ai_model, welcome_enabled, welcome_channel_id, welcome_message, autorole_enabled, autorole_role_id, achievement_channel_id, log_channels, ai_enabled, timezone_offset, language, show_session_duration } = req.body;
   const isDemo = req.session.user.demo;
   const username = req.session.user ? req.session.user.username : 'Web Dashboard';
 
@@ -753,7 +758,9 @@ app.post('/api/guilds/:guildId/settings', checkAuth, (req, res) => {
       achievement_channel_id: achievement_channel_id !== undefined ? achievement_channel_id : DEMO_SETTINGS.achievement_channel_id,
       log_channels: typeof log_channels === 'string' ? log_channels : JSON.stringify(log_channels || {}),
       ai_enabled: ai_enabled !== undefined ? ai_enabled : DEMO_SETTINGS.ai_enabled,
-      timezone_offset: timezone_offset !== undefined ? parseInt(timezone_offset) : DEMO_SETTINGS.timezone_offset
+      timezone_offset: timezone_offset !== undefined ? parseInt(timezone_offset) : DEMO_SETTINGS.timezone_offset,
+      language: language !== undefined ? language : DEMO_SETTINGS.language,
+      show_session_duration: show_session_duration !== undefined ? (show_session_duration === true || show_session_duration === 'true') : DEMO_SETTINGS.show_session_duration
     });
     return res.json({ success: true, settings: {
       ...DEMO_SETTINGS,
@@ -761,7 +768,9 @@ app.post('/api/guilds/:guildId/settings', checkAuth, (req, res) => {
       ignored_channels: JSON.parse(DEMO_SETTINGS.ignored_channels || '[]'),
       log_channels: JSON.parse(DEMO_SETTINGS.log_channels || '{}'),
       ai_enabled: DEMO_SETTINGS.ai_enabled,
-      timezone_offset: DEMO_SETTINGS.timezone_offset
+      timezone_offset: DEMO_SETTINGS.timezone_offset,
+      language: DEMO_SETTINGS.language,
+      show_session_duration: DEMO_SETTINGS.show_session_duration
     }});
   }
 
@@ -811,7 +820,9 @@ app.post('/api/guilds/:guildId/settings', checkAuth, (req, res) => {
     achievement_channel_id,
     log_channels,
     ai_enabled,
-    timezone_offset
+    timezone_offset,
+    language,
+    show_session_duration
   });
 
   res.json({

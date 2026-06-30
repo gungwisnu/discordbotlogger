@@ -1,25 +1,30 @@
 const { EmbedBuilder } = require('discord.js');
 const { sendLog } = require('../bot');
+const db = require('../database');
+const { t } = require('../utils/lang');
 
 module.exports = {
   async execute(oldMember, newMember) {
     const guildId = newMember.guild.id;
+    const settings = db.getGuildSettings(guildId);
+    const lang = settings.language || 'id';
+
     const embed = new EmbedBuilder()
       .setAuthor({ name: newMember.user.tag, iconURL: newMember.user.displayAvatarURL() })
       .setThumbnail(newMember.user.displayAvatarURL())
-      .setTimestamp()
-      .setFooter({ text: `${newMember.user.username}: ${newMember.id}` });
+      .setTimestamp();
 
     let logged = false;
 
     // 1. Nickname changed
     if (oldMember.nickname !== newMember.nickname) {
+      const noneNick = lang === 'id' ? '_Tidak ada (Bawaan)_' : '_None (Default)_';
       embed.setColor('#3b82f6') // Blue
-        .setTitle('👤 Nama Panggilan Berubah')
-        .setDescription(`Nama panggilan ${newMember} telah diperbarui di server.`)
+        .setTitle(t(lang, 'mem_update_nick_title'))
+        .setDescription(t(lang, 'mem_update_nick_desc', `${newMember}`))
         .addFields(
-          { name: 'Sebelum', value: oldMember.nickname || '_Tidak ada (Bawaan)_', inline: true },
-          { name: 'Sesudah', value: newMember.nickname || '_Tidak ada (Bawaan)_', inline: true }
+          { name: t(lang, 'voice_before'), value: oldMember.nickname || noneNick, inline: true },
+          { name: t(lang, 'voice_after'), value: newMember.nickname || noneNick, inline: true }
         );
       logged = true;
     }
@@ -33,7 +38,7 @@ module.exports = {
       const removedRoles = oldRoles.filter(role => !newRoles.has(role.id));
 
       const { AuditLogEvent } = require('discord.js');
-      let executorText = 'Tidak diketahui / Sistem';
+      let executorText = lang === 'id' ? 'Tidak diketahui / Sistem' : 'Unknown / System';
       try {
         const auditLogs = await newMember.guild.fetchAuditLogs({
           limit: 1,
@@ -50,11 +55,11 @@ module.exports = {
       if (addedRoles.size > 0) {
         const list = addedRoles.map(r => `${r}`).join(', ');
         embed.setColor('#10b981')
-          .setTitle('🛡️ Peran Ditambahkan')
-          .setDescription(`${newMember} mendapatkan peran baru.`)
+          .setTitle(t(lang, 'mem_update_role_add_title'))
+          .setDescription(t(lang, 'mem_update_role_add_desc', `${newMember}`))
           .addFields(
-            { name: 'Peran Baru', value: list, inline: true },
-            { name: 'Diberikan Oleh', value: executorText, inline: true }
+            { name: t(lang, 'mem_update_role_field'), value: list, inline: true },
+            { name: t(lang, 'mem_update_by_field'), value: executorText, inline: true }
           );
         logged = true;
       }
@@ -62,11 +67,11 @@ module.exports = {
       if (removedRoles.size > 0) {
         const list = removedRoles.map(r => `${r}`).join(', ');
         embed.setColor('#ef4444')
-          .setTitle('🛡️ Peran Dihapus')
-          .setDescription(`${newMember} kehilangan peran.`)
+          .setTitle(t(lang, 'mem_update_role_rem_title'))
+          .setDescription(t(lang, 'mem_update_role_rem_desc', `${newMember}`))
           .addFields(
-            { name: 'Peran Dihapus', value: list, inline: true },
-            { name: 'Dicabut Oleh', value: executorText, inline: true }
+            { name: t(lang, 'mem_update_role_field'), value: list, inline: true },
+            { name: t(lang, 'mem_update_by_field'), value: executorText, inline: true }
           );
         logged = true;
       }
