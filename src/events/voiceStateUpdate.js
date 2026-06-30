@@ -89,7 +89,7 @@ module.exports = {
           : t(lang, 'voice_mic_unmute_desc', `${member}`, `${newState.channel}`);
         
         embed.setColor(newState.selfMute ? '#f59e0b' : '#0ea5e9')
-          .setDescription(`-# ${emoji} ${descText}`);
+          .setDescription(`${emoji} ${descText}`);
         logged = true;
       }
       
@@ -101,7 +101,7 @@ module.exports = {
           : t(lang, 'voice_deaf_unmute_desc', `${member}`, `${newState.channel}`);
         
         embed.setColor(newState.selfDeaf ? '#f59e0b' : '#0ea5e9')
-          .setDescription(`-# ${emoji} ${descText}`);
+          .setDescription(`${emoji} ${descText}`);
         logged = true;
       }
 
@@ -113,7 +113,7 @@ module.exports = {
           : t(lang, 'voice_cam_off_desc', `${member}`, `${newState.channel}`);
         
         embed.setColor(newState.selfVideo ? '#0ea5e9' : '#f59e0b')
-          .setDescription(`-# ${emoji} ${descText}`);
+          .setDescription(`${emoji} ${descText}`);
         logged = true;
       }
 
@@ -125,7 +125,7 @@ module.exports = {
           : t(lang, 'voice_stream_off_desc', `${member}`, `${newState.channel}`);
         
         embed.setColor(newState.streaming ? '#0ea5e9' : '#f59e0b')
-          .setDescription(`-# ${emoji} ${descText}`);
+          .setDescription(`${emoji} ${descText}`);
         logged = true;
       }
 
@@ -138,7 +138,7 @@ module.exports = {
           : `${member} changed voice status in ${newState.channel || 'voice channel'} from ${oldVal} to ${newVal}.`;
         
         embed.setColor('#0ea5e9')
-          .setDescription(`-# 💬 ${descText}`);
+          .setDescription(`💬 ${descText}`);
         logged = true;
       }
 
